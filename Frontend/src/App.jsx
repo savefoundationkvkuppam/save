@@ -9023,8 +9023,8 @@ function App() {
 
                 <tr>
                   <td>Clusters</td>
-                  <td>11</td>
-                  <td>11</td>
+                  <td>{clusterRecords.length}</td>
+                  <td>{clusterRecords.length}</td>
                   <td>Regular Savings</td>
                   <td>43110946</td>
                   <td>43500446</td>
@@ -9041,8 +9041,8 @@ function App() {
 
                 <tr>
                   <td>Members</td>
-                  <td>6374</td>
-                  <td>6376</td>
+                  <td>{memberRecords.length}</td>
+                  <td>{memberRecords.length}</td>
                   <td>Total Savings</td>
                   <td>43110946</td>
                   <td>43558006</td>
@@ -9050,8 +9050,8 @@ function App() {
 
                 <tr>
                   <td>Panchayat Unions</td>
-                  <td>2</td>
-                  <td>2</td>
+                  <td>{panUnionRecords.length}</td>
+                  <td>{panUnionRecords.length}</td>
                   <td>Pov. Red. Fund 1 O/S</td>
                   <td>111549339</td>
                   <td>110625129</td>
@@ -9059,8 +9059,8 @@ function App() {
 
                 <tr>
                   <td>Panchayats</td>
-                  <td>36</td>
-                  <td>36</td>
+                  <td>{panchayatRecords.length}</td>
+                  <td>{panchayatRecords.length}</td>
                   <td>Pov. Red. Fund 2 O/S</td>
                   <td>0</td>
                   <td>0</td>
@@ -9068,8 +9068,8 @@ function App() {
 
                 <tr>
                   <td>Villages</td>
-                  <td>100</td>
-                  <td>100</td>
+                  <td>{villageRecords.length}</td>
+                  <td>{villageRecords.length}</td>
                   <td>Pov. Red. Fund 3 O/S</td>
                   <td>0</td>
                   <td>0</td>
