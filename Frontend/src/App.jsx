@@ -7814,7 +7814,9 @@ function App() {
   const TopBar = () => (
     <div className="top-bar">
       <div className="brand-area">
-        <div className="brand-mark">S</div>
+        <div className="brand-mark">
+          <img src="/save-logo.png.jpeg" alt="SAVE Foundation Logo" />
+        </div>
         <div>
           <div className="brand-name">SAVE FOUNDATION</div>
           <div className="brand-subtitle">Vazhvathram Management System</div>
