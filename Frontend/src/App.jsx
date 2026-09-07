@@ -6491,7 +6491,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `{API_BASE_URL}/login-details/login`,
+        `${API_BASE_URL}/login-details/login`,
         {
           method: "POST",
           headers: {
