@@ -2889,7 +2889,7 @@ position:relative; top:68px; left:55px;
 font-size:12px; color: var(--sf-muted);
 }
 .page h1 {
-font-family: serif !important;
+font-family: Inter, "Segoe UI", Arial, serif !important;
 font-size:32px !important;
 color: var(--sf-green-900) !important;
 margin-bottom:22px !important;
