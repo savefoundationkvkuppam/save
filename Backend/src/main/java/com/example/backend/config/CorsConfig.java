@@ -17,7 +17,8 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(
-                Arrays.asList("http://localhost:5173")
+                Arrays.asList("http://localhost:5173",
+                             "https://outstanding-connection-production-38a8.up.railway.app")
         );
 
         config.setAllowedMethods(
