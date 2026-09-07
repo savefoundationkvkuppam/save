@@ -1923,29 +1923,6 @@ function App() {
   // TOP BAR
   // =========================================================
   
-  const vazhvathrams = [
-    "SENTHAMARAI UK - 01",
-    "SRI KRISHNA UK - 02",
-    "SURIYAGANDHI UK - 03",
-    "MARUDHANI UK - 04",
-    "VIDIYAL UK - 05",
-    "SHAKTHI UK - 06",
-    "STAR UK - 07",
-    "SRI MARIYAMMAN UK - 08",
-    "SRI MURUGAN UK - 09",
-    "MALLI UK - 10",
-    "SRI SARASWATHI UK - 11",
-    "SRI GANABATHI UZHAVAR KUZHU - 12",
-    "SRI MUTHUMARIYAMMAN UK - 13",
-    "SIVAN - 14",
-    "OM SAKTHI - 15",
-    "KATHIR - 16",
-    "OM SAIRAM - 17",
-    "SRI GANAPATHY SENJI UK - 18",
-    "SIVAN VENKATAPURAM UK - 19",
-    "MARUDHANI - 20",
-  ];
-
   const [selectedCluster, setSelectedCluster] = useState(
     "DEVARASHIKUPPAM - 01"
   );
@@ -2030,6 +2007,10 @@ function App() {
       return [];
     }
   });
+
+  const vazhvathrams = vazhvathramRecords
+     .map((record) => String(record.vazhvathramName || "").trim())
+     .filter(Boolean);
 
   const [selectedVazhvathramRecordId, setSelectedVazhvathramRecordId] =
     useState(null);
