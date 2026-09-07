@@ -5146,7 +5146,7 @@ min-height: 35px;
 border-bottom: 1px solid #cad8d0;
 }
 
-.entitlement-row(odd) {
+.entitlement-row:nth-child(odd) {
 border-right: 1px solid #cad8d0;
 }
 
@@ -5232,7 +5232,7 @@ grid-template-columns: 1fr;
 border-left: 0;
 }
 
-.entitlement-row(odd) {
+.entitlement-row:nth-child(odd) {
 border-right: 0;
 }
 
