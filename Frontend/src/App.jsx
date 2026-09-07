@@ -1923,13 +1923,9 @@ function App() {
   // TOP BAR
   // =========================================================
   
-  const [selectedCluster, setSelectedCluster] = useState(
-    "DEVARASHIKUPPAM - 01"
-  );
+  const [selectedCluster, setSelectedCluster] = useState("");
 
-  const [selectedVazhvathram, setSelectedVazhvathram] = useState(
-    "SENTHAMARAI UK - 01"
-  );
+  const [selectedVazhvathram, setSelectedVazhvathram] = useState("");
 
   // =========================================================
   // CLUSTER
