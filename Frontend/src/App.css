@@ -2899,7 +2899,7 @@ width:460px !important;
 padding:30px !important;
 border:1px solid rgba(38,150,108,.16) !important;
 border-radius:20px !important;
-background: 255,255,255,.96 !important;
+background: rgba(255,255,255,.96) !important;
 box-shadow:0 25px 70px rgba(10,61,44,.14) !important;
 }
 .login-table::before {
