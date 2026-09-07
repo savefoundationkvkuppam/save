@@ -1923,11 +1923,10 @@ function App() {
   // TOP BAR
   // =========================================================
 
-  const clusters = [
-    "DEVARASHIKUPPAM - 01",
-    "SENJI - 08",
-  ];
-
+  const clusters = clusterRecords.map(
+     (record) => record.clusterName
+  );
+  
   const vazhvathrams = [
     "SENTHAMARAI UK - 01",
     "SRI KRISHNA UK - 02",
@@ -1972,6 +1971,10 @@ function App() {
   const [clusterRecords, setClusterRecords] = useState([]);
   const [clusterLoading, setClusterLoading] = useState(false);
 
+  const clusters = clusterRecords
+    .map((record) => String(record.clusterName || "").trim())
+    .filter(Boolean);
+  
   const [selectedClusterRecordId, setSelectedClusterRecordId] =
     useState(null);
 
