@@ -12219,3 +12219,546 @@ cursor: pointer;
   }
 
 }
+
+/* =========================================================
+   SAVE FOUNDATION - COMPLETE RESPONSIVE SYSTEM
+   Mobile / Tablet / Laptop / Desktop
+   ========================================================= */
+
+
+/* =========================================================
+   MOBILE - 700px AND BELOW
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* ---------- GLOBAL ---------- */
+
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  body {
+    overflow-y: auto !important;
+  }
+
+
+  /* =======================================================
+     APPLICATION PAGE
+     ======================================================= */
+
+  .save-page {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+
+  /* =======================================================
+     TOP HEADER
+     ======================================================= */
+
+  .top-bar {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .brand-area {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    gap: 9px !important;
+  }
+
+  .brand-mark {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 12px !important;
+  }
+
+  .brand-name {
+    font-size: 16px !important;
+    letter-spacing: 1px !important;
+  }
+
+  .brand-subtitle {
+    font-size: 9px !important;
+  }
+
+
+  /* ---------- TOP SELECTORS ---------- */
+
+  .context-area {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+
+  .top-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 5px 8px !important;
+  }
+
+  .top-item label {
+    flex-shrink: 0 !important;
+  }
+
+  .top-item select {
+    width: 65% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 34px !important;
+  }
+
+  .system-status {
+    width: 100% !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+
+
+  /* =======================================================
+     MAIN LAYOUT
+     ======================================================= */
+
+  .main-container {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: calc(100vh - 150px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+
+  /* =======================================================
+     MOBILE SIDEBAR
+     ======================================================= */
+
+  .side-menu {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 210px !important;
+
+    padding: 8px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--sf-border) !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    box-shadow: none !important;
+  }
+
+  .side-menu button {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    flex-shrink: 0 !important;
+
+    margin: 2px 0 !important;
+    font-size: 12px !important;
+  }
+
+  .side-menu button.menu-section {
+    height: 36px !important;
+    min-height: 36px !important;
+  }
+
+  .menu-caption {
+    padding: 4px 10px 7px !important;
+  }
+
+  .menu-divider {
+    margin: 7px 4px !important;
+  }
+
+
+  /* =======================================================
+     CONTENT AREA
+     ======================================================= */
+
+  .content {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    box-sizing: border-box !important;
+
+    padding: 20px 12px 40px !important;
+
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+
+    background: linear-gradient(
+      135deg,
+      #f7faf8 0%,
+      #eef5f1 100%
+    ) !important;
+  }
+
+  .content::before {
+    font-size: 9px !important;
+    letter-spacing: 1px !important;
+    white-space: nowrap !important;
+  }
+
+  .content h1 {
+    width: 100% !important;
+    font-size: 22px !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+    margin: 0 0 16px !important;
+  }
+
+  .content h2,
+  .content h3 {
+    max-width: 100% !important;
+    line-height: 1.4 !important;
+  }
+
+
+  /* =======================================================
+     DASHBOARD TABLES
+     ======================================================= */
+
+  .stats-table,
+  .member-list table,
+  .cluster-list table,
+  .vazhvathram-list table {
+    display: table !important;
+
+    width: max-content !important;
+    min-width: 700px !important;
+    max-width: none !important;
+
+    white-space: normal !important;
+  }
+
+  .stats-table th,
+  .member-list th,
+  .cluster-list th,
+  .vazhvathram-list th {
+    white-space: normal !important;
+    font-size: 11px !important;
+    padding: 8px !important;
+  }
+
+  .stats-table td,
+  .member-list td,
+  .cluster-list td,
+  .vazhvathram-list td {
+    white-space: normal !important;
+    font-size: 11px !important;
+    padding: 8px !important;
+  }
+
+
+  /* =======================================================
+     FORM CARDS
+     ======================================================= */
+
+  .cluster-form,
+  .vazhvathram-form,
+  .member-form,
+  .taluk-form,
+  .panchayat-union-form,
+  .panchayat-form,
+  .master-form {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+
+    box-sizing: border-box !important;
+  }
+
+
+  /* =======================================================
+     FORM ROWS
+     ======================================================= */
+
+  .cluster-row,
+  .vazhvathram-row,
+  .member-code-row,
+  .member-row,
+  .member-designation,
+  .member-date-row,
+  .member-marital-row,
+  .member-relative-row,
+  .member-category-row,
+  .member-ration-row,
+  .member-id-row,
+  .member-mobile-row,
+  .member-saving-row,
+  .taluk-row,
+  .panchayat-union-row,
+  .panchayat-row,
+  .master-row {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+
+    gap: 6px !important;
+
+    box-sizing: border-box !important;
+  }
+
+
+  /* ---------- FORM LABELS ---------- */
+
+  .cluster-row label,
+  .vazhvathram-row label,
+  .member-code-row label,
+  .member-row label,
+  .member-designation label,
+  .member-date-row label,
+  .member-marital-row label,
+  .member-relative-row label,
+  .member-category-row label,
+  .member-ration-row label,
+  .member-id-row label,
+  .member-mobile-row label,
+  .member-saving-row label,
+  .taluk-row label,
+  .panchayat-union-row label,
+  .panchayat-row label,
+  .master-row label {
+    width: 100% !important;
+    text-align: left !important;
+    font-size: 12px !important;
+  }
+
+
+  /* ---------- FORM INPUTS ---------- */
+
+  .cluster-form input,
+  .cluster-form select,
+  .vazhvathram-form input,
+  .vazhvathram-form select,
+  .member-form input,
+  .member-form select,
+  .taluk-form input,
+  .taluk-form select,
+  .panchayat-union-form input,
+  .panchayat-union-form select,
+  .panchayat-form input,
+  .panchayat-form select,
+  .master-form input,
+  .master-form select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    height: 42px !important;
+
+    box-sizing: border-box !important;
+
+    font-size: 13px !important;
+  }
+
+
+  /* =======================================================
+     BUTTON GROUPS
+     ======================================================= */
+
+  .cluster-buttons,
+  .vazhvathram-buttons,
+  .member-buttons,
+  .taluk-buttons,
+  .panchayat-union-buttons,
+  .panchayat-buttons,
+  .master-buttons {
+    width: 100% !important;
+
+    display: flex !important;
+    flex-wrap: wrap !important;
+
+    gap: 7px !important;
+  }
+
+  .cluster-buttons button,
+  .vazhvathram-buttons button,
+  .member-buttons button,
+  .taluk-buttons button,
+  .panchayat-union-buttons button,
+  .panchayat-buttons button,
+  .master-buttons button {
+    min-height: 40px !important;
+    max-width: 100% !important;
+    flex: 0 1 auto !important;
+  }
+
+
+  /* =======================================================
+     MASTER PAGES
+     ======================================================= */
+
+  .master-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .master-content .master-form {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .master-content > p {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+  }
+
+
+  /* =======================================================
+     TOUCH DEVICES
+     ======================================================= */
+
+  button,
+  input,
+  select {
+    touch-action: manipulation;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE - 420px AND BELOW
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+  .top-bar {
+    padding: 8px !important;
+  }
+
+  .brand-name {
+    font-size: 15px !important;
+  }
+
+  .top-item select {
+    width: 62% !important;
+  }
+
+  .side-menu {
+    max-height: 200px !important;
+  }
+
+  .content {
+    padding: 16px 9px 35px !important;
+  }
+
+  .content h1 {
+    font-size: 20px !important;
+  }
+
+  .stats-table,
+  .member-list table,
+  .cluster-list table,
+  .vazhvathram-list table {
+    min-width: 680px !important;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET - 701px TO 1000px
+   ========================================================= */
+
+@media (min-width: 701px) and (max-width: 1000px) {
+
+  .top-bar {
+    height: 72px !important;
+    min-height: 72px !important;
+    padding: 0 14px !important;
+  }
+
+  .brand-area {
+    min-width: 200px !important;
+  }
+
+  .brand-name {
+    font-size: 15px !important;
+  }
+
+  .top-item select {
+    min-width: 120px !important;
+    max-width: 150px !important;
+  }
+
+  .main-container {
+    height: calc(100vh - 72px) !important;
+    grid-template-columns: 185px minmax(0, 1fr) !important;
+  }
+
+  .side-menu {
+    min-width: 185px !important;
+    padding: 12px 8px !important;
+  }
+
+  .side-menu button {
+    font-size: 12px !important;
+  }
+
+  .content {
+    padding: 22px 18px 40px !important;
+  }
+
+  .content h1 {
+    font-size: 25px !important;
+  }
+
+}
+
+
+/* =========================================================
+   LARGE DESKTOP - 1400px+
+   ========================================================= */
+
+@media (min-width: 1400px) {
+
+  .content {
+    padding-left: 50px !important;
+    padding-right: 50px !important;
+  }
+
+}
