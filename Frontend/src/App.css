@@ -2926,6 +2926,12 @@ border:0 !important; border-radius:9px !important;
 background: linear-gradient(135deg,var(--sf-green-800),var(--sf-green-600)) !important;
 color:#fff !important; box-shadow:0 8px 18px rgba(20,88,67,.22);
 }
+
+.login-row button:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 24px rgba(20,88,67,.30) !important;
+  background: linear-gradient(135deg,var(--sf-green-900),var(--sf-green-600)) !important;
+}
 .login-row button { transform: translateY(-2px); }
 
 /* APPLICATION SHELL */
