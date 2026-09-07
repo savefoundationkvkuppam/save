@@ -1922,10 +1922,6 @@ function App() {
   // =========================================================
   // TOP BAR
   // =========================================================
-
-  const clusters = clusterRecords.map(
-     (record) => record.clusterName
-  );
   
   const vazhvathrams = [
     "SENTHAMARAI UK - 01",
