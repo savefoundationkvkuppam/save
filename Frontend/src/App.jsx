@@ -27043,9 +27043,9 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <select value={passwordData.instType}
                 onChange={e=>updateData(setPasswordData,"instType",e.target.value)}>
                 <option>-- Select --</option>
-                <option>Federation</option>
-                <option>Cluster</option>
-                <option>Vazhvathram</option>
+                <option>Vazhvathram/AFG/Jeevidam/Vayalagam/Mother Federation 12AB - AOP</option>
+                <option>Federation Mutuals</option>
+                <option>SUHAM Federation</option>
               </select>
             </div>
             <div className="master-row">
@@ -27053,8 +27053,8 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <select value={passwordData.user}
                 onChange={e=>updateData(setPasswordData,"user",e.target.value)}>
                 <option>-- Select User --</option>
-                <option>Admin</option>
-                <option>Staff</option>
+                <option>Block Integrator - SUHAM</option>
+                <option>Accountant - SUHAM</option>
               </select>
             </div>
             <div className="master-row">
@@ -27133,7 +27133,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-row"><label>User Code</label><input disabled={addUserMode === "view"} value={addUserData.userCode} onChange={e=>updateData(setAddUserData,"userCode",e.target.value)}/></div>
             <div className="master-row"><label>Name</label><input disabled={addUserMode === "view"} value={addUserData.name} onChange={e=>updateData(setAddUserData,"name",e.target.value)}/></div>
             <div className="master-row"><label>Password</label><input type="password" disabled={addUserMode === "view"} value={addUserData.password} onChange={e=>updateData(setAddUserData,"password",e.target.value)}/></div>
-            <div className="master-row"><label>Role</label><select disabled={addUserMode === "view"} value={addUserData.role} onChange={e=>updateData(setAddUserData,"role",e.target.value)}><option>Block Integrator</option><option>Block Incharge</option><option>Admin</option></select></div>
+            <div className="master-row"><label>Role</label><select disabled={addUserMode === "view"} value={addUserData.role} onChange={e=>updateData(setAddUserData,"role",e.target.value)}><option>Block Integrator</option><option>Accountant</option><option>Computer Operator</option><option>Associate</option></select></div>
             <div className="master-row"><label>Status</label><select disabled={addUserMode === "view"} value={addUserData.status} onChange={e=>updateData(setAddUserData,"status",e.target.value)}><option>Working</option><option>Not Working</option></select></div>
             <div className="master-row"><label>Cluster</label><input disabled={addUserMode === "view"} value={addUserData.cluster} onChange={e=>updateData(setAddUserData,"cluster",e.target.value)}/></div>
 
@@ -27192,9 +27192,14 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <label>Broader Classification</label>
               <select value={digPurposeData.classification} onChange={e => updateData(setDigPurposeData, "classification", e.target.value)}>
                 <option>Institution Building</option>
-                <option>Livelihood Promotion</option>
-                <option>Social Development</option>
-                <option>Other</option>
+                <option>Livelihood</option>
+                <option>// Systems</option>
+                <option>Financial</option>
+                <option>Leadership Development</option>
+                <option>Social Security</option>
+                <option>Health</option>
+                <option>Linkages</option> 
+                <option>Others</option>
               </select>
             </div>
 
@@ -27275,8 +27280,8 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-row"><label>Code</label><input value={staffData.code} onChange={e=>updateData(setStaffData,"code",e.target.value)}/></div>
             <div className="master-row"><label>Staff Name</label><input value={staffData.staffName} onChange={e=>updateData(setStaffData,"staffName",e.target.value)}/></div>
             <div className="master-row"><label>Staff Code as per MLeave Software</label><input value={staffData.mlLeaveCode} onChange={e=>updateData(setStaffData,"mlLeaveCode",e.target.value)}/></div>
-            <div className="master-row"><label>Role</label><select value={staffData.role} onChange={e=>updateData(setStaffData,"role",e.target.value)}><option>Block Integrator or Block Incharges</option><option>Accountant</option><option>Computer Operator</option></select></div>
-            <div className="master-row"><label>DHAN/Fed Staff</label><select value={staffData.dhanFedStaff} onChange={e=>updateData(setStaffData,"dhanFedStaff",e.target.value)}><option>DHAN Foundation Staff Deputed to Federation</option><option>Federation Staff</option></select></div>
+            <div className="master-row"><label>Role</label><select value={staffData.role} onChange={e=>updateData(setStaffData,"role",e.target.value)}><option>Block Integrator or Block Incharges</option><option>Accountant or // System Analysts</option><option>Regional Coordinator or Regional Incharges</option></div>
+            <div className="master-row"><label>SAVE/Fed Staff</label><select value={staffData.dhanFedStaff} onChange={e=>updateData(setStaffData,"dhanFedStaff",e.target.value)}><option>SAVE Foundation Staff Deputed to Federation</option><option>Federation Staff</option><option>PSDB Staff</option></select></div>
             <div className="master-buttons">
               <button onClick={handleStaffAdd}>Add</button>
               <button onClick={handleStaffEdit}>Edit</button>
