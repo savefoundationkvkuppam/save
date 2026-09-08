@@ -5355,7 +5355,7 @@ useEffect(() => {
   const handleStaffAdd = () => {
     setStaffMode("add");
     setSelectedStaffId(null);
-    setStaffData({ fedCode: "001", code: "2", staffName: "", mlLeaveCode: "", role: "Block Integrator or Block Incharges", dhanFedStaff: "DHAN Foundation Staff Deputed to Federation" });
+    setStaffData({ fedCode: "001", code: "2", staffName: "", mlLeaveCode: "", role: "Block Integrator or Block Incharges", saveFedStaff: "SAVE Foundation Staff Deputed to Federation" });
     setShowStaffList(false);
   };
 
@@ -5408,7 +5408,7 @@ useEffect(() => {
   const handleStaffEdit = () => {
     if (!selectedStaffId) {
       const match = staffRecords.find(item => String(item.code || "") === String(staffData.code || "") && String(item.fedCode || "") === String(staffData.fedCode || ""));
-      if (match) { setSelectedStaffId(match.id); setStaffData({ fedCode: match.fedCode || "372", code: match.code || "", staffName: match.staffName || "", mlLeaveCode: match.mlLeaveCode || "", role: match.role || "", dhanFedStaff: match.dhanFedStaff || "" }); setStaffMode("edit"); return; }
+      if (match) { setSelectedStaffId(match.id); setStaffData({ fedCode: match.fedCode || "001", code: match.code || "", staffName: match.staffName || "", mlLeaveCode: match.mlLeaveCode || "", role: match.role || "", dhanFedStaff: match.dhanFedStaff || "" }); setStaffMode("edit"); return; }
       alert("Select a Staff record from List first.");
       return;
     }
@@ -5594,30 +5594,19 @@ const handleBankAccountSave = async () => {
     setSavingRateMode("view");
     setSelectedSavingRateId(null);
   };
+  
+  const handleSavingRateAdd = () => {
+  setSavingRateData({
+    vazhvathramCode: "001",
+    subLedger: "",
+    annualRate: "9",
+    dateChange: "2026-04-01",
+  });
 
-  const handleSavingRateAdd = async () => {
-    if (!savingRateData.subLedger) {
-      alert("Please select Sub Ledger.");
-      return;
-    }
-    if (!savingRateData.dateChange) {
-      alert("Please select Date of Change.");
-      return;
-    }
-    try {
-      const saved = await apiRequest("/saving-interest-rates", {
-        method: "POST",
-        body: JSON.stringify(savingRateData),
-      });
-      setSavingRateRecords(previous => [...previous, saved]);
-      setSavingRateMode("view");
-      setSelectedSavingRateId(null);
-      alert("Savings Interest Rate saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Savings Interest Rate: ${error.message}`);
-    }
-  };
+  setSelectedSavingRateId(null);
+  setSavingRateMode("add");
+};
+
 
   const handleSavingRateEdit = () => {
     if (selectedSavingRateId) {
@@ -5745,30 +5734,17 @@ const handleSavingRateSave = async () => {
     setSelectedLoanRateId(null);
   };
 
-  const handleLoanRateAdd = async () => {
-    if (!loanRateData.subLedger) {
-      alert("Please select Sub Ledger.");
-      return;
-    }
-    if (!loanRateData.dateChange) {
-      alert("Please select Date of Change.");
-      return;
-    }
+  const handleLoanRateAdd = () => {
+  setLoanRateData({
+    vazhvathramCode: "001",
+    subLedger: "",
+    annualRate: "24",
+    dateChange: "2026-04-01",
+  });
 
-    try {
-      const saved = await apiRequest("/loan-interest-rates", {
-        method: "POST",
-        body: JSON.stringify(loanRateData),
-      });
-      setLoanRateRecords(previous => [...previous, saved]);
-      setLoanRateMode("view");
-      setSelectedLoanRateId(null);
-      alert("Loan Interest Rate saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Loan Interest Rate: ${error.message}`);
-    }
-  };
+  setSelectedLoanRateId(null);
+  setLoanRateMode("add");
+};
 
   const handleLoanRateEdit = () => {
     if (selectedLoanRateId) {
@@ -5913,21 +5889,27 @@ const handleLoanRateSave = async () => {
     setSelectedInsuranceId(null);
   };
 
-  const handleInsuranceAdd = async () => {
-    try {
-      const saved = await apiRequest("/insurance-products", {
-        method: "POST",
-        body: JSON.stringify(insuranceData),
-      });
-      setInsuranceRecords(previous => [...previous, saved]);
-      setInsuranceMode("view");
-      setSelectedInsuranceId(null);
-      alert("Social Security Products saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Social Security Products: ${error.message}`);
-    }
-  };
+  const handleInsuranceAdd = () => {
+  setInsuranceData({
+    federationCode: "001",
+    ogiLifeMember: "50",
+    pmLifeMember: "100",
+    nalam: "300",
+    pmHealth: "450",
+    ogiLifeSpouse: "50",
+    pmLifeSpouse: "100",
+    pmCow: "450",
+    pmGoat: "45",
+    tataAiaMember: "46",
+    tataAiaSpouse: "46",
+    pmLifeOldAgeMember: "600",
+    pmLifeOldAgeSpouse: "300",
+    dateChange: "2026-04-01",
+  });
+
+  setSelectedInsuranceId(null);
+  setInsuranceMode("add");
+};
 
   const handleInsuranceEdit = () => {
     let record = selectedInsuranceId
@@ -26707,7 +26689,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-buttons">
               <button onClick={handleBankAccountAdd}>Add</button>
               <button onClick={handleBankAccountEdit}>Edit</button>
-              <button onClick={handleBankAccountSave} disabled={bankAccountMode !== "edit"}>Save</button>
+              <button onClick={handleBankAccountSave} disabled={bankAccountMode !== "add" && bankAccountMode !== "edit"}>Save</button>
               <button onClick={resetBankAccountForm}>Cancel</button>
               <button onClick={handleBankAccountDelete}>Delete</button>
               <button onClick={()=>setShowBankAccountList(true)}>List</button>
@@ -26770,7 +26752,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-buttons">
               <button onClick={handleSavingRateAdd}>Add</button>
               <button onClick={handleSavingRateEdit}>Edit</button>
-              <button onClick={handleSavingRateSave} disabled={savingRateMode !== "edit"}>Save</button>
+              <button onClick={handleSavingRateSave} disabled={savingRateMode !== "add" && savingRateMode !== "edit"}>Save</button>
               <button onClick={resetSavingRateForm}>Cancel</button>
               <button onClick={handleSavingRateDelete}>Delete</button>
               <button onClick={()=>setShowSavingRateList(true)}>List 1</button>
@@ -26827,7 +26809,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-buttons">
               <button onClick={handleLoanRateAdd}>Add</button>
               <button onClick={handleLoanRateEdit}>Edit</button>
-              <button onClick={handleLoanRateSave} disabled={loanRateMode !== "edit"}>Save</button>
+              <button onClick={handleLoanRateSave} disabled={loanRateMode !== "add" && loanRateMode !== "edit"}>Save</button>
               <button onClick={resetLoanRateForm}>Cancel</button>
               <button onClick={handleLoanRateDelete}>Delete</button>
               <button onClick={() => setShowLoanRateList(previous => !previous)}>List 1</button>
@@ -26919,7 +26901,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-buttons">
               <button onClick={handleInsuranceAdd}>Add</button>
               <button onClick={handleInsuranceEdit}>Edit</button>
-              <button onClick={handleInsuranceSave} disabled={insuranceMode !== "edit"}>Save</button>
+              <button onClick={handleInsuranceSave} disabled={insuranceMode !== "add" && insuranceMode !== "edit"}>Save</button>
               <button onClick={resetInsuranceForm} disabled={insuranceMode === "view"}>Cancel</button>
               <button onClick={handleInsuranceDelete}>Delete</button>
               <button onClick={() => setShowInsuranceList(value => !value)}>
@@ -27009,7 +26991,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-buttons">
               <button onClick={handleBankAdd}>Add</button>
               <button onClick={handleBankEdit}>Edit</button>
-              <button onClick={handleBankSave} disabled={bankMode !== "edit"}>Save</button>
+              <button onClick={handleBankSave} disabled={bankMode !== "add" && bankMode !== "edit"}>Save</button>
               <button onClick={resetBankForm} disabled={bankMode === "view"}>Cancel</button>
               <button onClick={handleBankDelete}>Delete</button>
               <button onClick={() => setShowBankList(value => !value)}>
@@ -27606,7 +27588,7 @@ const districtOptions = [
             <div className="master-buttons">
               <button onClick={handleAuditorAdd}>Add</button>
               <button onClick={handleAuditorEdit}>Edit</button>
-              <button onClick={handleAuditorSave} disabled={auditorMode !== "edit"}>Save</button>
+              <button onClick={handleAuditorSave} disabled={auditorMode !== "add" && auditorMode !== "edit"}>Save</button>
               <button onClick={resetAuditorForm} disabled={auditorMode === "view"}>Cancel</button>
               <button onClick={handleAuditorDelete}>Delete</button>
               <button onClick={() => setShowAuditorList(value => !value)}>
@@ -27760,7 +27742,7 @@ const districtOptions = [
             <div className="master-buttons">
               <button onClick={handleAddUserAdd}>Add</button>
               <button onClick={handleAddUserEdit}>Edit</button>
-              <button onClick={handleAddUserSave} disabled={addUserMode !== "edit"}>Save</button>
+              <button onClick={handleAddUserSave} disabled={addUserMode !== "add" && addUserMode !== "edit"}>Save</button>
               <button onClick={resetAddUserForm} disabled={addUserMode === "view"}>Cancel</button>
               <button onClick={handleAddUserDelete}>Delete</button>
               <button onClick={() => setShowAddUserList(value => !value)}>{showAddUserList ? "Hide List" : "List"}</button>
@@ -27832,7 +27814,7 @@ const districtOptions = [
                 }
                 setDigPurposeMode("edit");
               }}>Edit</button>
-              <button onClick={handleDigPurposeUpdate} disabled={digPurposeMode !== "edit"}>Save</button>
+              <button onClick={handleDigPurposeUpdate} disabled={digPurposeMode !== "add" && digPurposeMode !== "edit"}>Save</button>
               <button onClick={() => {
                 setDigPurposeData({ code: "", name: "", classification: "Institution Building" });
                 setSelectedDigPurposeId(null);
