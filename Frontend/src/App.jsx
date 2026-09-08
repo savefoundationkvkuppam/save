@@ -6024,7 +6024,7 @@ const handleLoanRateSave = async () => {
   const selectInsuranceRecord = (record) => {
     setSelectedInsuranceId(record.id);
     setInsuranceData({
-      federationCode: record.federationCode || "372",
+      federationCode: record.federationCode || "001",
       ogiLifeMember: record.ogiLifeMember || "50",
       pmLifeMember: record.pmLifeMember || "100",
       nalam: record.nalam || "300",
