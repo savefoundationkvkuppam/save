@@ -6364,32 +6364,21 @@ const handleAuditorAdd = () => {
     setAddUserMode("view");
     setSelectedAddUserId(null);
   };
+ const handleAddUserAdd = () => {
+  setAddUserData({
+    fedCode: "001",
+    userCode: "",
+    name: "",
+    password: "",
+    role: "Block Integrator",
+    status: "Working",
+    cluster: ""
+  });
 
-  const handleAddUserAdd = async () => {
-    if (!addUserData.userCode.trim() || !addUserData.name.trim()) {
-      alert("Please enter User Code and Name.");
-      return;
-    }
-    if (!addUserData.password || addUserData.password.length < 8) {
-      alert("Password must contain at least 8 characters.");
-      return;
-    }
-
-    try {
-      const saved = await apiRequest("/add-users", {
-        method: "POST",
-        body: JSON.stringify(addUserData),
-      });
-      setAddUserRecords(previous => [...previous, saved]);
-      setSelectedAddUserId(saved.id);
-      setAddUserData(previous => ({ ...previous, password: "" }));
-      setAddUserMode("view");
-      alert("User saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save User: ${error.message}`);
-    }
-  };
+  setSelectedAddUserId(null);
+  setAddUserMode("add");
+};
+  
 
   const handleAddUserEdit = () => {
     if (!selectedAddUserId) {
