@@ -5273,33 +5273,16 @@ useEffect(() => {
     setter(previous => ({ ...previous, [field]: value }));
   };
 
-  const handleDigPurposeAdd = async () => {
-    if (!digPurposeData.code.trim()) {
-      alert("Please enter DIG Purpose Code.");
-      return;
-    }
+  const handleDigPurposeAdd = () => {
+  setDigPurposeData({
+    code: "001",
+    name: "",
+    description: ""
+  });
 
-    if (!digPurposeData.name.trim()) {
-      alert("Please enter DIG Purpose Name.");
-      return;
-    }
-
-    try {
-      const saved = await apiRequest("/dig-purposes", {
-        method: "POST",
-        body: JSON.stringify(digPurposeData),
-      });
-
-      setDigPurposeRecords((previous) => [...previous, saved]);
-      setSelectedDigPurposeId(saved.id);
-      setDigPurposeMode("view");
-
-      alert("DIG Purpose details saved successfully!");
-    } catch (error) {
-      console.error("Could not save DIG Purpose:", error);
-      alert("Unable to save DIG Purpose data.");
-    }
-  };
+  setSelectedDigPurposeId(null);
+  setDigPurposeMode("add");
+};
 
   const handleDigPurposeUpdate = async () => {
     if (!selectedDigPurposeId) {
