@@ -7887,7 +7887,7 @@ useEffect(() => {
         <button
           className="transaction-parent"
           type="button"
-          onClick={() => setPage("masterHome")}
+          onClick={() => setPage("save")}
         >
           Master
         </button>
@@ -8226,7 +8226,7 @@ useEffect(() => {
           <button
             className="reports-parent"
             type="button"
-            onClick={() => setPage("masterHome")}
+            onClick={() => setPage("save")}
           >
             Master
           </button>
@@ -8324,7 +8324,7 @@ useEffect(() => {
           <button
             className="mutual-life-parent"
             type="button"
-            onClick={() => setPage("masterHome")}
+            onClick={() => setPage("save")}
           >
             Master
           </button>
@@ -8407,7 +8407,7 @@ useEffect(() => {
           <button
             className="dis-parent"
             type="button"
-            onClick={() => setPage("masterHome")}
+            onClick={() => setPage("save")}
           >
             Master
           </button>
@@ -8567,7 +8567,7 @@ useEffect(() => {
           <button
             className="upload-images-parent"
             type="button"
-            onClick={() => setPage("masterHome")}
+            onClick={() => setPage("save")}
           >
             Master
           </button>
@@ -8697,7 +8697,7 @@ useEffect(() => {
           <button
             className="others-parent"
             type="button"
-            onClick={() => setPage("masterHome")}
+            onClick={() => setPage("save")}
           >
             Master
           </button>
