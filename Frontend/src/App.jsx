@@ -5946,27 +5946,48 @@ const handleLoanRateSave = async () => {
   };
 
   const handleInsuranceSave = async () => {
-    if (!selectedInsuranceId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
+  try {
+    let saved;
 
-    try {
-      const updated = await apiRequest(`/insurance-products/${selectedInsuranceId}`, {
-        method: "PUT",
+    if (selectedInsuranceId) {
+      saved = await apiRequest(
+        `/insurance-products/${selectedInsuranceId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(insuranceData),
+        }
+      );
+
+      setInsuranceRecords(previous =>
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
+      );
+
+      alert("Social Security Products updated successfully!");
+    } else {
+      saved = await apiRequest("/insurance-products", {
+        method: "POST",
         body: JSON.stringify(insuranceData),
       });
 
-      setInsuranceRecords(previous =>
-        previous.map(item => item.id === updated.id ? updated : item)
-      );
-      setInsuranceMode("view");
-      alert("Social Security Products updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Social Security Products: ${error.message}`);
+      setInsuranceRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedInsuranceId(saved.id);
+
+      alert("Social Security Products saved successfully!");
     }
-  };
+
+    setInsuranceMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Social Security Products: ${error.message}`);
+  }
+};
 
   const handleInsuranceDelete = async () => {
     let id = selectedInsuranceId;
