@@ -6184,31 +6184,26 @@ useEffect(() => {
   const resetAuditorForm = () => {
     setAuditorData({
       auditorName: "", address1: "", address2: "",
-      state: "Andaman Nicobar", district: "Ahmedabad", pincode: "", phone: ""
+      state: "", district: "", pincode: "", phone: ""
     });
     setAuditorMode("view");
     setSelectedAuditorId(null);
   };
+const handleAuditorAdd = () => {
+  setAuditorData({
+    auditorName: "",
+    address1: "",
+    address2: "",
+    state: "",
+    district: "",
+    pincode: "",
+    phone: ""
+  });
 
-  const handleAuditorAdd = async () => {
-    if (!auditorData.auditorName.trim()) {
-      alert("Please enter Auditor Name.");
-      return;
-    }
-    try {
-      const saved = await apiRequest("/auditors", {
-        method: "POST",
-        body: JSON.stringify(auditorData),
-      });
-      setAuditorRecords(previous => [...previous, saved]);
-      setSelectedAuditorId(saved.id);
-      setAuditorMode("view");
-      alert("Auditor Details saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Auditor Details: ${error.message}`);
-    }
-  };
+  setSelectedAuditorId(null);
+  setAuditorMode("add");
+};
+
 
   const handleAuditorEdit = () => {
     if (!selectedAuditorId) {
