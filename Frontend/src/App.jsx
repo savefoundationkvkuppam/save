@@ -8232,7 +8232,7 @@ const handleAuditorAdd = () => {
           <button
             className="master-parent top-active"
             type="button"
-            onclick={() => setPage("save")}
+            onClick={() => setPage("save")}
           >
             Master
           </button>
