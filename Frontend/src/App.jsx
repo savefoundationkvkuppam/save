@@ -6118,12 +6118,46 @@ const handleBranchAdd = () => {
     setBranchMode("edit");
   };
 
-  const handleBranchSave = async () => {
-    if (!selectedBranchId) {
-      alert("Please click Edit before Save.");
-      return;
+ const handleBranchSave = async () => {
+  try {
+    let saved;
+
+    if (selectedBranchId) {
+      saved = await apiRequest(`/branches/${selectedBranchId}`, {
+        method: "PUT",
+        body: JSON.stringify(branchData),
+      });
+
+      setBranchRecords(previous =>
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
+      );
+
+      alert("Branch Details updated successfully!");
+    } else {
+      saved = await apiRequest("/branches", {
+        method: "POST",
+        body: JSON.stringify(branchData),
+      });
+
+      setBranchRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedBranchId(saved.id);
+
+      alert("Branch Details saved successfully!");
     }
 
+    setBranchMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Branch Details: ${error.message}`);
+  }
+};
     try {
       const updated = await apiRequest(`/branches/${selectedBranchId}`, {
         method: "PUT",
