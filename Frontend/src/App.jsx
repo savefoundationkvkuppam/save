@@ -26859,6 +26859,59 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
   // BRANCH DETAILS
   // =========================================================
   if (page === "branch") {
+
+    const stateOptions = [
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal"
+];
+
+    const districtOptions = [
+  "Nicobar",
+  "North Middle Andaman",
+  "South Andaman"
+];
+
+const [bankOptions, setBankOptions] = useState([
+  "UNION BANK KV KUPPAM",
+  "KDFS",
+  "CENTRAL BANK OF INDIA",
+  "UNION BANK OF INDIA",
+  "CANARA BANK"
+]);
     const branchFields = [
       ["Bank Name", "bankName"],
       ["Branch Code", "branchCode"],
@@ -26879,11 +26932,79 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             {branchFields.map(([label, key]) => (
               <div className="master-row" key={key}>
                 <label>{label}</label>
-                <input
-                  disabled={branchMode === "view"}
-                  value={branchData[key]}
-                  onChange={e=>updateData(setBranchData,key,e.target.value)}
-                />
+                {key === "state" ? (
+                   <select
+                      disabled={branchMode === "view"}
+                      value={branchData[key]}
+                      onChange={e =>
+                         updateData(setBranchData, key, e.target.value)
+                       }
+                     >
+                      <option value="">Select State</option>
+                      {stateOptions.map(state => (
+                        <option key={state} value={state}>
+                           {state}
+                        </option>
+                      ))}
+                    </select>
+                  ) : key === "district" ? (
+                    <select
+                      disabled={branchMode === "view"}
+                      value={branchData[key]}
+                      onChange={e =>
+                          updateData(setBranchData, key, e.target.value)
+                        }
+                      >
+                       <option value="">Select District</option>
+                       {districtOptions.map(district => (
+                          <option key={district} value={district}>
+                            {district}
+                          </option>
+                       ))}
+                 </select>
+                ) : key === "bankName" ? (
+                    <select
+                        disabled={branchMode === "view"}
+                        value={branchData[key]}
+                        onChange={e => {
+                           const value = e.target.value;
+                           if (value === "__add_new_bank__") {
+                               const newBank = window.prompt("Enter new Bank Name:");
+
+                              if (newBank && newBank.trim()) {
+                                 const bankName = newBank.trim();
+
+                                 setBankOptions(previous =>
+                                    previous.includes(bankName)
+                                    ? previous
+                                    : [...previous, bankName]
+                                 );
+
+                                updateData(setBranchData, key, bankName);
+                               }
+                              } else {
+                                updateData(setBranchData, key, value);
+                              }
+                          }}
+                         }
+                      >
+                        <option value="">Select Bank Name</option>
+                        {bankOptions.map(bank => (
+                           <option key={bank} value={bank}>
+                              {bank}
+                           </option>
+                          ))}
+                            <option value="__add_new_bank__">+ Add New Bank</option>
+                       </select>
+                ) : (
+                    <input
+                       disabled={branchMode === "view"}
+                       value={branchData[key]}
+                       onChange={e =>
+                          updateData(setBranchData, key, e.target.value)
+                    }
+                  />    
+                  )}
               </div>
             ))}
 
