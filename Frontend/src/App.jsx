@@ -5784,29 +5784,50 @@ const handleSavingRateSave = async () => {
     });
     setLoanRateMode("edit");
   };
+const handleLoanRateSave = async () => {
+  try {
+    let saved;
 
-  const handleLoanRateSave = async () => {
-    if (!selectedLoanRateId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
+    if (selectedLoanRateId) {
+      saved = await apiRequest(
+        `/loan-interest-rates/${selectedLoanRateId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(loanRateData),
+        }
+      );
 
-    try {
-      const updated = await apiRequest(`/loan-interest-rates/${selectedLoanRateId}`, {
-        method: "PUT",
+      setLoanRateRecords(previous =>
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
+      );
+
+      alert("Loan Interest Rate updated successfully!");
+    } else {
+      saved = await apiRequest("/loan-interest-rates", {
+        method: "POST",
         body: JSON.stringify(loanRateData),
       });
 
-      setLoanRateRecords(previous =>
-        previous.map(item => item.id === updated.id ? updated : item)
-      );
-      setLoanRateMode("view");
-      alert("Loan Interest Rate updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Loan Interest Rate: ${error.message}`);
+      setLoanRateRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedLoanRateId(saved.id);
+
+      alert("Loan Interest Rate saved successfully!");
     }
-  };
+
+    setLoanRateMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Loan Interest Rate: ${error.message}`);
+  }
+};
+
 
   const handleLoanRateDelete = async () => {
     let id = selectedLoanRateId;
