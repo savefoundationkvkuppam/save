@@ -5360,21 +5360,50 @@ useEffect(() => {
   };
 
   const handleStaffSave = async () => {
-    if (!staffData.staffName.trim()) {
-      alert("Please enter Staff Name.");
-      return;
-    }
-    try {
-      const saved = await apiRequest("/staff-details", { method: "POST", body: JSON.stringify(staffData) });
-      setStaffRecords(previous => [...previous, saved]);
+  if (!staffData.staffName.trim()) {
+    alert("Please enter Staff Name.");
+    return;
+  }
+
+  try {
+    let saved;
+
+    if (selectedStaffId) {
+      saved = await apiRequest(`/staff-details/${selectedStaffId}`, {
+        method: "PUT",
+        body: JSON.stringify(staffData),
+      });
+
+      setStaffRecords(previous =>
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
+      );
+
+      alert("Staff details updated successfully!");
+    } else {
+      saved = await apiRequest("/staff-details", {
+        method: "POST",
+        body: JSON.stringify(staffData),
+      });
+
+      setStaffRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
       setSelectedStaffId(saved.id);
-      setStaffMode("view");
+
       alert("Staff details saved successfully!");
-    } catch (error) {
-      console.error("Could not save Staff Details:", error);
-      alert("Unable to save Staff Details data.");
     }
-  };
+
+    setStaffMode("view");
+
+  } catch (error) {
+    console.error("Could not save Staff Details:", error);
+    alert(`Unable to save Staff Details: ${error.message}`);
+  }
+};
 
   const handleStaffEdit = () => {
     if (!selectedStaffId) {
@@ -5429,26 +5458,17 @@ useEffect(() => {
     setSelectedBankAccountRecordId(null);
   };
 
-  const handleBankAccountAdd = async () => {
-    if (!bankAccountData.accountNumber.trim()) {
-      alert("Please enter Account Number.");
-      return;
-    }
+ const handleBankAccountAdd = () => {
+  setBankAccountData({
+    accountType: "Select A/c Type",
+    accountNumber: "",
+    accountDate: "",
+    amount: ""
+  });
 
-    try {
-      const saved = await apiRequest("/bank-accounts", {
-        method: "POST",
-        body: JSON.stringify(bankAccountData),
-      });
-      setBankAccountRecords((previous) => [...previous, saved]);
-      setBankAccountMode("view");
-      setSelectedBankAccountRecordId(null);
-      alert("Bank Account details saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Bank Account details: ${error.message}`);
-    }
-  };
+  setSelectedBankAccountRecordId(null);
+  setBankAccountMode("add");
+};
 
   const handleBankAccountEdit = () => {
     const accountNumber = bankAccountData.accountNumber.trim();
