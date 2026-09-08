@@ -9060,17 +9060,17 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     0
   );
 
-  const totalLoanOutstanding =
-  povertyReductionFund1Outstanding +
-  povertyReductionFund2Outstanding +
-  housingUpgSupport;
-
   const housingUpgSupport =
   memberReceiptRecords.reduce(
     (total, record) =>
       total + (Number(record.housingLoan) || 0),
     0
   );
+
+  const totalLoanOutstanding =
+  povertyReductionFund1Outstanding +
+  povertyReductionFund2Outstanding +
+  housingUpgSupport;
   
   if (page === "save") {
     return (
