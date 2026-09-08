@@ -27010,7 +27010,7 @@ const [bankOptions, setBankOptions] = useState([
             <div className="master-buttons">
               <button onClick={handleBranchAdd}>Add</button>
               <button onClick={handleBranchEdit}>Edit</button>
-              <button onClick={handleBranchSave} disabled={branchMode !== "edit"}>Save</button>
+              <button onClick={handleBranchSave} disabled={branchMode !== "edit" && branchMode !== "add"}>Save</button>
               <button onClick={resetBranchForm} disabled={branchMode === "view"}>Cancel</button>
               <button onClick={handleBranchDelete}>Delete</button>
               <button onClick={() => setShowBranchList(value => !value)}>
