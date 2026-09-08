@@ -8976,6 +8976,11 @@ useEffect(() => {
   // SAVE / HOME PAGE
   // =========================================================
 
+  const mapDigUniqueGroupCount = new Set(
+     mapDigGroupRecords
+        .map((record) => String(record.groupName || "").trim())
+        .filter(Boolean)
+ ).size;
   if (page === "save") {
     return (
       <div className="save-page">
@@ -9048,8 +9053,8 @@ useEffect(() => {
 
                 <tr>
                   <td>Groups</td>
-                  <td>369</td>
-                  <td>369</td>
+                  <td>{mapDigUniqueGroupCount}</td>
+                  <td>{mapDigUniqueGroupCount}</td>
                   <td>Special Savings</td>
                   <td>0</td>
                   <td>57560</td>
