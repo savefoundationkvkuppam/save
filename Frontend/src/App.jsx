@@ -6254,27 +6254,47 @@ const handleAuditorAdd = () => {
     });
     setAuditorMode("edit");
   };
+   const handleAuditorSave = async () => {
+  try {
+    let saved;
 
-  const handleAuditorSave = async () => {
-    if (!selectedAuditorId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
-    try {
-      const updated = await apiRequest(`/auditors/${selectedAuditorId}`, {
+    if (selectedAuditorId) {
+      saved = await apiRequest(`/auditors/${selectedAuditorId}`, {
         method: "PUT",
         body: JSON.stringify(auditorData),
       });
+
       setAuditorRecords(previous =>
-        previous.map(item => item.id === updated.id ? updated : item)
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
       );
-      setAuditorMode("view");
+
       alert("Auditor Details updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Auditor Details: ${error.message}`);
+    } else {
+      saved = await apiRequest("/auditors", {
+        method: "POST",
+        body: JSON.stringify(auditorData),
+      });
+
+      setAuditorRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedAuditorId(saved.id);
+
+      alert("Auditor Details saved successfully!");
     }
-  };
+
+    setAuditorMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Auditor Details: ${error.message}`);
+  }
+};
+  
 
   const handleAuditorDelete = async () => {
     if (!selectedAuditorId) {
