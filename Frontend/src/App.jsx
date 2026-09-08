@@ -6072,27 +6072,24 @@ useEffect(() => {
     setBranchMode("view");
     setSelectedBranchId(null);
   };
+const handleBranchAdd = () => {
+  setBranchData({
+    bankName: "",
+    branchCode: "001",
+    branchName: "",
+    address1: "",
+    address2: "",
+    state: "",
+    district: "",
+    pinCode: "",
+    phone: "",
+    ifscCode: ""
+  });
 
-  const handleBranchAdd = async () => {
-    if (!branchData.branchCode.trim() || !branchData.branchName.trim()) {
-      alert("Please enter Branch Code and Branch Name.");
-      return;
-    }
+  setSelectedBranchId(null);
+  setBranchMode("add");
+};
 
-    try {
-      const saved = await apiRequest("/branches", {
-        method: "POST",
-        body: JSON.stringify(branchData),
-      });
-      setBranchRecords(previous => [...previous, saved]);
-      setSelectedBranchId(saved.id);
-      setBranchMode("view");
-      alert("Branch Details saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Branch Details: ${error.message}`);
-    }
-  };
 
   const handleBranchEdit = () => {
     if (!selectedBranchId) {
