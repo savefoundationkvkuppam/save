@@ -6450,29 +6450,51 @@ const handleAuditorAdd = () => {
     });
     setAddUserMode("edit");
   };
-
   const handleAddUserSave = async () => {
-    if (!selectedAddUserId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
+  try {
+    let saved;
 
-    try {
-      const updated = await apiRequest(`/add-users/${selectedAddUserId}`, {
+    if (selectedAddUserId) {
+      saved = await apiRequest(`/add-users/${selectedAddUserId}`, {
         method: "PUT",
         body: JSON.stringify(addUserData),
       });
+
       setAddUserRecords(previous =>
-        previous.map(item => item.id === updated.id ? updated : item)
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
       );
-      setAddUserMode("view");
-      setAddUserData(previous => ({ ...previous, password: "" }));
+
       alert("User updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update User: ${error.message}`);
+    } else {
+      saved = await apiRequest("/add-users", {
+        method: "POST",
+        body: JSON.stringify(addUserData),
+      });
+
+      setAddUserRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedAddUserId(saved.id);
+
+      alert("User saved successfully!");
     }
-  };
+
+    setAddUserMode("view");
+
+    setAddUserData(previous => ({
+      ...previous,
+      password: ""
+    }));
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save User: ${error.message}`);
+  }
+};
 
   const handleAddUserDelete = async () => {
     if (!selectedAddUserId) {
