@@ -27280,7 +27280,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-row"><label>Code</label><input value={staffData.code} onChange={e=>updateData(setStaffData,"code",e.target.value)}/></div>
             <div className="master-row"><label>Staff Name</label><input value={staffData.staffName} onChange={e=>updateData(setStaffData,"staffName",e.target.value)}/></div>
             <div className="master-row"><label>Staff Code as per MLeave Software</label><input value={staffData.mlLeaveCode} onChange={e=>updateData(setStaffData,"mlLeaveCode",e.target.value)}/></div>
-            <div className="master-row"><label>Role</label><select value={staffData.role} onChange={e=>updateData(setStaffData,"role",e.target.value)}><option>Block Integrator or Block Incharges</option><option>Accountant or // System Analysts</option><option>Regional Coordinator or Regional Incharges</option></div>
+            <div className="master-row"><label>Role</label><select value={staffData.role} onChange={e=>updateData(setStaffData,"role",e.target.value)}><option>Block Integrator or Block Incharges</option><option>Accountant or // System Analysts</option><option>Regional Coordinator or Regional Incharges</option></select></div>
             <div className="master-row"><label>SAVE/Fed Staff</label><select value={staffData.dhanFedStaff} onChange={e=>updateData(setStaffData,"dhanFedStaff",e.target.value)}><option>SAVE Foundation Staff Deputed to Federation</option><option>Federation Staff</option><option>PSDB Staff</option></select></div>
             <div className="master-buttons">
               <button onClick={handleStaffAdd}>Add</button>
