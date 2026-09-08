@@ -26852,7 +26852,20 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
       ["OGI - Life - Spouse","ogiLifeSpouse"],["PM Life - Spouse","pmLifeSpouse"],["PM - Cow","pmCow"],["PM - Goat","pmGoat"],
       ["TATA AIA Member","tataAiaMember"],["TATA AIA Spouse","tataAiaSpouse"],["PM Life Old Age - Member","pmLifeOldAgeMember"],["PM Life - Old Age - Spouse","pmLifeOldAgeSpouse"]
     ];
-    const values = ["0","45","46","50","100","300","450","600"];
+    const insuranceOptions = {
+       ogiLifeMember: ["50","59","118","177","200","236","250","295","354","413","450","472","531","590","708"],
+       pmLifeMember: ["100","103","108","116","200","216","300","400","500"],
+       nalam: ["300"],
+       pmHealth: ["450],
+       ogiLifeSpouse: ["50","59","118","177","200","236","250","295","354","413","450","472","531","590","708"],
+       pmLifeSpouse: ["100","103","108","116","200","216","300","400","500"],
+       pmCow: ["450","900","1350","1800","2250"],
+       pmGoat: ["45","90","135","200","250","350","800","1250"],
+       tataAiaMember: ["46","92","138","184","276"],
+       tataAiaSpouse: ["46","92","138","184","276"],
+       pmLifeOldAgeMember: ["600"],
+       pmLifeOldAgeSpouse: ["300"]
+    };
 
     return (
       <div className="save-page"><TopBar /><div className="main-container"><SideMenu />
@@ -26867,8 +26880,10 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                   disabled={insuranceMode === "view"}
                   onChange={e => updateData(setInsuranceData,key,e.target.value)}
                 >
-                  <option value={insuranceData[key]}>{insuranceData[key]}</option>
-                  {values.filter(v => v !== insuranceData[key]).map(v => <option key={v} value={v}>{v}</option>)}
+                 <option value={insuranceData[key]}>{insuranceData[key]}</option>
+{(insuranceOptions[key] || []).filter(v => v !== insuranceData[key]).map(v => (
+  <option key={v} value={v}>{v}</option>
+))}
                 </select>
               </div>
             ))}
