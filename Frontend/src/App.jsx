@@ -8808,6 +8808,21 @@ useEffect(() => {
   const [markDissolvedRows, setMarkDissolvedRows] = useState([]);
   const [markDissolvedLoading, setMarkDissolvedLoading] = useState(false);
 
+const [dashboardDebtRecords, setDashboardDebtRecords] = useState([]);
+
+useEffect(() => {
+  const loadDashboardDebts = async () => {
+    try {
+      const data = await apiRequest("/debts");
+      setDashboardDebtRecords(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Could not load Debt data for dashboard:", error);
+      setDashboardDebtRecords([]);
+    }
+  };
+
+  loadDashboardDebts();
+}, []);
   if (page === "login") {
     return (
       <div className="page">
@@ -8981,22 +8996,6 @@ useEffect(() => {
         .map((record) => String(record.groupName || "").trim())
         .filter(Boolean)
  ).size;
-
-  const [dashboardDebtRecords, setDashboardDebtRecords] = useState([]);
-
-useEffect(() => {
-  const loadDashboardDebts = async () => {
-    try {
-      const data = await apiRequest("/debts");
-      setDashboardDebtRecords(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Could not load Debt data for dashboard:", error);
-      setDashboardDebtRecords([]);
-    }
-  };
-
-  loadDashboardDebts();
-}, []);
 
 const bankOutstanding = dashboardDebtRecords.reduce(
   (total, record) => {
