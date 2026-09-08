@@ -26959,6 +26959,289 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
   // AUDITOR DETAILS
   // =========================================================
   if (page === "auditor") {
+
+    const stateOptions = [
+      "Andaman Nicobar",
+      "Tamil Nadu",
+      "Andhra Pradesh",
+      "Arunachal Pradesh",
+      "Assam",
+      "Bihar",
+      "Chandigarh",
+      "Chhattisgarh",
+      "Dadra Nagar Haveli",
+      "Daman Diu",
+      "Delhi",
+      "Goa",
+      "Gujarat",
+      "Haryana",
+      "Himachal Pradesh",
+      "Jammu Kashmir",
+      "Jharkhand",
+      "Karnataka",
+      "Kerala",
+      "Lakshadweep",
+      "Madhya Pradesh",
+      "Maharashtra",
+      "Manipur",
+      "Meghalaya",
+      "Mizoram",
+      "Nagaland",
+      "Odisha",
+      "Puducherry",
+      "Punjab",
+      "Rajasthan",
+      "Sikkim",
+     "Telangana",
+     "Tripura",
+     "Uttar Pradesh",
+     "Uttarakhand",
+     "West Bengal"
+];
+
+const districtOptions = [
+"Ahmedabad",
+"Ahmednagar",
+"Akola",
+"Alappuzha",
+"Ambala",
+"Amravati",
+"Amreli",
+"Anand",
+"Anantnag",
+"Aravalli",
+"Ariyalur",
+"Aurangabad",
+"Bagalkot",
+"Banaskantha",
+"Bandipora",
+"Bangalore Rural",
+"Bangalore Urban",
+"Baramulla",
+"Beed",
+"Belgaum",
+"Bellary",
+"Bhandara",
+"Bharuch",
+"Bhavnagar",
+"Bhiwani",
+"Bidar",
+"Bijapur",
+"Bilaspur",
+"Bokaro",
+"Botad",
+"Budgam",
+"Buldhana",
+"Central Delhi",
+"Chamarajanagar",
+"Chamba",
+"Chandrapur",
+"Charkhi Dadri",
+"Chatra",
+"Chennai",
+"Chhota Udaipur",
+"Chikkaballapur",
+"Chikkamagaluru",
+"Chitradurga",
+"Coimbatore",
+"Cuddalore",
+"Dahod",
+"Dakshina Kannada",
+"Dang",
+"Davanagere",
+"Deoghar",
+"Devbhoomi Dwarka",
+"Dhanbad",
+"Dharmapuri",
+"Dharwad",
+"Dhule",
+"Dindigul",
+"Doda",
+"Dumka",
+"East Delhi",
+"East Singhbhum",
+"Ernakulam",
+"Erode",
+"Faridabad",
+"Fatehabad",
+"Gadag",
+"Gadchiroli",
+"Ganderbal",
+"Gandhinagar",
+"Garhwa",
+"Gir Somnath",
+"Giridih",
+"Godda",
+"Gondia",
+"Gulbarga",
+"Gumla",
+"Gurugram",
+"Hamirpur",
+"Hassan",
+"Haveri",
+"Hazaribagh",
+"Hingoli",
+"Idukki",
+"Hisar",
+"Jalgaon",
+"Jalna",
+"Jammu",
+"Jamnagar",
+"Jamtara",
+"Jhajjar",
+"Jind",
+"Junagadh",
+"Kaithal",
+"Kancheepuram",
+"Kangra",
+"Kannur",
+"Kanyakumari",
+"Kargil",
+"Karnal",
+"Karur",
+"Kasaragod",
+"Kathua",
+"Kheda",
+"Khunti",
+"Kinnaur",
+"Kishtwar",
+"Kodagu",
+"Koderma",
+"Kolar",
+"Kolhapur",
+"Kollam",
+"Koppal",
+"Kottayam",
+"Kozhikode",
+"Krishnagiri",
+"Kulgam",
+"Kullu",
+"Kupwara",
+"Kurukshetra",
+"Kutch",
+"Lahaul Spiti",
+"Lakshadweep",
+"Latehar",
+"Latur",
+"Lohardaga",
+"Madurai",
+"Mahendragarh",
+"Mahisagar",
+"Malappuram",
+"Mandi",
+"Mandya",
+"Mehsana",
+"Mewat",
+"Morbi",
+"Mumbai City",
+"Mumbai Suburban",
+"Mysore",
+"Nagapattinam",
+"Nagpur",
+"Namakkal",
+"Nanded",
+"Nandurbar",
+"Narmada",
+"Nashik",
+"Navsari",
+"New Delhi",
+"Nicobar",
+"Nilgiris",
+"North Delhi",
+"North East Delhi",
+"North Goa",
+"North Middle Andaman",
+"North West Delhi",
+"Osmanabad",
+"Pakur",
+"Palakkad",
+"Palamu",
+"Palghar",
+"Palwal",
+"Panchkula",
+"Panchmahal",
+"Panipat",
+"Parbhani",
+"Patan",
+"Pathanamthitta",
+"Perambalur",
+"Poonch",
+"Porbandar",
+"Pudukottai",
+"Pulwama",
+"Pune",
+"Raichur",
+"Raigad",
+"Rajkot",
+"Rajouri",
+"Ramanagara",
+"Ramanathapuram",
+"Ramban",
+"Ramgarh",
+"Ranchi",
+"Ratnagiri",
+"Reasi",
+"Rewari",
+"Rohtak",
+"Sabarkantha",
+"Sahebganj",
+"Salem",
+"Samba",
+"Sangli",
+"Satara",
+"Seraikela Kharsawan",
+"Shahdara",
+"Shimla",
+"Shimoga",
+"Shopian",
+"Simdega",
+"Sindhudurg",
+"Sirmaur",
+"Sirsa",
+"Sivaganga",
+"Solan",
+"Solapur",
+"Sonipat",
+"South Andaman",
+"South Delhi",
+"South East Delhi",
+"South Goa",
+"South West Delhi",
+"Srinagar",
+"Surat",
+"Surendranagar",
+"Tapi",
+"Thane",
+"Thanjavur",
+"Theni",
+"Thiruchirappalli",
+"Thirunelveli",
+"Thiruppur",
+"Thiruvallur",
+"Thiruvananthapuram",
+"Thiruvannamalai",
+"Thiruvarur",
+"Thoothukudi",
+"Thrissur",
+"Tumkur",
+"Udhampur",
+"Udupi",
+"Una",
+"Uttara Kannada",
+"Vadodara",
+"Valsad",
+"Vellore",
+"Viluppuram",
+"Virudhunagar
+"Wardha",
+"Washim",
+"Wayanad",
+"West Delhi",
+"West Singhbhum",
+"Yadgir",
+"Yamunanagar", 
+"Yavatmal",
+];
     const auditorFields = [
       ["Auditor Name", "auditorName"],
       ["Address 1", "address1"],
@@ -26968,21 +27251,59 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
       ["Pincode", "pincode"],
       ["Phone", "phone"]
     ];
+    
 
     return (
       <div className="save-page"><TopBar /><div className="main-container"><SideMenu />
         <div className="content master-content"><h1>Auditor Details</h1>
           <div className="master-form auditor-form">
-            {auditorFields.map(([label, key]) => (
-              <div className="master-row" key={key}>
-                <label>{label}</label>
-                <input
-                  disabled={auditorMode === "view"}
-                  value={auditorData[key]}
-                  onChange={e=>updateData(setAuditorData,key,e.target.value)}
-                />
-              </div>
-            ))}
+           {auditorFields.map(([label, key]) => (
+               <div className="master-row" key={key}>
+                 <label>{label}</label>
+
+                  {key === "state" ? (
+                     <select
+                        disabled={auditorMode === "view"}
+                        value={auditorData[key]}
+                        onChange={e =>
+                        updateData(setAuditorData, key, e.target.value)
+                     }
+                   >
+                     <option value="">Select State</option>
+
+                    {stateOptions.map(state => (
+                         <option key={state} value={state}>
+                            {state}
+                         </option>
+                       ))}
+                     </select>
+                  ) :key === "district" ? (
+                       <select
+                          disabled={auditorMode === "view"}
+                          value={auditorData[key]}
+                         onChange={e =>
+                           updateData(setAuditorData, key, e.target.value)
+                        }
+                      >
+                        <option value="">Select District</option>
+                        {districtOptions.map(district => (
+                           <option key={district} value={district}>
+                             {district}
+                           </option>
+                        ))}
+                    </select>
+                  ) : (
+                   <input
+                       disabled={auditorMode === "view"}
+                       value={auditorData[key]}
+                       onChange={e =>
+                          updateData(setAuditorData, key, e.target.value)
+                      }
+                   />
+                  )}
+               </div>
+             ))}
+          </div>
             <div className="master-buttons">
               <button onClick={handleAuditorAdd}>Add</button>
               <button onClick={handleAuditorEdit}>Edit</button>
