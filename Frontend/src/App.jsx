@@ -6617,7 +6617,7 @@ useEffect(() => {
     }
 
     if (item === "Master") {
-      setPage("masterHome");
+      setPage("save");
       return;
     }
   };
@@ -8087,7 +8087,7 @@ useEffect(() => {
           <button
             className="master-parent top-active"
             type="button"
-            onclick={() => setPage("masterHome")}
+            onclick={() => setPage("save")}
           >
             Master
           </button>
@@ -21868,15 +21868,6 @@ if (item === "Mark Dissolved Gps") {
       </div>
     );
   }
-
-  // SAVE / HOME PAGE
-  // =========================================================
-
-  if (page === "masterHome") {
-    setPage("masterHome");
-    return ;
-  }
-
 
   // =========================================================
   // TRANSACTION PAGES
