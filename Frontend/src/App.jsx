@@ -21873,7 +21873,8 @@ if (item === "Mark Dissolved Gps") {
   // =========================================================
 
   if (page === "masterHome") {
-    return null;
+    setPage("masterHome");
+    return ;
   }
 
 
