@@ -9039,7 +9039,26 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       total + (Number(record.livelihoodLoanSupport1) || 0),
     0
   );
-  
+
+  const povertyReductionFund2Outstanding =
+  memberPaymentRecords.reduce(
+    (total, record) => {
+      if (
+        String(record.loanType || "").trim() !==
+        "Livelihood Loan Support 2"
+      ) {
+        return total;
+      }
+
+      return total + (Number(record.loanAmount) || 0);
+    },
+    0
+  ) -
+  memberReceiptRecords.reduce(
+    (total, record) =>
+      total + (Number(record.livelihoodLoanSupport2) || 0),
+    0
+  );
   if (page === "save") {
     return (
       <div className="save-page">
