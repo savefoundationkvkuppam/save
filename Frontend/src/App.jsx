@@ -9086,7 +9086,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{clusterRecords.length}</td>
                   <td>{clusterRecords.length}</td>
                   <td>Regular Savings</td>
-                  <td>{totalRegularSaving}</td>
+                  <td>{totalRegularSavings}</td>
                   <td>43500446</td>
                 </tr>
 
