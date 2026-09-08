@@ -27232,7 +27232,7 @@ const districtOptions = [
 "Valsad",
 "Vellore",
 "Viluppuram",
-"Virudhunagar
+"Virudhunagar",
 "Wardha",
 "Washim",
 "Wayanad",
