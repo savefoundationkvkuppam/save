@@ -1272,6 +1272,22 @@ function App() {
   const [mapDigLoading, setMapDigLoading] = useState(false);
   const [mapDigStaffName, setMapDigStaffName] = useState("");
 
+  const [mapDigGroupRecords, setMapDigGroupRecords] = useState([]);
+
+useEffect(() => {
+  const loadMapDigGroupsForDashboard = async () => {
+    try {
+      const data = await apiRequest("/map-dig");
+      setMapDigGroupRecords(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Could not load Map DIG groups for dashboard:", error);
+      setMapDigGroupRecords([]);
+    }
+  };
+
+  loadMapDigGroupsForDashboard();
+}, []);
+
   const updateMapDigRow = (index, field, value) => {
     setMapDigRows((previous) =>
       previous.map((row, rowIndex) =>
