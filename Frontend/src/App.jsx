@@ -5285,30 +5285,48 @@ useEffect(() => {
 };
 
   const handleDigPurposeUpdate = async () => {
-    if (!selectedDigPurposeId) {
-      alert("Please select a DIG Purpose record first.");
-      return;
-    }
+  try {
+    let saved;
 
-    try {
-      const updated = await apiRequest(`/dig-purposes/${selectedDigPurposeId}`, {
-        method: "PUT",
-        body: JSON.stringify(digPurposeData),
-      });
+    if (selectedDigPurposeId) {
+      saved = await apiRequest(
+        `/dig-purposes/${selectedDigPurposeId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(digPurposeData),
+        }
+      );
 
-      setDigPurposeRecords((previous) =>
-        previous.map((record) =>
-          record.id === selectedDigPurposeId ? updated : record
+      setDigPurposeRecords(previous =>
+        previous.map(record =>
+          record.id === saved.id ? saved : record
         )
       );
 
-      setDigPurposeMode("view");
       alert("DIG Purpose details updated successfully!");
-    } catch (error) {
-      console.error("Could not update DIG Purpose:", error);
-      alert("Unable to update DIG Purpose data.");
+    } else {
+      saved = await apiRequest("/dig-purposes", {
+        method: "POST",
+        body: JSON.stringify(digPurposeData),
+      });
+
+      setDigPurposeRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedDigPurposeId(saved.id);
+
+      alert("DIG Purpose details saved successfully!");
     }
-  };
+
+    setDigPurposeMode("view");
+
+  } catch (error) {
+    console.error("Could not save DIG Purpose:", error);
+    alert(`Unable to save DIG Purpose data: ${error.message}`);
+  }
+};
 
   const handleDigPurposeDelete = async (id) => {
     try {
