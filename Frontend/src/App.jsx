@@ -8982,6 +8982,16 @@ useEffect(() => {
         .filter(Boolean)
  ).size;
 
+  const totalRegularSavings = memberRecords.reduce(
+  (total, record) => total + (Number(record.regularSavings) || 0),
+  0
+);
+
+const totalSpecialSavings = memberRecords.reduce(
+  (total, record) => total + (Number(record.specialSavings) || 0),
+  0
+);
+
   const [dashboardDebtRecords, setDashboardDebtRecords] = useState([]);
 
 useEffect(() => {
