@@ -9161,7 +9161,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{panchayatRecords.length}</td>
                   <td>{panchayatRecords.length}</td>
                   <td>Pov. Red. Fund 2 O/S</td>
-                  <td>0</td>
+                  <td>{povertyReductionFund2Outstanding}</td>
                   <td>0</td>
                 </tr>
 
