@@ -5477,28 +5477,49 @@ useEffect(() => {
     setBankAccountMode("edit");
   };
 
-  const handleBankAccountSave = async () => {
-    if (!selectedBankAccountRecordId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
+const handleBankAccountSave = async () => {
+  try {
+    let saved;
 
-    try {
-      const updated = await apiRequest(`/bank-accounts/${selectedBankAccountRecordId}`, {
-        method: "PUT",
+    if (selectedBankAccountRecordId) {
+      saved = await apiRequest(
+        `/bank-accounts/${selectedBankAccountRecordId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(bankAccountData),
+        }
+      );
+
+      setBankAccountRecords(previous =>
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
+      );
+
+      alert("Bank Account details updated successfully!");
+    } else {
+      saved = await apiRequest("/bank-accounts", {
+        method: "POST",
         body: JSON.stringify(bankAccountData),
       });
 
-      setBankAccountRecords((previous) =>
-        previous.map((item) => item.id === updated.id ? updated : item)
-      );
-      setBankAccountMode("view");
-      alert("Bank Account details updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Bank Account details: ${error.message}`);
+      setBankAccountRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedBankAccountRecordId(saved.id);
+
+      alert("Bank Account details saved successfully!");
     }
-  };
+
+    setBankAccountMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Bank Account details: ${error.message}`);
+  }
+};
 
   const handleBankAccountDelete = async () => {
     let id = selectedBankAccountRecordId;
