@@ -9133,7 +9133,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{panUnionRecords.length}</td>
                   <td>{panUnionRecords.length}</td>
                   <td>Pov. Red. Fund 1 O/S</td>
-                  <td>111549339</td>
+                  <td>{povertyReductionFund1Outstanding}</td>
                   <td>110625129</td>
                 </tr>
 
