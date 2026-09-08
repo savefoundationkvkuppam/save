@@ -6049,27 +6049,22 @@ const handleLoanRateSave = async () => {
     setBankMode("view");
     setSelectedBankId(null);
   };
+  const handleBankAdd = () => {
+  setBankData({
+    bankCode: "001",
+    bankName: "",
+    address1: "",
+    address2: "",
+    state: "",
+    district: "",
+    pinCode: "",
+    phone: ""
+  });
 
-  const handleBankAdd = async () => {
-    if (!bankData.bankCode.trim() || !bankData.bankName.trim()) {
-      alert("Please enter Bank Code and Bank Name.");
-      return;
-    }
-
-    try {
-      const saved = await apiRequest("/bank-details", {
-        method: "POST",
-        body: JSON.stringify(bankData),
-      });
-      setBankRecords(previous => [...previous, saved]);
-      setSelectedBankId(saved.id);
-      setBankMode("view");
-      alert("Bank Details saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not save Bank Details: ${error.message}`);
-    }
-  };
+  setSelectedBankId(null);
+  setBankMode("add");
+};
+ 
 
   const handleBankEdit = () => {
     if (!selectedBankId) {
@@ -6092,27 +6087,45 @@ const handleLoanRateSave = async () => {
   };
 
   const handleBankSave = async () => {
-    if (!selectedBankId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
+  try {
+    let saved;
 
-    try {
-      const updated = await apiRequest(`/bank-details/${selectedBankId}`, {
+    if (selectedBankId) {
+      saved = await apiRequest(`/bank-details/${selectedBankId}`, {
         method: "PUT",
         body: JSON.stringify(bankData),
       });
 
       setBankRecords(previous =>
-        previous.map(item => item.id === updated.id ? updated : item)
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
       );
-      setBankMode("view");
+
       alert("Bank Details updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Bank Details: ${error.message}`);
+    } else {
+      saved = await apiRequest("/bank-details", {
+        method: "POST",
+        body: JSON.stringify(bankData),
+      });
+
+      setBankRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedBankId(saved.id);
+
+      alert("Bank Details saved successfully!");
     }
-  };
+
+    setBankMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Bank Details: ${error.message}`);
+  }
+};
 
   const handleBankDelete = async () => {
     if (!selectedBankId) {
