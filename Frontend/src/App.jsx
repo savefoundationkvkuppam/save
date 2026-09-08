@@ -5354,7 +5354,7 @@ useEffect(() => {
   const handleStaffAdd = () => {
     setStaffMode("add");
     setSelectedStaffId(null);
-    setStaffData({ fedCode: "372", code: "2", staffName: "", mlLeaveCode: "", role: "Block Integrator or Block Incharges", dhanFedStaff: "DHAN Foundation Staff Deputed to Federation" });
+    setStaffData({ fedCode: "001", code: "2", staffName: "", mlLeaveCode: "", role: "Block Integrator or Block Incharges", dhanFedStaff: "DHAN Foundation Staff Deputed to Federation" });
     setShowStaffList(false);
   };
 
@@ -5544,7 +5544,7 @@ useEffect(() => {
 
   const resetSavingRateForm = () => {
     setSavingRateData({
-      vazhvathramCode: "3720101",
+      vazhvathramCode: "001",
       subLedger: "",
       annualRate: "9",
       dateChange: "2026-04-01",
@@ -5669,7 +5669,7 @@ useEffect(() => {
 
   const resetLoanRateForm = () => {
     setLoanRateData({
-      vazhvathramCode: "3720101",
+      vazhvathramCode: "001",
       subLedger: "",
       annualRate: "24",
       dateChange: "2026-04-01",
@@ -5806,7 +5806,7 @@ useEffect(() => {
 
   const resetInsuranceForm = () => {
     setInsuranceData({
-      federationCode: "372",
+      federationCode: "001",
       ogiLifeMember: "50",
       pmLifeMember: "100",
       nalam: "300",
@@ -5860,7 +5860,7 @@ useEffect(() => {
 
     setSelectedInsuranceId(record.id);
     setInsuranceData({
-      federationCode: record.federationCode || "372",
+      federationCode: record.federationCode || "001",
       ogiLifeMember: record.ogiLifeMember || "50",
       pmLifeMember: record.pmLifeMember || "100",
       nalam: record.nalam || "300",
@@ -6325,7 +6325,7 @@ useEffect(() => {
     setSelectedPasswordId(record.id);
     setPasswordData(previous => ({
       ...previous,
-      fedCode: record.fedCode || "372",
+      fedCode: record.fedCode || "001",
       instType: record.instType || "-- Select --",
       user: record.user || "-- Select User --",
       newPassword: "",
@@ -6358,7 +6358,7 @@ useEffect(() => {
 
   const resetAddUserForm = () => {
     setAddUserData({
-      fedCode: "372",
+      fedCode: "001",
       userCode: "",
       name: "",
       password: "",
@@ -6405,7 +6405,7 @@ useEffect(() => {
     if (!record) return;
 
     setAddUserData({
-      fedCode: record.fedCode || "372",
+      fedCode: record.fedCode || "001",
       userCode: record.userCode || "",
       name: record.name || "",
       password: "",
@@ -6462,7 +6462,7 @@ useEffect(() => {
   const selectAddUserRecord = (record) => {
     setSelectedAddUserId(record.id);
     setAddUserData({
-      fedCode: record.fedCode || "372",
+      fedCode: record.fedCode || "001",
       userCode: record.userCode || "",
       name: record.name || "",
       password: "",
@@ -8861,7 +8861,7 @@ useEffect(() => {
 
             <input
               type="text"
-              defaultValue="372"
+              defaultValue="001"
             />
           </div>
 
@@ -20066,7 +20066,7 @@ if (item === "Mark Dissolved Gps") {
     const [gradingReportStatus, setGradingReportStatus] = useState("");
 
     // SCHEDULE REPORT DATABASE CONNECTION (additive; original Schedule page preserved)
-    const [scheduleFedBlockCode, setScheduleFedBlockCode] = useState("372");
+    const [scheduleFedBlockCode, setScheduleFedBlockCode] = useState("001");
     const [scheduleAllSubLedgers, setScheduleAllSubLedgers] = useState(false);
     const [scheduleGeneralLedger, setScheduleGeneralLedger] = useState("Administrative Expenses - 4410");
     const [scheduleSubLedger, setScheduleSubLedger] = useState("Bank Charges Not Related to SHG-Bank Linkage - 4415");
@@ -27290,7 +27290,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                 {staffRecords.length === 0 ? <p>No staff records found.</p> : staffRecords.map(record => (
                   <div key={record.id} className="master-list-row">
                     <span>{record.fedCode} / {record.code} / {record.staffName} / {record.role}</span>
-                    <span><button onClick={()=>{setStaffData({fedCode:record.fedCode||"372",code:record.code||"",staffName:record.staffName||"",mlLeaveCode:record.mlLeaveCode||"",role:record.role||"",dhanFedStaff:record.dhanFedStaff||""});setSelectedStaffId(record.id);setStaffMode("edit");setShowStaffList(false);}}>Select</button><button onClick={()=>handleStaffDelete(record.id)}>Delete</button></span>
+                    <span><button onClick={()=>{setStaffData({fedCode:record.fedCode||"001",code:record.code||"",staffName:record.staffName||"",mlLeaveCode:record.mlLeaveCode||"",role:record.role||"",dhanFedStaff:record.dhanFedStaff||""});setSelectedStaffId(record.id);setStaffMode("edit");setShowStaffList(false);}}>Select</button><button onClick={()=>handleStaffDelete(record.id)}>Delete</button></span>
                   </div>
                 ))}
               </div>
