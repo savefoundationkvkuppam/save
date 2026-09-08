@@ -5631,24 +5631,49 @@ const handleBankAccountSave = async () => {
     setSavingRateMode("edit");
   };
 
-  const handleSavingRateSave = async () => {
-    if (!selectedSavingRateId) {
-      alert("Please click Edit before Save.");
-      return;
-    }
-    try {
-      const updated = await apiRequest(`/saving-interest-rates/${selectedSavingRateId}`, {
-        method: "PUT",
+const handleSavingRateSave = async () => {
+  try {
+    let saved;
+
+    if (selectedSavingRateId) {
+      saved = await apiRequest(
+        `/saving-interest-rates/${selectedSavingRateId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(savingRateData),
+        }
+      );
+
+      setSavingRateRecords(previous =>
+        previous.map(item =>
+          item.id === saved.id ? saved : item
+        )
+      );
+
+      alert("Savings Interest Rate updated successfully!");
+    } else {
+      saved = await apiRequest("/saving-interest-rates", {
+        method: "POST",
         body: JSON.stringify(savingRateData),
       });
-      setSavingRateRecords(previous => previous.map(item => item.id === updated.id ? updated : item));
-      setSavingRateMode("view");
-      alert("Savings Interest Rate updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Savings Interest Rate: ${error.message}`);
+
+      setSavingRateRecords(previous => [
+        ...previous,
+        saved
+      ]);
+
+      setSelectedSavingRateId(saved.id);
+
+      alert("Savings Interest Rate saved successfully!");
     }
-  };
+
+    setSavingRateMode("view");
+
+  } catch (error) {
+    console.error(error);
+    alert(`Could not save Savings Interest Rate: ${error.message}`);
+  }
+};
 
   const handleSavingRateDelete = async () => {
     let id = selectedSavingRateId;
