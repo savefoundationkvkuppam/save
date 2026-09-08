@@ -1991,7 +1991,7 @@ useEffect(() => {
   // VAZHVATHRAM
   // =========================================================
 
-  const [vazhvathramCode, setVazhvathramCode] = useState("37201");
+  const [vazhvathramCode, setVazhvathramCode] = useState("001");
   const [vazhvathramCodeSecond, setVazhvathramCodeSecond] = useState("");
   const [vazhvathramName, setVazhvathramName] = useState("");
   const [regionalVazhvathramName, setRegionalVazhvathramName] =
@@ -2930,7 +2930,7 @@ useEffect(() => {
     };
   }, []);
   const [savingRateData, setSavingRateData] = useState({
-    vazhvathramCode: "3720101", subLedger: "", annualRate: "9", dateChange: "2026-04-01"
+    vazhvathramCode: "001", subLedger: "", annualRate: "9", dateChange: "2026-04-01"
   });
   const [savingRateRecords, setSavingRateRecords] = useState([]);
   const [savingRateMode, setSavingRateMode] = useState("view");
@@ -2951,7 +2951,7 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
   const [loanRateData, setLoanRateData] = useState({
-    vazhvathramCode: "3720101", subLedger: "", annualRate: "24", dateChange: "2026-04-01"
+    vazhvathramCode: "001", subLedger: "", annualRate: "24", dateChange: "2026-04-01"
   });
   const [loanRateRecords, setLoanRateRecords] = useState([]);
   const [loanRateMode, setLoanRateMode] = useState("view");
@@ -2974,7 +2974,7 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
   const [insuranceData, setInsuranceData] = useState({
-    federationCode: "372", ogiLifeMember: "50", pmLifeMember: "100", nalam: "300", pmHealth: "450",
+    federationCode: "001", ogiLifeMember: "50", pmLifeMember: "100", nalam: "300", pmHealth: "450",
     ogiLifeSpouse: "50", pmLifeSpouse: "100", pmCow: "450", pmGoat: "45", tataAiaMember: "46",
     tataAiaSpouse: "46", pmLifeOldAgeMember: "600", pmLifeOldAgeSpouse: "300", dateChange: "2026-04-01"
   });
@@ -2998,7 +2998,7 @@ useEffect(() => {
     loadInsuranceRecords();
     return () => { cancelled = true; };
   }, []);
-  const [bankData, setBankData] = useState({ bankCode: "", bankName: "", standardBankName: "-- Select --" });
+  const [bankData, setBankData] = useState({ bankCode: "001", bankName: "", standardBankName: "-- Select --" });
   const [bankRecords, setBankRecords] = useState([]);
   const [bankMode, setBankMode] = useState("view");
   const [selectedBankId, setSelectedBankId] = useState(null);
@@ -3061,7 +3061,7 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
   const [passwordData, setPasswordData] = useState({
-    fedCode: "372", instType: "-- Select --", user: "-- Select User --", newPassword: "", rePassword: "", showPassword: false
+    fedCode: "001", instType: "-- Select --", user: "-- Select User --", newPassword: "", rePassword: "", showPassword: false
   });
   const [passwordRecords, setPasswordRecords] = useState([]);
   const [selectedPasswordId, setSelectedPasswordId] = useState(null);
@@ -3081,7 +3081,7 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
   const [addUserData, setAddUserData] = useState({
-    fedCode: "372", userCode: "", name: "", password: "", role: "Block Integrator", status: "Working", cluster: "DEVARASHIKUPPAM"
+    fedCode: "001", userCode: "", name: "", password: "", role: "Block Integrator", status: "Working", cluster: "DEVARASHIKUPPAM"
   });
   const [addUserRecords, setAddUserRecords] = useState([]);
   const [addUserMode, setAddUserMode] = useState("view");
@@ -3101,7 +3101,7 @@ useEffect(() => {
     loadAddUsers();
     return () => { cancelled = true; };
   }, []);
-  const [digPurposeData, setDigPurposeData] = useState({ code: "", name: "", classification: "Institution Building" });
+  const [digPurposeData, setDigPurposeData] = useState({ code: "001", name: "", classification: "Institution Building" });
   const [digPurposeRecords, setDigPurposeRecords] = useState([]);
   const [selectedDigPurposeId, setSelectedDigPurposeId] = useState(null);
   const [showDigPurposeList, setShowDigPurposeList] = useState(false);
@@ -3128,7 +3128,7 @@ useEffect(() => {
     };
   }, []);
   const [staffData, setStaffData] = useState({
-    fedCode: "372", code: "2", staffName: "", mlLeaveCode: "", role: "Block Integrator or Block Incharges", dhanFedStaff: "DHAN Foundation Staff Deputed to Federation"
+    fedCode: "001", code: "2", staffName: "", mlLeaveCode: "", role: "Block Integrator or Block Incharges", dhanFedStaff: "DHAN Foundation Staff Deputed to Federation"
   });
   const [staffRecords, setStaffRecords] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
