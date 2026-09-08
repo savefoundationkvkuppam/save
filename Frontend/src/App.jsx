@@ -8087,6 +8087,7 @@ useEffect(() => {
           <button
             className="master-parent top-active"
             type="button"
+            onclick={() => setPage("masterHome")}
           >
             Master
           </button>
