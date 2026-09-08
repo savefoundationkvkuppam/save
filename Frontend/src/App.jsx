@@ -8981,6 +8981,45 @@ useEffect(() => {
         .map((record) => String(record.groupName || "").trim())
         .filter(Boolean)
  ).size;
+
+  const [dashboardDebtRecords, setDashboardDebtRecords] = useState([]);
+
+useEffect(() => {
+  const loadDashboardDebts = async () => {
+    try {
+      const data = await apiRequest("/debts");
+      setDashboardDebtRecords(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Could not load Debt data for dashboard:", error);
+      setDashboardDebtRecords([]);
+    }
+  };
+
+  loadDashboardDebts();
+}, []);
+
+const bankOutstanding = dashboardDebtRecords.reduce(
+  (total, record) => {
+    const source = String(record.source || "").trim();
+
+    if (source !== "2. Banks") {
+      return total;
+    }
+
+    return total + (Number(record.presentOutstanding) || 0);
+  },
+  0
+);
+  const totalRegularSavings = memberRecords.reduce(
+     (total, record) => total + (Number(record.regularSavings) || 0),
+     0
+   );
+
+  const totalSpecialSavings = memberRecords.reduce(
+     (total, record) => total + (Number(record.specialSavings) || 0),
+      0
+  );
+  
   if (page === "save") {
     return (
       <div className="save-page">
@@ -9047,7 +9086,7 @@ useEffect(() => {
                   <td>{clusterRecords.length}</td>
                   <td>{clusterRecords.length}</td>
                   <td>Regular Savings</td>
-                  <td>43110946</td>
+                  <td>{totalRegularSaving}</td>
                   <td>43500446</td>
                 </tr>
 
@@ -9056,7 +9095,7 @@ useEffect(() => {
                   <td>{mapDigUniqueGroupCount}</td>
                   <td>{mapDigUniqueGroupCount}</td>
                   <td>Special Savings</td>
-                  <td>0</td>
+                  <td>{totalSpecialSavings}</td>
                   <td>57560</td>
                 </tr>
 
@@ -9065,7 +9104,7 @@ useEffect(() => {
                   <td>{memberRecords.length}</td>
                   <td>{memberRecords.length}</td>
                   <td>Total Savings</td>
-                  <td>43110946</td>
+                  <td>{totalRegularSavings + totalSpecialSavings}</td>
                   <td>43558006</td>
                 </tr>
 
@@ -9100,7 +9139,7 @@ useEffect(() => {
                   <td>
                     Prog. Sup. for Pov. Red.-Bank O/S
                   </td>
-                  <td>56406095</td>
+                  <td>{bankOutstanding}</td>
                   <td>55141145</td>
                   <td>Housing Upg. Support</td>
                   <td>0</td>
