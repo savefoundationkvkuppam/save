@@ -6262,22 +6262,6 @@ const handleBranchAdd = () => {
     alert(`Could not save Branch Details: ${error.message}`);
   }
 };
-    try {
-      const updated = await apiRequest(`/branches/${selectedBranchId}`, {
-        method: "PUT",
-        body: JSON.stringify(branchData),
-      });
-
-      setBranchRecords(previous =>
-        previous.map(item => item.id === updated.id ? updated : item)
-      );
-      setBranchMode("view");
-      alert("Branch Details updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(`Could not update Branch Details: ${error.message}`);
-    }
-  };
 
   const handleBranchDelete = async () => {
     if (!selectedBranchId) {
