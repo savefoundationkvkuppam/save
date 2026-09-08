@@ -27343,7 +27343,7 @@ const districtOptions = [
             </div>
           )}
         </div>
-      </div></div>
+      </div>
     );
   }
 
