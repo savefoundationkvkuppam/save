@@ -26986,7 +26986,6 @@ const [bankOptions, setBankOptions] = useState([
                                 updateData(setBranchData, key, value);
                               }
                           }}
-                         }
                       >
                         <option value="">Select Bank Name</option>
                         {bankOptions.map(bank => (
