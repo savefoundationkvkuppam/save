@@ -9059,6 +9059,19 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       total + (Number(record.livelihoodLoanSupport2) || 0),
     0
   );
+
+  const totalLoanOutstanding =
+  povertyReductionFund1Outstanding +
+  povertyReductionFund2Outstanding +
+  housingUpgSupport;
+
+  const housingUpgSupport =
+  memberReceiptRecords.reduce(
+    (total, record) =>
+      total + (Number(record.housingLoan) || 0),
+    0
+  );
+  
   if (page === "save") {
     return (
       <div className="save-page">
@@ -9181,7 +9194,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{bankOutstanding}</td>
                   <td>55141145</td>
                   <td>Housing Upg. Support</td>
-                  <td>0</td>
+                  <td>{housingUpgSupport}</td>
                   <td>0</td>
                 </tr>
 
@@ -9203,7 +9216,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>0</td>
                   <td>0</td>
                   <td>Total Loan O/S</td>
-                  <td>111549339</td>
+                  <td>{totalLoanOutstanding}</td>
                   <td>110625129</td>
                 </tr>
 
