@@ -8977,7 +8977,7 @@ useEffect(() => {
   // =========================================================
 
   const mapDigUniqueGroupCount = new Set(
-     mapDigGroupRecords
+     mapDigRows
         .map((record) => String(record.groupName || "").trim())
         .filter(Boolean)
  ).size;
