@@ -12835,3 +12835,17 @@ cursor: pointer;
 .save-page .password-form .master-row {
   grid-template-columns: 200px 1fr;
 }
+
+/* =========================================================
+   GLOBAL CONTENT-FIT FORM CONTROLS
+   ========================================================= */
+
+.save-page input,
+.save-page select,
+.save-page textarea {
+  field-sizing: content;
+  width: max-content;
+  min-width: 140px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
