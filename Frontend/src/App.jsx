@@ -9258,7 +9258,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <th>
                     Upto
                     <br />
-                    15-07-2026
+                    31-03-2027
                   </th>
                   <th>Particulars</th>
                   <th>
@@ -9269,7 +9269,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <th>
                     Upto
                     <br />
-                    15-07-2026
+                    31-03-2027
                   </th>
                 </tr>
               </thead>
@@ -9282,7 +9282,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{clusterRecords.length}</td>
                   <td>Regular Savings</td>
                   <td>{totalRegularSavings}</td>
-                  <td>43500446</td>
+                  <td>0</td>
                 </tr>
 
                 <tr>
@@ -9291,7 +9291,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{mapDigUniqueGroupCount}</td>
                   <td>Special Savings</td>
                   <td>{totalSpecialSavings}</td>
-                  <td>57560</td>
+                  <td>0</td>
                 </tr>
 
                 <tr>
@@ -9300,7 +9300,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{memberRecords.length}</td>
                   <td>Total Savings</td>
                   <td>{totalRegularSavings + totalSpecialSavings}</td>
-                  <td>43558006</td>
+                  <td>0</td>
                 </tr>
 
                 <tr>
@@ -9309,7 +9309,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{panUnionRecords.length}</td>
                   <td>Pov. Red. Fund 1 O/S</td>
                   <td>{povertyReductionFund1Outstanding}</td>
-                  <td>110625129</td>
+                  <td>0</td>
                 </tr>
 
                 <tr>
@@ -9335,23 +9335,12 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                     Prog. Sup. for Pov. Red.-Bank O/S
                   </td>
                   <td>{bankOutstanding}</td>
-                  <td>55141145</td>
+                  <td>0</td>
                   <td>Housing Upg. Support</td>
                   <td>{housingUpgSupport}</td>
                   <td>0</td>
                 </tr>
-
-                <tr>
-                  <td>
-                    Vazhvatharam O/S
-                  </td>
-                  <td>3669931</td>
-                  <td>3669931</td>
-                  <td>Other Activity support</td>
-                  <td>0</td>
-                  <td>0</td>
-                </tr>
-
+                
                 <tr>
                   <td>
                     Prog. Sup. for Pov. Red.-Federation O/S
@@ -9360,7 +9349,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>0</td>
                   <td>Total Loan O/S</td>
                   <td>{totalLoanOutstanding}</td>
-                  <td>110625129</td>
+                  <td>0</td>
                 </tr>
 
               </tbody>
