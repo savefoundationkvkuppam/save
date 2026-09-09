@@ -59,7 +59,6 @@ const usePersistentMenuScroll = (menuKey) => {
 function App() {
   const bankBranches = [
     "UNION BANK OF INDIA - KV KUPPAM",
-    "KDFS - MADURAI",
   ];
   // =========================================================
   // COMMON / LOGIN
@@ -2004,8 +2003,8 @@ useEffect(() => {
   const [meetingDate, setMeetingDate] = useState("1");
   const [formedBy, setFormedBy] = useState("Staff");
   const [villageName, setVillageName] = useState("NAGAL");
-  const [bankName, setBankName] = useState("KDFS");
-  const [branchName, setBranchName] = useState("MADURAI");
+  const [bankName, setBankName] = useState("CANARA");
+  const [branchName, setBranchName] = useState("VELLORE");
   const [serviceAreaBranch, setServiceAreaBranch] =
     useState("Service Area Branch");
 
@@ -4508,8 +4507,8 @@ useEffect(() => {
 
   // Fixed Deposit transaction
   const emptyFixedDeposit = {
-    bank: "KDFS",
-    branch: "MADURAI",
+    bank: "CANARA BANK",
+    branch: "VELLORE",
     receiptNumber: "",
     fdNumber: "",
     fdDate: "",
@@ -5061,7 +5060,7 @@ useEffect(() => {
     ) {
       return;
     }
-
+    
     try {
       setOtherJournalLoading(true);
 
@@ -5447,8 +5446,8 @@ useEffect(() => {
 
   const resetBankAccountForm = () => {
     setBankAccountData({
-      bankName: "KDFS",
-      branchName: "MADURAI",
+      bankName: "CANARA BANK",
+      branchName: "VELLORE",
       accountType: "Select A/c Type",
       accountNumber: "",
       accountDate: "",
@@ -5488,8 +5487,8 @@ useEffect(() => {
 
     setSelectedBankAccountRecordId(record.id);
     setBankAccountData({
-      bankName: record.bankName || "KDFS",
-      branchName: record.branchName || "MADURAI",
+      bankName: record.bankName || "CANARA BANK",
+      branchName: record.branchName || "VELLORE",
       accountType: record.accountType || "Select A/c Type",
       accountNumber: record.accountNumber || "",
       accountDate: record.accountDate || "",
@@ -5573,8 +5572,8 @@ const handleBankAccountSave = async () => {
   const selectBankAccountRecord = (record) => {
     setSelectedBankAccountRecordId(record.id);
     setBankAccountData({
-      bankName: record.bankName || "KDFS",
-      branchName: record.branchName || "MADURAI",
+      bankName: record.bankName || "CANARA BANK",
+      branchName: record.branchName || "VELLORE",
       accountType: record.accountType || "Select A/c Type",
       accountNumber: record.accountNumber || "",
       accountDate: record.accountDate || "",
@@ -5613,7 +5612,7 @@ const handleBankAccountSave = async () => {
       const record = savingRateRecords.find(item => item.id === selectedSavingRateId);
       if (record) {
         setSavingRateData({
-          vazhvathramCode: record.vazhvathramCode || "3720101",
+          vazhvathramCode: record.vazhvathramCode || "001",
           subLedger: record.subLedger || "",
           annualRate: record.annualRate || "9",
           dateChange: record.dateChange || "2026-04-01",
@@ -5633,7 +5632,7 @@ const handleBankAccountSave = async () => {
     }
     setSelectedSavingRateId(record.id);
     setSavingRateData({
-      vazhvathramCode: record.vazhvathramCode || "3720101",
+      vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "9",
       dateChange: record.dateChange || "2026-04-01",
@@ -5714,7 +5713,7 @@ const handleSavingRateSave = async () => {
   const selectSavingRateRecord = (record) => {
     setSelectedSavingRateId(record.id);
     setSavingRateData({
-      vazhvathramCode: record.vazhvathramCode || "3720101",
+      vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "9",
       dateChange: record.dateChange || "2026-04-01",
@@ -5751,7 +5750,7 @@ const handleSavingRateSave = async () => {
       const record = loanRateRecords.find(item => item.id === selectedLoanRateId);
       if (record) {
         setLoanRateData({
-          vazhvathramCode: record.vazhvathramCode || "3720101",
+          vazhvathramCode: record.vazhvathramCode || "001",
           subLedger: record.subLedger || "",
           annualRate: record.annualRate || "24",
           dateChange: record.dateChange || "2026-04-01",
@@ -5774,7 +5773,7 @@ const handleSavingRateSave = async () => {
 
     setSelectedLoanRateId(record.id);
     setLoanRateData({
-      vazhvathramCode: record.vazhvathramCode || "3720101",
+      vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "24",
       dateChange: record.dateChange || "2026-04-01",
@@ -5859,7 +5858,7 @@ const handleLoanRateSave = async () => {
   const selectLoanRateRecord = (record) => {
     setSelectedLoanRateId(record.id);
     setLoanRateData({
-      vazhvathramCode: record.vazhvathramCode || "3720101",
+      vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "24",
       dateChange: record.dateChange || "2026-04-01",
@@ -7115,7 +7114,7 @@ const handleAuditorAdd = () => {
   // =========================================================
 
   const resetVazhvathram = () => {
-    setVazhvathramCode("37201");
+    setVazhvathramCode("001");
     setVazhvathramCodeSecond("");
     setVazhvathramName("");
     setRegionalVazhvathramName("");
@@ -7125,7 +7124,7 @@ const handleAuditorAdd = () => {
     setMeetingDate("1");
     setFormedBy("Staff");
     setVillageName("NAGAL");
-    setBankName("KDFS");
+    setBankName("CANARA BANK");
     setBranchName("MADURAI");
     setServiceAreaBranch("Service Area Branch");
   };
@@ -7174,11 +7173,11 @@ const handleAuditorAdd = () => {
     );
 
     setBankName(
-      record.bankName || "KDFS"
+      record.bankName || "CANARA BANK"
     );
 
     setBranchName(
-      record.branchName || "MADURAI"
+      record.branchName || "VELLORE"
     );
 
     setServiceAreaBranch(
@@ -9344,7 +9343,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
 
                 <tr>
                   <td>
-                    Prog. Sup. for Pov. Red.-KDFS O/S
+                    Vazhvatharam O/S
                   </td>
                   <td>3669931</td>
                   <td>3669931</td>
@@ -13092,7 +13091,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
             </button>
           </div>
           <div className="roc-subheader bank">Bank ROC</div>
-          <div className="roc-subheader kdfs">KDFS ROC</div>
+          <div className="roc-subheader kdfs"> ROC</div>
         </div>
 
         <div className="roc-rows">
@@ -14106,8 +14105,8 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       {
         accountNumber: "524364550",
         branchCode: "5001",
-        branchName: "MADURAI",
-        bankName: "KDFS",
+        branchName: "VELLORE",
+        bankName: "CANARA BANK",
         status: "Active with Regular Transcations",
       },
       {
@@ -14137,8 +14136,8 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       {
         accountNumber: "524364550",
         branchCode: "5001",
-        branchName: "MADURAI",
-        bankName: "KDFS",
+        branchName: "VELLORE",
+        bankName: "CANARA BANK",
         approvalStatus: "Approved",
       },
       {
@@ -14419,7 +14418,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       }
 
       if (!bankInterestRows.length) {
-        alert("No Bank / KDFS / HOPE Loan details available to save.");
+        alert("No Bank / canara / HOPE Loan details available to save.");
         return;
       }
 
@@ -14456,10 +14455,10 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         }
 
         setBankInterestRows(savedRows);
-        alert("Bank / KDFS / HOPE Interest Rate details saved successfully to PostgreSQL!");
+        alert("Bank / canara / HOPE Interest Rate details saved successfully to PostgreSQL!");
       } catch (error) {
         console.error("Bank Interest Rate save error:", error);
-        alert(`Unable to save Bank / KDFS / HOPE Interest Rate details.\n${error.message}`);
+        alert(`Unable to save Bank / canara / HOPE Interest Rate details.\n${error.message}`);
       } finally {
         setBankInterestLoading(false);
       }
@@ -19949,11 +19948,11 @@ if (item === "Mark Dissolved Gps") {
         <div className="change-bank-interest-page">
           <div className="change-bank-interest-card">
             <div className="change-bank-interest-title">
-              Change Interest Rate of Bank / KDFS / HOPE Loans
+              Change Interest Rate of Bank / canara / HOPE Loans
             </div>
 
             <div className="change-bank-interest-warning">
-              You need to select the Group for which you want to change the Interest Rate of Bank Loan or KDFS Loan from Top Frame
+              You need to select the Group for which you want to change the Interest Rate of Bank Loan or  Loan from Top Frame
             </div>
 
             <div className="change-bank-interest-date-row">
@@ -20079,7 +20078,7 @@ if (item === "Mark Dissolved Gps") {
     const [financialSubLedger, setFinancialSubLedger] = useState("Regular Savings");
     const [financialBankLoanLedger, setFinancialBankLoanLedger] = useState("SHG Linkage - Bank");
     const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
-    const [financialBankBranch, setFinancialBankBranch] = useState("KDFS - MADURAI-5001");
+    const [financialBankBranch, setFinancialBankBranch] = useState("");
     const [financialAcctNo, setFinancialAcctNo] = useState("5243664550");
     const [financialFromDate, setFinancialFromDate] = useState("2026-04-01");
     const [financialToDate, setFinancialToDate] = useState("2026-04-01");
@@ -20261,7 +20260,7 @@ if (item === "Mark Dissolved Gps") {
         } else if (selected.includes("Bank Linkage status") || selected.includes("Linkage Efficiency") || selected.includes("Interest Outstanding") || selected.includes("vazhvathrams not linked")) {
           rows = members.filter((record) => {
             const text = Object.values(record || {}).join(" ").toLowerCase();
-            return selected.includes("vazhvathrams not linked") ? !text.includes("bank") && !text.includes("kdfs") : true;
+            return selected.includes("vazhvathrams not linked") ? !text.includes("bank") && !text.includes("") : true;
           });
         } else if (selected.includes("Disbursement") || selected.includes("Repayment") || selected.includes("Demand Collection")) {
           rows = [...receipts, ...payments];
@@ -21148,7 +21147,7 @@ if (item === "Mark Dissolved Gps") {
           "BK 06 - Monthwise Repayment Status", "BK 07 - Monthwise Disbursement & Repayment Status - With Additional Parameters",
           "BK 07A - Monthwise Disbursement & Repayment Status", "BK 07B - Monthwise Disbursement & Repayment Status - With Additional Parameters - Including Groups not having Bank OS",
           "BK 08 - Cluster Monthwise Disbursement Status", "BK 09 - Group Monthwise Disbursement Status",
-          "BK 10 - Branchwise Disbursement Status", "BK 11 - vazhvathrams not linked with Bank/KDFS",
+          "BK 10 - Branchwise Disbursement Status", "BK 11 - vazhvathrams not linked with Bank",
           "BK 12 - Linkage Efficiency Status", "BK 13 - Interest Outstanding Status",
           "BK 14 - Fixed Deposit List","BK 15 - Fixed Deposit Maturity List for the Month",
           "BK 16 - Fixed Deposit Maturity List for the Month", 
@@ -21386,7 +21385,7 @@ if (item === "Mark Dissolved Gps") {
         </>
       );
     } else if (item === "Financial") {
-      body = legacyCard(<><div className="legacy-report-panel"><div className="legacy-report-subtitle">For Member Ledger</div><div className="legacy-fields"><label>Member<input type="text" placeholder="Enter Member Name" /></label><label>Sub Ledger<select><option>Regular Savings</option><option>Special Savings</option><option>Bullet Savings</option><option>Livelihood Loan Support 1</option><option>Livelihood Loan Support 2</option><option>Housing Loan</option></select></label><label>Bank Loan Ledger<select><option>SHG Linkage - Bank</option><option>Sahaya Loan - Covid Reponse - Bank</option><option>ROC - Bank</option><option>SGSY RF - Bank</option><option>Loan support from KDFS</option><option>ROC - KDFS</option><option>UPNRM - KDFS</option><option>KDFS - Covid Response Loan Product</option><option>Housing Loan - HOPE</option></select></label></div><div className="legacy-report-subtitle">For Bank Book</div><div className="legacy-fields"><label>Acct Type<select><option>Savings Bank AC</option><option>Loan A/C</option></select></label><label>Bank and Branch<select><option>KDFS - MADURAI-5001</option></select></label><label>Acct No<select><option>5243664550</option></select></label></div></div><ListBox options={base.options} size={9}/>{dates}<div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></>);
+      body = legacyCard(<><div className="legacy-report-panel"><div className="legacy-report-subtitle">For Member Ledger</div><div className="legacy-fields"><label>Member<input type="text" placeholder="Enter Member Name" /></label><label>Sub Ledger<select><option>Regular Savings</option><option>Special Savings</option><option>Bullet Savings</option><option>Livelihood Loan Support 1</option><option>Livelihood Loan Support 2</option><option>Housing Loan</option></select></label><label>Bank Loan Ledger<select><option>SHG Linkage - Bank</option><option>Sahaya Loan - Covid Reponse - Bank</option><option>ROC - Bank</option><option>SGSY RF - Bank</option><option>Housing Loan - HOPE</option></select></label></div><div className="legacy-report-subtitle">For Bank Book</div><div className="legacy-fields"><label>Acct Type<select><option>Savings Bank AC</option><option>Loan A/C</option></select></label><label>Bank and Branch<select></select></label><label>Acct No<select><option>5243664550</option></select></label></div></div><ListBox options={base.options} size={9}/>{dates}<div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></>);
     } else if (item === "Journals") {
       body = legacyCard(<><ListBox options={base.options} size={9} value={journalReportSelection} onChange={(event) => { setJournalReportSelection(event.target.value); setJournalReportStatus(""); setJournalReportResults([]); }} /><div className="legacy-report-row"><strong>From Date</strong><input type="date" value={journalFromDate} onChange={(event) => setJournalFromDate(event.target.value)} /></div><div className="legacy-report-row"><strong>To Date</strong><input type="date" value={journalToDate} onChange={(event) => setJournalToDate(event.target.value)} /></div><div className="legacy-report-actions"><Button /></div>{journalReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{journalReportStatus}</div>}{renderJournalReportResults()}</>);
     } else if (item === "MIS") {
@@ -21398,9 +21397,9 @@ if (item === "Mark Dissolved Gps") {
     } else if (item === "Confirmation") {
       body = <div className="legacy-report-simple confirmation-page"><h1>Member Confirmation Sheet</h1><p className="legacy-red-note">Run this report by selecting date which is end of Month to integrate Monthly Auto Journals</p><div className="confirmation-date"><strong>Meeting Date</strong><ListBox options={[""]} size={8}/></div><p className="legacy-red-warning">Monthly Auto Journals are not passed. Please pass Auto Journals / Temp Journals to display the date.</p></div>;
     } else if (item === "Schedule") {
-      body = <div className="legacy-report-card schedule-card"><div className="legacy-report-title">Schedule</div><div className="legacy-report-row"><strong>Fed./Block Code</strong><input value="372" readOnly/><label className="inline-check"><input type="checkbox"/> All Sub Ledgers</label></div><div className="legacy-report-row"><strong>General Ledger</strong><select><option>Administrative Expenses - 4410</option><option>Advance Receivables - 2220</option><option>Allocation Funds - Federation - 1330</option><option>Current Assets -2110</option><option>Donations - 3320</option><option>External Audit Fees - 4520</option><option>Fixed Assets-2010</option><option>General And Corpus Fund - 1010</option><option>Group Level Allocation For Development od Members - 4510</option><option>Income From Livelihood Activities - 3110</option><option>Interest Income From Banks - 3210</option><option>Loan support from HOPE - 1250</option><option>Loan support from KDFS-1240</option><option>Member Deposit - 1120</option><option>Member Deposit To Federation - 2020</option><option>Member Incentives - 4120</option><option>Mut.Help Prog Benefit - 1380</option><option>Mut Help Prog. Risk Share Contribution - 1370</option><option>Other Payables - 1340</option><option>Payables - Federation - 1320</option><option>Prog. Support For Poverty Reduction - Federation - 1230</option><option>Programme Cost For Livelihood Activities - 4210</option><option>Programme Expenses - 4110</option><option>Programme Fund For Poverty Reduction -Members - 2210</option><option>Programme Support For Poverty Reduction - Bank - 1220</option><option>Programme Support Loss Provision - 3330</option><option>Programme Support On Loss Provision - 1410</option><option>Revolving Fund - 1110</option><option>Risk/Mutuality Fund - 1420</option><option>Savings - 1130</option><option>Scholarship Fund - 1350</option><option>SHG - Bank Linkage Charges - 4420</option><option>Social Secu.Prog.Benefit - 1390</option><option>Social Security Scheme - Payables - 1310</option><option>Specified Prog. Activity - 1430</option><option>Subscription And Donations - 4310</option><option>Subscription And Enteance Fee - 3310</option><option>Sustainable Health Care Initiative - 1360</option></select></div><div className="legacy-report-row"><strong>Sub Ledger</strong><select><option>Bank Charges Not Related to SHG-Bank Linkage - 4415</option><option>Postage, Telegram & Telephone - 4414</option><option>Printing and Stationeries - 4413</option><option>Training and meeting Expense at Group Level - 4412</option><option>Travlel Expense - 4411</option></select></div><div className="legacy-report-row"><strong>As on Date</strong><input type="date"/><label className="inline-check"><input type="checkbox"/> All Details</label></div><div className="legacy-report-actions"><Button> vazhvathram </Button><Button> Cluster </Button><Button> Block/Fed. </Button></div></div>;
+      body = <div className="legacy-report-card schedule-card"><div className="legacy-report-title">Schedule</div><div className="legacy-report-row"><strong>Fed./Block Code</strong><input value="372" readOnly/><label className="inline-check"><input type="checkbox"/> All Sub Ledgers</label></div><div className="legacy-report-row"><strong>General Ledger</strong><select><option>Administrative Expenses - 4410</option><option>Advance Receivables - 2220</option><option>Allocation Funds - Federation - 1330</option><option>Current Assets -2110</option><option>Donations - 3320</option><option>External Audit Fees - 4520</option><option>Fixed Assets-2010</option><option>General And Corpus Fund - 1010</option><option>Group Level Allocation For Development od Members - 4510</option><option>Income From Livelihood Activities - 3110</option><option>Interest Income From Banks - 3210</option><option>Loan support from HOPE - 1250</option><option>Member Deposit - 1120</option><option>Member Deposit To Federation - 2020</option><option>Member Incentives - 4120</option><option>Mut.Help Prog Benefit - 1380</option><option>Mut Help Prog. Risk Share Contribution - 1370</option><option>Other Payables - 1340</option><option>Payables - Federation - 1320</option><option>Prog. Support For Poverty Reduction - Federation - 1230</option><option>Programme Cost For Livelihood Activities - 4210</option><option>Programme Expenses - 4110</option><option>Programme Fund For Poverty Reduction -Members - 2210</option><option>Programme Support For Poverty Reduction - Bank - 1220</option><option>Programme Support Loss Provision - 3330</option><option>Programme Support On Loss Provision - 1410</option><option>Revolving Fund - 1110</option><option>Risk/Mutuality Fund - 1420</option><option>Savings - 1130</option><option>Scholarship Fund - 1350</option><option>SHG - Bank Linkage Charges - 4420</option><option>Social Secu.Prog.Benefit - 1390</option><option>Social Security Scheme - Payables - 1310</option><option>Specified Prog. Activity - 1430</option><option>Subscription And Donations - 4310</option><option>Subscription And Enteance Fee - 3310</option><option>Sustainable Health Care Initiative - 1360</option></select></div><div className="legacy-report-row"><strong>Sub Ledger</strong><select><option>Bank Charges Not Related to SHG-Bank Linkage - 4415</option><option>Postage, Telegram & Telephone - 4414</option><option>Printing and Stationeries - 4413</option><option>Training and meeting Expense at Group Level - 4412</option><option>Travlel Expense - 4411</option></select></div><div className="legacy-report-row"><strong>As on Date</strong><input type="date"/><label className="inline-check"><input type="checkbox"/> All Details</label></div><div className="legacy-report-actions"><Button> vazhvathram </Button><Button> Cluster </Button><Button> Block/Fed. </Button></div></div>;
     } else if (item === "Bank Link.") {
-      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["SHG", "Covid Loan - Bank", "ROC", "Federation Loan", "KDFS-MF", "KDFS-ROC","KDFS-UPNRM","Covid Loan - KDFS","HOPE-Housing"]} size={6}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={7}/></div></div><div className="legacy-report-actions"><Button /></div></>);
+      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["SHG", "Covid Loan - Bank", "ROC", "Federation Loan","HOPE-Housing"]} size={3}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={7}/></div></div><div className="legacy-report-actions"><Button /></div></>);
     } else if (item === "Grading") {
       body = <div className="legacy-report-card grading-card"><div className="legacy-report-title">PEARLS Institutional Rating</div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3}/></div><div><div className="legacy-report-section-label">Month</div><MonthBox size={6}/></div></div><div className="legacy-report-section-label">Language</div><select><option>English</option><option>தமிழ் (Tamil)</option><option>(Telugu)</option><option>ଓଡ଼ିଆ (Odia)</option><option>தமிழ் (Tamil)</option><option>తెలుగు (Telugu)</option><option>മലയാളം (Malayalam)</option> <option>मराठी (Marathi)</option><option>हिन्दी (Hindi)</option><option>অসমীয় (Assamese)</option></select><div className="legacy-report-actions"><Button>Generate Rating</Button></div></div>;
     } else if (item === "Analytics") {
@@ -21723,7 +21722,7 @@ if (item === "Mark Dissolved Gps") {
       body = <div className="legacy-report-card schedule-card">
         <div className="legacy-report-title">Schedule</div>
         <div className="legacy-report-row"><strong>Fed./Block Code</strong><input value={scheduleFedBlockCode} onChange={(event) => setScheduleFedBlockCode(event.target.value)} /><label className="inline-check"><input type="checkbox" checked={scheduleAllSubLedgers} onChange={(event) => setScheduleAllSubLedgers(event.target.checked)} /> All Sub Ledgers</label></div>
-        <div className="legacy-report-row"><strong>General Ledger</strong><select value={scheduleGeneralLedger} onChange={(event) => { setScheduleGeneralLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Administrative Expenses - 4410","Advance Receivables - 2220","Allocation Funds - Federation - 1330","Current Assets -2110","Donations - 3320","External Audit Fees - 4520","Fixed Assets-2010","General And Corpus Fund - 1010","Group Level Allocation For Development od Members - 4510","Income From Livelihood Activities - 3110","Interest Income From Banks - 3210","Loan support from HOPE - 1250","Loan support from KDFS-1240","Member Deposit - 1120","Member Deposit To Federation - 2020","Member Incentives - 4120","Mut.Help Prog Benefit - 1380","Mut Help Prog. Risk Share Contribution - 1370","Other Payables - 1340","Payables - Federation - 1320","Prog. Support For Poverty Reduction - Federation - 1230","Programme Cost For Livelihood Activities - 4210","Programme Expenses - 4110","Programme Fund For Poverty Reduction -Members - 2210","Programme Support For Poverty Reduction - Bank - 1220","Programme Support Loss Provision - 3330","Programme Support On Loss Provision - 1410","Revolving Fund - 1110","Risk/Mutuality Fund - 1420","Savings - 1130","Scholarship Fund - 1350","SHG - Bank Linkage Charges - 4420","Social Secu.Prog.Benefit - 1390","Social Security Scheme - Payables - 1310","Specified Prog. Activity - 1430","Subscription And Donations - 4310","Subscription And Enteance Fee - 3310","Sustainable Health Care Initiative - 1360"].map((option) => <option key={option}>{option}</option>)}</select></div>
+        <div className="legacy-report-row"><strong>General Ledger</strong><select value={scheduleGeneralLedger} onChange={(event) => { setScheduleGeneralLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Administrative Expenses - 4410","Advance Receivables - 2220","Allocation Funds - Federation - 1330","Current Assets -2110","Donations - 3320","External Audit Fees - 4520","Fixed Assets-2010","General And Corpus Fund - 1010","Group Level Allocation For Development od Members - 4510","Income From Livelihood Activities - 3110","Interest Income From Banks - 3210","Loan support from HOPE - 1250","Member Deposit - 1120","Member Deposit To Federation - 2020","Member Incentives - 4120","Mut.Help Prog Benefit - 1380","Mut Help Prog. Risk Share Contribution - 1370","Other Payables - 1340","Payables - Federation - 1320","Prog. Support For Poverty Reduction - Federation - 1230","Programme Cost For Livelihood Activities - 4210","Programme Expenses - 4110","Programme Fund For Poverty Reduction -Members - 2210","Programme Support For Poverty Reduction - Bank - 1220","Programme Support Loss Provision - 3330","Programme Support On Loss Provision - 1410","Revolving Fund - 1110","Risk/Mutuality Fund - 1420","Savings - 1130","Scholarship Fund - 1350","SHG - Bank Linkage Charges - 4420","Social Secu.Prog.Benefit - 1390","Social Security Scheme - Payables - 1310","Specified Prog. Activity - 1430","Subscription And Donations - 4310","Subscription And Enteance Fee - 3310","Sustainable Health Care Initiative - 1360"].map((option) => <option key={option}>{option}</option>)}</select></div>
         <div className="legacy-report-row"><strong>Sub Ledger</strong><select value={scheduleSubLedger} onChange={(event) => { setScheduleSubLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Bank Charges Not Related to SHG-Bank Linkage - 4415","Postage, Telegram & Telephone - 4414","Printing and Stationeries - 4413","Training and meeting Expense at Group Level - 4412","Travlel Expense - 4411"].map((option) => <option key={option}>{option}</option>)}</select></div>
         <div className="legacy-report-row"><strong>As on Date</strong><input type="date" value={scheduleAsOnDate} onChange={(event) => { setScheduleAsOnDate(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }} /><label className="inline-check"><input type="checkbox" checked={scheduleAllDetails} onChange={(event) => setScheduleAllDetails(event.target.checked)} /> All Details</label></div>
         <div className="legacy-report-actions"><Button>Execute</Button></div>
@@ -21750,7 +21749,7 @@ if (item === "Mark Dissolved Gps") {
             <div>
               <div className="legacy-report-section-label">Subledger</div>
               <select value={bankLinkSubledger} onChange={(event) => { setBankLinkSubledger(event.target.value); setBankLinkReportStatus(""); setBankLinkReportResults([]); }}>
-                {["SHG", "Covid Loan - Bank", "ROC", "Federation Loan", "KDFS-MF", "KDFS-ROC", "KDFS-UPNRM", "Covid Loan - KDFS", "HOPE-Housing"].map((option) => <option key={option}>{option}</option>)}
+                {["SHG", "Covid Loan - Bank", "ROC", "Federation Loan", "HOPE-Housing"].map((option) => <option key={option}>{option}</option>)}
               </select>
             </div>
             <div>
@@ -22173,8 +22172,7 @@ if (item === "Mark Dissolved Gps") {
       "Corpus Fund - 1012", "Revolving Fund - 1111", "SHG Linkage - Bank - 1221",
       "Sahaya Loan -Covid Reponse - Bank - 1222", "ROC - Bank - 1223",
       "Livelihood Promotion - Federation - 1231", "Special Product Promotion - Federation - 1232",
-      "Loan support from KDFS - 1241", "ROCKDFS - 1242", "UPNRM - KDFS - 1243",
-      "KDFS - Covid Response Loan Product - 1244", "Housing Loan - HOPE - 1251",
+       "Housing Loan - HOPE - 1251",
       "Social Security Programme - Member Life - 1311", "Social Security Programme - Spouse Life - 1312",
       "Social Security Programme - Livestock - 1313", "Social Security Programme - Health - 1314",
       "Social Security Programme - Pension - 1315", "Social Security Programme - Endowment - 1316",
@@ -22194,15 +22192,14 @@ if (item === "Mark Dissolved Gps") {
       "Disaster Risk Reduction Fund - 1422", "Specified Prog. Activity - 1431",
       "Land and Building - 2011", "Member Development fund - Federation - 2021",
       "Cash at Bank - 2112", "Fixed Deposit - 2113", "Recurring Deposit - 2114",
-      "Excess principle paid - Bank - 2221", "Other Receivable - 2223", "Excess principle paid - KDFS-2224",
+      "Excess principle paid - Bank - 2221", "Other Receivable - 2223",
       "Interest on Savings Bank Account - 3211", "Interest on Deposits - 3212",
-      "Interest on Bank Loan - Adjustments - 3213", "Interest on KDFS Loan - Adjustments (Cr.) - 3214",
+      "Interest on Bank Loan - Adjustments - 3213",
       "Donations Received - 3321", "Programme Support Loss Provision - 3331"
     ];
 
     const bankBranches = [
       "UNION BANK OF INDIA - KV KUPPAM",
-      "KDFS - MADURAI"
     ];
 
     const updateOtherReceiptField = (field, value) => {
@@ -22544,7 +22541,6 @@ if (item === "Mark Dissolved Gps") {
       "Recurring Deposit - 2114",
       "Excess principle paid - Bank - 2221",
       "Other Receivable - 2223",
-      "Excess principle paid - KDFS - 2224",
       "Maintenance of Group Expense - To Federation - 4111",
       "Maintenance of Book Keeping - To Federation - 4112",
       "Maintenance - Training Meeting Expenses - To Fed. 4113",
@@ -22554,10 +22550,8 @@ if (item === "Mark Dissolved Gps") {
       "Maintenance of Group Expenses - To CDA-4117",
       "Interest on Loan - Bank - 4211",
       "Livelihood activity cost to Federation - 4212",
-      "Interest on Loan - KDFS-4213",
       "Interest on Loan - HOPE - 4214",
       "Interest on Bank Loan - Penalty or Adjustments - 4215",
-      "Interest on KDFS Loan - Adjustments (Dr.) - 4216",
       "Entrance / Subscription - Federation - 4312",
       "Entrance / Subscription - Movement - 4313",
       "Donations Paid - 4314",
@@ -23089,7 +23083,6 @@ if (item === "Mark Dissolved Gps") {
             onChange={(e) => updateFixedDepositField("bank", e.target.value)}
             disabled={!isEditingFixedDeposit}
           >
-            <option>KDFS</option>
             <option>CENTRAL BANK OF INDIA</option>
             <option>UNION BANK OF INDIA</option>
             <option>CANARA BANK</option>
@@ -23648,7 +23641,6 @@ if (item === "Mark Dissolved Gps") {
                   <option>Current Assets</option>
                   <option>Interest Income From Banks - 3210</option>
                   <option>Loan Support from HOPE - 1250</option>
-                  <option>Loan Support from KDFS - 1240</option>
                   <option>Prog. Support For Poverty Reduction - Federation - 1230</option>
                   <option>Programme Cost For Livelihood Activities - 4210</option>
                   <option>Programme Support For Poverty Reduction - Bank - 1220</option>
@@ -23932,7 +23924,7 @@ if (item === "Mark Dissolved Gps") {
 
             <div className="other-journal-note">
               <hr />
-              <h3>Passing of Journals for Bank Loan / KDFS Loan / Hope Loan</h3>
+              <h3>Passing of Journals for Bank Loan / Hope Loan</h3>
               <p>
                 While obtaining confirmation, ensure it is for the <strong>end of the month</strong>.
                 Before passing journals to reconcile with the bank statement, verify that the <em>interest rate entered in SAVE</em> matches the <em>interest rate charged by the bank</em>.
@@ -26663,7 +26655,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
         <div className="content master-content bank-account-content">
           <h1>Vazhvathram Bank Account Details</h1>
           <div className="master-form bank-account-form">
-            <div className="master-row"><label>Bank Name</label><select value={bankAccountData.bankName} onChange={e=>updateData(setBankAccountData,"bankName",e.target.value)}><option>KDFS</option><option>Central Bank of India</option><option>Union Bank of India</option><option>Canara Bank</option></select></div>
+            <div className="master-row"><label>Bank Name</label><select value={bankAccountData.bankName} onChange={e=>updateData(setBankAccountData,"bankName",e.target.value)}><option>Central Bank of India</option><option>Union Bank of India</option><option>Canara Bank</option></select></div>
             <div className="master-row"><label>Branch Name</label><select value={bankAccountData.branchName} onChange={e=>updateData(setBankAccountData,"branchName",e.target.value)}><option>MADURAI</option><option>Vellore</option><option>KV KUPPAM</option></select></div>
             <div className="master-row"><label>SB A/C or Loan A/C</label><select value={bankAccountData.accountType} onChange={e=>updateData(setBankAccountData,"accountType",e.target.value)}><option>Select A/c Type</option><option>SB A/C</option><option>Loan A/C</option></select></div>
             <div className="master-row"><label>Account Number</label><input value={bankAccountData.accountNumber} onChange={e=>updateData(setBankAccountData,"accountNumber",e.target.value)} /></div>
@@ -27085,7 +27077,6 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
 
 const [bankOptions, setBankOptions] = useState([
   "UNION BANK KV KUPPAM",
-  "KDFS",
   "CENTRAL BANK OF INDIA",
   "UNION BANK OF INDIA",
   "CANARA BANK"
