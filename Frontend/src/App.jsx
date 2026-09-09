@@ -2896,8 +2896,8 @@ useEffect(() => {
   // =========================================================
 
   const [bankAccountData, setBankAccountData] = useState({
-    bankName: "KDFS",
-    branchName: "MADURAI",
+    bankName: "CANARA",
+    branchName: "VELLORE",
     accountType: "Select A/c Type",
     accountNumber: "",
     accountDate: "",
@@ -4670,7 +4670,7 @@ useEffect(() => {
     "March", "April", "May", "June", "July", "August",
     "September", "October", "November", "December", "January", "February",
   ];
-  const [tempJournalLockCode] = useState("3720101");
+  const [tempJournalLockCode] = useState("0010101");
   const [tempJournalLockMonth, setTempJournalLockMonth] = useState("March");
   const [tempJournalLockPassword, setTempJournalLockPassword] = useState("");
   const [tempJournalLockStatus, setTempJournalLockStatus] = useState(null);
@@ -4756,7 +4756,7 @@ useEffect(() => {
     "April", "May", "June", "July", "August", "September",
     "October", "November", "December", "January", "February", "March",
   ];
-  const [autoJournalLockCode] = useState("3720101");
+  const [autoJournalLockCode] = useState("0010101");
   const [autoJournalLockMonth, setAutoJournalLockMonth] = useState("April");
   const [autoJournalLockPassword, setAutoJournalLockPassword] = useState("");
   const [autoJournalLockStatus, setAutoJournalLockStatus] = useState(null);
@@ -7124,7 +7124,7 @@ const handleAuditorAdd = () => {
     setFormedBy("Staff");
     setVillageName("NAGAL");
     setBankName("CANARA BANK");
-    setBranchName("MADURAI");
+    setBranchName("VELLORE");
     setServiceAreaBranch("Service Area Branch");
   };
 
@@ -20429,7 +20429,7 @@ if (item === "Mark Dissolved Gps") {
         rows = rows.map((member) => ({
           memberCode: member?.memberCode || member?.code || member?.memberId || member?.id || "",
           memberName: member?.memberName || member?.name || "",
-          vazhvathramCode: member?.vazhvathramCode || member?.vazhvathram || "3720101",
+          vazhvathramCode: member?.vazhvathramCode || member?.vazhvathram || "0010101",
           meetingDate: demandMeetingDate,
           memberMode: demandMemberMode,
           status: isLocked(member) ? "Locked" : "Active"
@@ -21355,7 +21355,7 @@ if (item === "Mark Dissolved Gps") {
     } else if (item === "MIS-SSP") {
       body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-row"><strong>Select Year</strong><select><option>Current Year</option><option>Previous Year</option></select></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["Social Security Programme - Member Life", "Social Security Programme - Spouse Life", "Social Security Programme - Livestock", "Social Security Programme - Health", "Social Security Programme - Pension","Social Security Programme - Endowment","Social Security Programme - Crop","Tata - AIA - Member","Tata - AIA - Spouse","Nalam","Mut.Help Prog. Risk share Contr.- Member Life","Mut.Help Prog. Risk share Contr.Spouse Life","Mut.Help Prog. Risk share Contr.- Health","Mut.Help Prog. Risk share Contr.- Livestock","Mut.Help Prog. Risk share Contr.- Crop","Mut.Help Prog. Funeral Fund","Mut.Help Prog.Admin Fund","Mut.Help Prog. Risk Share Contr.-Mem Li OA","Mut.Help Prog.Risk Share Contr. - Spo Li OA","Mut.Help Prog. - Benefit-Member Life","Mut.Help Prog. -Benefit - Spouse Life","Mut.Help Prog.-Benefit - Health","Mut.Help Prog.-Benefit -LiveStock","Mut.Help prog. - Benefit - Crop","Mut.Help prog. - Benefit - Funeral Fund","Mut.Help prog. - Benefit -Mem Life Old Age","Mut.Help prog. - Benefit - Spo Life Old Age","Social Secu. Prog.-Benefit- Health"]} size={6}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
     } else if (item === "Dem. Sheet") {
-      body = <div className="legacy-report-simple"><h1>Demand Sheet</h1><div className="legacy-report-card demand-card"><div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="3720101" readOnly/></div><div className="legacy-report-row"><strong>Meeting Date</strong><input type="date"/></div><div className="legacy-report-row"><strong>Members</strong><select><option>Without Locked Members</option><option>With Locked Members</option></select></div><div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></div></div>;
+      body = <div className="legacy-report-simple"><h1>Demand Sheet</h1><div className="legacy-report-card demand-card"><div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div><div className="legacy-report-row"><strong>Meeting Date</strong><input type="date"/></div><div className="legacy-report-row"><strong>Members</strong><select><option>Without Locked Members</option><option>With Locked Members</option></select></div><div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></div></div>;
     } else if (item === "Confirmation") {
       body = <div className="legacy-report-simple confirmation-page"><h1>Member Confirmation Sheet</h1><p className="legacy-red-note">Run this report by selecting date which is end of Month to integrate Monthly Auto Journals</p><div className="confirmation-date"><strong>Meeting Date</strong><ListBox options={[""]} size={8}/></div><p className="legacy-red-warning">Monthly Auto Journals are not passed. Please pass Auto Journals / Temp Journals to display the date.</p></div>;
     } else if (item === "Schedule") {
@@ -21648,7 +21648,7 @@ if (item === "Mark Dissolved Gps") {
       body = <div className="legacy-report-simple">
         <h1>Demand Sheet</h1>
         <div className="legacy-report-card demand-card">
-          <div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="3720101" readOnly/></div>
+          <div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div>
           <div className="legacy-report-row"><strong>Meeting Date</strong><input type="date" value={demandMeetingDate} onChange={(event) => { setDemandMeetingDate(event.target.value); setDemandReportStatus(""); setDemandReportResults([]); }}/></div>
           <div className="legacy-report-row"><strong>Members</strong><select value={demandMemberMode} onChange={(event) => { setDemandMemberMode(event.target.value); setDemandReportStatus(""); setDemandReportResults([]); }}><option>Without Locked Members</option><option>With Locked Members</option></select></div>
           <div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div>
@@ -22006,7 +22006,7 @@ if (item === "Mark Dissolved Gps") {
 
     return transactionShell(
       <div className="legacy-transaction-form wide">
-        <div className="legacy-title">Receipt Voucher : Member - (Vazhvathram Code : 3720101)</div>
+        <div className="legacy-title">Receipt Voucher : Member - (Vazhvathram Code : 0010101)</div>
 
         <div className="legacy-grid-row compact">
           <label>Rcpt No.</label>
@@ -22273,7 +22273,7 @@ if (item === "Mark Dissolved Gps") {
 
     return transactionShell(
       <div className="legacy-transaction-form receipt-vazhvathram">
-        <div className="legacy-title">Receipt Voucher : Vazhvathram - (Code : 3720101)</div>
+        <div className="legacy-title">Receipt Voucher : Vazhvathram - (Code : 0010101)</div>
         <div className="legacy-form-row"><label>Receipt Number</label><input value={otherReceiptForm.receiptNo} onChange={(e) => updateOtherReceiptField("receiptNo", e.target.value)} /></div>
         <div className="legacy-form-row"><label>Receipt Date</label><input placeholder="dd-mm-yyyy" value={otherReceiptForm.receiptDate} onChange={(e) => updateOtherReceiptField("receiptDate", e.target.value)} /></div>
         <div className="legacy-grid-row compact"><label>Receipt Type</label><select value={otherReceiptForm.receiptType} onChange={(e) => updateOtherReceiptField("receiptType", e.target.value)}><option>Cash</option><option>Bank</option></select><label>Acct Type</label><select value={otherReceiptForm.accountType} onChange={(e) => updateOtherReceiptField("accountType", e.target.value)}><option>Select A/c Type</option><option>SB A/C</option><option>Loan A/C</option></select></div>
@@ -22338,7 +22338,7 @@ if (item === "Mark Dissolved Gps") {
 
     return transactionShell(
       <div className="legacy-transaction-form payment-form">
-        <div className="legacy-title">Payment Voucher : Member - (Vazhvathram Code : 3720101)</div>
+        <div className="legacy-title">Payment Voucher : Member - (Vazhvathram Code : 0010101)</div>
 
         <div className="legacy-grid-row compact">
           <label>Voucher No.</label>
@@ -22569,7 +22569,7 @@ if (item === "Mark Dissolved Gps") {
 
     return transactionShell(
       <div className="legacy-transaction-form wide">
-        <div className="legacy-title">Payment Voucher : Vazhvathram - (Code : 3720101)</div>
+        <div className="legacy-title">Payment Voucher : Vazhvathram - (Code : 0010101)</div>
 
         <div className="legacy-grid-row compact">
           <label>Vr. No.</label>
@@ -22831,7 +22831,7 @@ if (item === "Mark Dissolved Gps") {
     return transactionShell(
       <div className="legacy-transaction-form member-journal-form narrow">
         <div className="legacy-title">
-          Journal Voucher : Member - (Vazhvathram Code : 3720101)
+          Journal Voucher : Member - (Vazhvathram Code : 0010101)
         </div>
 
         <div className="legacy-grid-row compact">
@@ -23059,7 +23059,7 @@ if (item === "Mark Dissolved Gps") {
             onChange={(e) => updateFixedDepositField("branch", e.target.value)}
             disabled={!isEditingFixedDeposit}
           >
-            <option>MADURAI</option>
+            <option>VELLORE</option>
           </select>
         </div>
 
@@ -23564,7 +23564,7 @@ if (item === "Mark Dissolved Gps") {
             <div className="other-journal-form">
 
               <div className="other-journal-title">
-                Journal Voucher : Vazhvathram - (Code : 3720101)
+                Journal Voucher : Vazhvathram - (Code : 0010101)
               </div>
 
               <div className="oj-row oj-row-top">
@@ -26618,7 +26618,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
           <h1>Vazhvathram Bank Account Details</h1>
           <div className="master-form bank-account-form">
             <div className="master-row"><label>Bank Name</label><select value={bankAccountData.bankName} onChange={e=>updateData(setBankAccountData,"bankName",e.target.value)}><option>Central Bank of India</option><option>Union Bank of India</option><option>Canara Bank</option></select></div>
-            <div className="master-row"><label>Branch Name</label><select value={bankAccountData.branchName} onChange={e=>updateData(setBankAccountData,"branchName",e.target.value)}><option>MADURAI</option><option>Vellore</option><option>KV KUPPAM</option></select></div>
+            <div className="master-row"><label>Branch Name</label><select value={bankAccountData.branchName} onChange={e=>updateData(setBankAccountData,"branchName",e.target.value)}><option>Vellore</option><option>KV KUPPAM</option></select></div>
             <div className="master-row"><label>SB A/C or Loan A/C</label><select value={bankAccountData.accountType} onChange={e=>updateData(setBankAccountData,"accountType",e.target.value)}><option>Select A/c Type</option><option>SB A/C</option><option>Loan A/C</option></select></div>
             <div className="master-row"><label>Account Number</label><input value={bankAccountData.accountNumber} onChange={e=>updateData(setBankAccountData,"accountNumber",e.target.value)} /></div>
             <div className="master-row"><label>Account Date</label><input type="date" value={bankAccountData.accountDate} onChange={e=>updateData(setBankAccountData,"accountDate",e.target.value)} /></div>
