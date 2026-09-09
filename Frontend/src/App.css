@@ -2704,17 +2704,17 @@ color:#183b2d; font:900 25px Georgia,serif;
 box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
 }
 .brand-name { font: 800 18px/1.1 Arial,sans-serif; letter-spacing:1.3px; }
-.brand-subtitle { margin-top:4px; font: 12px/1.2 Arial,sans-serif; color: 255,255,255,.72; }
+.brand-subtitle { margin-top:4px; font: 12px/1.2 Arial,sans-serif; color: rgba(255,255,255,.72); }
 .context-area { display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; }
 .top-item { display:flex; align-items:center; gap:7px; }
-.top-item label { font:700 13px Arial,sans-serif; color: 255,255,255,.82; }
+.top-item label { font:700 13px Arial,sans-serif; color: rgba(255,255,255,.82); }
 .top-item select {
 min-width: 175px; height: 34px; padding: 3px 10px;
 border:1px solid rgba(255,255,255,.28); border-radius:7px;
 background:#fff; color:#1d2b25; font-weight:600;
 }
 .top-item select { outline:none; box-shadow:0 0 0 3px rgba(213,167,44,.22); }
-.system-status { display:flex; align-items:center; gap:7px; padding:8px 11px; border-radius:999px; background: 255,255,255,.10; font:600 12px Arial,sans-serif; white-space:nowrap; }
+.system-status { display:flex; align-items:center; gap:7px; padding:8px 11px; border-radius:999px; background: rgba(255,255,255,.10); font:600 12px Arial,sans-serif; white-space:nowrap; }
 .system-status span { width:8px; height:8px; border-radius:50%; background:#67e28f; box-shadow:0 0 0 4px rgba(103,226,143,.14); }
 
 .main-container { display:flex; grid-template-columns: 214px minmax(0,1fr); min-height: calc(100vh - 76px); }
@@ -2792,14 +2792,14 @@ outline:none; border-color:#36745a; box-shadow:0 0 0 2px rgba(54,116,90,.10);
 .member-buttons button {
 border:1px solid #83958b !important;
 border-radius:6px !important;
-background: #fff,#edf2ef !important;
+background: #fff !important;
 color:#183d2d !important;
 font-weight:700 !important;
 box-shadow:0 1px 2px rgba(0,0,0,.08);
 }
 .master-buttons button, .cluster-buttons button,
 .vazhvathram-buttons button, .member-buttons button {
-background: #fff,#dceae2 !important;
+background: #dceae2 !important;
 border-color:#4f7e67 !important;
 transform: translateY(-1px);
 }
@@ -3343,7 +3343,7 @@ transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 
 .save-page .master-buttons button,
-.save-page button:hover() {
+.save-page button:hover {
 transform: translateY(-2px);
 background: linear-gradient(135deg, #0b9169, #087f5b);
 color: #fff;
