@@ -4278,7 +4278,6 @@ useEffect(() => {
     "Defunct Group",
     "DefunctGroup-RC",
     "Unlock Members",
-    "KDFSEquity",
     "Map DIG",
     "DIG Meeting",
     "DIG Impact",
@@ -17084,32 +17083,6 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     if (item === "ROC Limit") return <RocLimitPage />;
     if (item === "Defunct Group") return <DefunctGroupPage />;
     if (item === "DefunctGroup-RC") return <DefunctGroupRCPage />;
-
-    if (item === "KDFSEquity") {
-      return (
-        <div className="kdfs-equity-page">
-          <div className="kdfs-equity-card">
-
-            <div className="kdfs-equity-title">
-              Enter / Update KDFS Equity Details
-            </div>
-
-            <div className="kdfs-equity-row">
-              <label>Password</label>
-
-              <input
-                type="password"
-              />
-
-              <button type="button" onClick={() => alert("Please enter password")}>
-                Enter
-              </button>
-            </div>
-
-          </div>
-        </div>
-      );
-    }
 
     if (item === "Unlock Members") {
       return (
