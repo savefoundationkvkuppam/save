@@ -4611,7 +4611,7 @@ useEffect(() => {
     "April", "May", "June", "July", "August", "September",
     "October", "November", "December", "January", "February", "March",
   ];
-  const [transactionLockCode] = useState("3720101");
+  const [transactionLockCode] = useState("001");
   const [transactionLockMonth, setTransactionLockMonth] = useState("April");
   const [transactionLockPassword, setTransactionLockPassword] = useState("");
   const [transactionLockStatus, setTransactionLockStatus] = useState(null);
@@ -24845,7 +24845,6 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                     vazhvathramMode === "view"
                   }
                 >
-                  <option>KDFS</option>
                   <option>Central Bank of India</option>
                   <option>Union Bank of Indian</option>
                   <option>Canara Bank</option>
@@ -24871,7 +24870,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                       vazhvathramMode === "view"
                     }
                   >
-                    <option>MADURAI</option>
+                    <option>VELLORE</option>
                   </select>
 
                   <span>
