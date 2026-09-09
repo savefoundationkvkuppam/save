@@ -12830,3 +12830,8 @@ cursor: pointer;
   min-width: max-content;
   white-space: nowrap;
 }
+
+/* Password form - allow long labels */
+.save-page .password-form .master-row {
+  grid-template-columns: 200px 1fr;
+}
