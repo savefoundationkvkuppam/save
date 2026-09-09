@@ -12785,50 +12785,6 @@ cursor: pointer;
   display: block !important;
 }
 
-/* =========================================================
-   GLOBAL SMART FIELD SIZING
-   ========================================================= */
 
-.save-page input,
-.save-page select,
-.save-page textarea {
-  box-sizing: border-box;
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* Long text should remain visible instead of being clipped */
-.save-page input[type="text"],
-.save-page input[type="search"],
-.save-page select,
-.save-page textarea {
-  overflow: visible;
-  text-overflow: clip;
-}
-
-/* Form fields inside flexible containers can expand naturally */
-.save-page .master-row input,
-.save-page .master-row select,
-.save-page .form-row input,
-.save-page .form-row select {
-  width: 100%;
-  min-width: 0;
-}
-
-/* Keep tables usable when there are many columns */
-.save-page .table-container,
-.save-page .table-wrapper,
-.save-page .list-container,
-.save-page .list-wrapper {
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* GLOBAL FORM LABEL WIDTH FIX */
-.save-page label {
-  min-width: max-content;
-  white-space: nowrap;
-}
 
 
