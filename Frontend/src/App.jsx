@@ -9281,7 +9281,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{clusterRecords.length}</td>
                   <td>Regular Savings</td>
                   <td>{totalRegularSavings}</td>
-                  <td>0</td>
+                  <td>{totalRegularSaving}</td>
                 </tr>
 
                 <tr>
@@ -9290,7 +9290,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{mapDigUniqueGroupCount}</td>
                   <td>Special Savings</td>
                   <td>{totalSpecialSavings}</td>
-                  <td>0</td>
+                  <td>{totalSpecialSavings}</td>
                 </tr>
 
                 <tr>
@@ -9299,7 +9299,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{memberRecords.length}</td>
                   <td>Total Savings</td>
                   <td>{totalRegularSavings + totalSpecialSavings}</td>
-                  <td>0</td>
+                  <td>{totalRegularSavings + totalSpecialSavings}</td>
                 </tr>
 
                 <tr>
@@ -9308,7 +9308,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{panUnionRecords.length}</td>
                   <td>Pov. Red. Fund 1 O/S</td>
                   <td>{povertyReductionFund1Outstanding}</td>
-                  <td>0</td>
+                  <td>{povertyReductionFund1Outstanding}</td>
                 </tr>
 
                 <tr>
@@ -9317,7 +9317,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>{panchayatRecords.length}</td>
                   <td>Pov. Red. Fund 2 O/S</td>
                   <td>{povertyReductionFund2Outstanding}</td>
-                  <td>0</td>
+                  <td>{povertyReductionFund2Outstanding}</td>
                 </tr>
 
                 <tr>
@@ -9334,10 +9334,10 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                     Prog. Sup. for Pov. Red.-Bank O/S
                   </td>
                   <td>{bankOutstanding}</td>
-                  <td>0</td>
+                  <td>{bankOutstanding}</td>
                   <td>Housing Upg. Support</td>
                   <td>{housingUpgSupport}</td>
-                  <td>0</td>
+                  <td>{housingUpgSupport}</td>
                 </tr>
                 
                 <tr>
@@ -9348,7 +9348,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <td>0</td>
                   <td>Total Loan O/S</td>
                   <td>{totalLoanOutstanding}</td>
-                  <td>0</td>
+                  <td>{totalLoanOutstanding}</td>
                 </tr>
 
               </tbody>
