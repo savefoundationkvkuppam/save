@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const API_BASE_URL = "https://save-foundation-production.up.railway.app/api";
+const API_BASE_URL = "https://save-production-1fb0.up.railway.app/api";
 
 const apiRequest = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
