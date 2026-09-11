@@ -18,7 +18,7 @@ public class CorsConfig {
 
         config.setAllowedOrigins(
                 Arrays.asList("http://localhost:5173",
-                             "https://outstanding-connection-production-38a8.up.railway.app")
+                             "https://disciplined-freedom-production-8131.up.railway.app")
         );
 
         config.setAllowedMethods(
