@@ -57,6 +57,72 @@ const usePersistentMenuScroll = (menuKey) => {
 };
 
 function App() {
+  // =========================================================
+  // GLOBAL ENTER KEY NAVIGATION
+  // Press Enter to move to the next form field.
+  // =========================================================
+  useEffect(() => {
+    const handleGlobalEnter = (event) => {
+      if (event.key !== "Enter") return;
+
+      const target = event.target;
+
+      if (
+        !target ||
+        !["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName) ||
+        target.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      // Keep Login Enter behavior unchanged.
+      if (target.closest(".login-table")) {
+        return;
+      }
+
+      const container =
+        target.closest(".save-page") ||
+        target.closest(".page") ||
+        document.body;
+
+      const fields = Array.from(
+        container.querySelectorAll(
+          "input:not([disabled]):not([type='hidden']), select:not([disabled]), textarea:not([disabled])"
+        )
+      ).filter(
+        (field) =>
+          field.offsetParent !== null &&
+          !field.readOnly
+      );
+
+      const currentIndex = fields.indexOf(target);
+
+      if (currentIndex === -1) return;
+
+      const nextField = fields[currentIndex + 1];
+
+      if (nextField) {
+        event.preventDefault();
+        nextField.focus();
+
+        if (
+          nextField.tagName === "INPUT" &&
+          nextField.type !== "date" &&
+          nextField.type !== "checkbox" &&
+          nextField.type !== "radio"
+        ) {
+          nextField.select();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleGlobalEnter);
+
+    return () => {
+      document.removeEventListener("keydown", handleGlobalEnter);
+    };
+  }, []);
+
   const bankBranches = [
     "UNION BANK OF INDIA - KV KUPPAM",
   ];
