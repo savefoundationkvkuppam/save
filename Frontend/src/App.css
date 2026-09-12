@@ -13070,6 +13070,44 @@ cursor: pointer;
     flex-wrap: wrap;
   }
 }
+/* =========================================================
+   ATTENDANCE CHECKBOXES — SIDE BY SIDE
+   ========================================================= */
+
+.save-page.transaction-page .attendance-info {
+  padding: 20px 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-page.transaction-page .attendance-checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: none;
+}
+
+.save-page.transaction-page .attendance-checkbox-row label {
+  min-width: 150px;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 13px 16px;
+}
+
+/* Keep them stacked on small screens */
+@media (max-width: 700px) {
+  .save-page.transaction-page .attendance-checkbox-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .save-page.transaction-page .attendance-checkbox-row label {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
 
 
 
