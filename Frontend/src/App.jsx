@@ -23493,23 +23493,6 @@ if (item === "Mark Dissolved Gps") {
                     </label>
 
                   </div>
-
-                  <div className="attendance-notice">
-                    The Monthly Auto Journal is not passed for the
-                    Previous Months. Please go to Transaction Menu
-                    and pass Monthly Auto Journal by Clicking the
-                    Button "Auto Jrnl. Lock" OR You might not have
-                    entered data entry for the previous months.
-                    Get Data Entry Extension from your Programme
-                    Team. OR if you are going to do data entry for
-                    April, you might not have entered data for long
-                    period of time. Hence, you need to get approval
-                    from CFO to do the entry as data entry is not
-                    completed within 5 days. OR It might be a new
-                    group but data entry not completed within 10
-                    days of data entry. Get Extension for Data Entry.
-                  </div>
-
                 </div>
               </div>
 
