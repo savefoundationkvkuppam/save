@@ -12785,6 +12785,291 @@ cursor: pointer;
   display: block !important;
 }
 
+/* =========================================================
+   ATTENDANCE PAGE — MODERN SAVE FOUNDATION DESIGN
+   This overrides the existing Attendance CSS.
+   ========================================================= */
+
+.save-page.transaction-page .attendance-content {
+  padding: 28px;
+  background: linear-gradient(135deg, #f3faf6 0%, #eaf5ef 100%);
+  min-height: calc(100vh - 80px);
+}
+
+/* Main card */
+.save-page.transaction-page .attendance-card {
+  width: min(1100px, 96%);
+  margin: 10px auto 30px;
+  background: #ffffff;
+  border: 1px solid #d6e9df;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(20, 88, 67, 0.13);
+}
+
+/* Header */
+.save-page.transaction-page .attendance-title {
+  width: 100%;
+  padding: 17px 22px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #12634c, #238463);
+  letter-spacing: 0.3px;
+}
+
+/* Form section */
+.save-page.transaction-page .attendance-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.85fr);
+  background: #ffffff;
+}
+
+/* Left form */
+.save-page.transaction-page .attendance-left {
+  padding: 22px 24px;
+  border-right: 1px solid #dfede7;
+}
+
+.save-page.transaction-page .attendance-row {
+  display: grid;
+  grid-template-columns: 155px minmax(180px, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  border-bottom: 0;
+}
+
+.save-page.transaction-page .attendance-row label {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  color: #164d3d;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.save-page.transaction-page .attendance-row input,
+.save-page.transaction-page .attendance-row select {
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  padding: 7px 12px;
+  box-sizing: border-box;
+  border: 1px solid #c9ddd4;
+  border-radius: 9px;
+  background: #fbfefd;
+  color: #173f34;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.save-page.transaction-page .attendance-row input:focus,
+.save-page.transaction-page .attendance-row select:focus {
+  border-color: #238463;
+  box-shadow: 0 0 0 3px rgba(35, 132, 99, 0.12);
+  background: #ffffff;
+}
+
+/* Right checkbox section */
+.save-page.transaction-page .attendance-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: #f7fbf9;
+}
+
+.save-page.transaction-page .attendance-checkbox-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.save-page.transaction-page .attendance-checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #d3e6dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #174d3d;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(20, 88, 67, 0.06);
+  transition: all 0.2s ease;
+}
+
+.save-page.transaction-page .attendance-checkbox-row label:hover {
+  border-color: #238463;
+  transform: translateY(-1px);
+}
+
+.save-page.transaction-page .attendance-checkbox-row input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  accent-color: #238463;
+  cursor: pointer;
+}
+
+/* Member header */
+.save-page.transaction-page .attendance-table-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 50px;
+  padding: 0 20px;
+  background: #eaf5ef;
+  border-top: 1px solid #d7e9e0;
+  border-bottom: 1px solid #d7e9e0;
+  color: #155440;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.save-page.transaction-page .attendance-table-header > div:first-child {
+  text-align: center;
+}
+
+.save-page.transaction-page .attendance-table-header label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #155440;
+  font-weight: 700;
+}
+
+.save-page.transaction-page .attendance-table-header input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #238463;
+}
+
+/* Member area */
+.save-page.transaction-page .attendance-table {
+  min-height: 100px;
+  background: #ffffff;
+}
+
+/* Empty member message */
+.save-page.transaction-page .attendance-table
+  > div:not(.attendance-table-header) {
+  color: #71877e;
+}
+
+/* Buttons */
+.save-page.transaction-page .attendance-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  background: #f5faf7;
+  border-top: 1px solid #dcebe4;
+}
+
+.save-page.transaction-page .attendance-actions button {
+  min-width: 125px;
+  min-height: 40px;
+  padding: 9px 18px;
+  border: 1px solid #c8ddd4;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #155440;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-page.transaction-page .attendance-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(20, 88, 67, 0.12);
+  background: #eaf5ef;
+}
+
+.save-page.transaction-page .attendance-actions button:first-child {
+  background: linear-gradient(135deg, #12634c, #238463);
+  color: #ffffff;
+  border-color: #12634c;
+}
+
+.save-page.transaction-page .attendance-actions button:first-child:hover {
+  background: linear-gradient(135deg, #0e563f, #1d7659);
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .save-page.transaction-page .attendance-content {
+    padding: 14px;
+  }
+
+  .save-page.transaction-page .attendance-card {
+    width: 100%;
+    margin: 0 auto 20px;
+    border-radius: 14px;
+  }
+
+  .save-page.transaction-page .attendance-title {
+    font-size: 18px;
+    padding: 14px;
+  }
+
+  .save-page.transaction-page .attendance-top {
+    grid-template-columns: 1fr;
+  }
+
+  .save-page.transaction-page .attendance-left {
+    padding: 18px 16px;
+    border-right: none;
+    border-bottom: 1px solid #dfede7;
+  }
+
+  .save-page.transaction-page .attendance-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    min-height: auto;
+    margin-bottom: 14px;
+  }
+
+  .save-page.transaction-page .attendance-row label {
+    font-size: 14px;
+  }
+
+  .save-page.transaction-page .attendance-row input,
+  .save-page.transaction-page .attendance-row select {
+    height: 40px;
+  }
+
+  .save-page.transaction-page .attendance-info {
+    padding: 16px;
+  }
+
+  .save-page.transaction-page .attendance-checkbox-row {
+    max-width: none;
+  }
+
+  .save-page.transaction-page .attendance-table-header {
+    padding: 0 12px;
+  }
+
+  .save-page.transaction-page .attendance-actions {
+    flex-wrap: wrap;
+  }
+}
 
 
 
