@@ -4873,6 +4873,7 @@ useEffect(() => {
   const [autoJournalLockPassword, setAutoJournalLockPassword] = useState("");
   const [autoJournalLockStatus, setAutoJournalLockStatus] = useState(null);
   const [autoJournalLockLoading, setAutoJournalLockLoading] = useState(false);
+  const [autoJournalLastAttendanceDate, setAutoJournalLastAttendanceDate] =useState("not entered");
 
   const loadAutoJournalLockStatus = async (month = autoJournalLockMonth) => {
     try {
@@ -4888,12 +4889,33 @@ useEffect(() => {
       }
     }
   };
+useEffect(() => {
+  if (page === "autoJournalLock") {
+    loadAutoJournalLockStatus();
 
-  useEffect(() => {
-    if (page === "autoJournalLock") {
-      loadAutoJournalLockStatus();
-    }
-  }, [page, autoJournalLockMonth]);
+    const loadLatestAttendanceDate = async () => {
+      try {
+        const data = await apiRequest("/attendances");
+        const records = Array.isArray(data) ? data : [];
+
+        const dates = records
+          .map((record) => record?.meetingDate)
+          .filter(Boolean)
+          .sort();
+
+        setAutoJournalLastAttendanceDate(
+          dates.length ? dates[dates.length - 1] : "not entered"
+        );
+      } catch (error) {
+        console.error("Latest attendance date error:", error);
+        setAutoJournalLastAttendanceDate("not entered");
+      }
+    };
+
+    loadLatestAttendanceDate();
+  }
+}, [page, autoJournalLockMonth]);
+
 
   const lockAutoJournal = async () => {
     if (!String(autoJournalLockPassword || "").trim()) {
@@ -23407,7 +23429,7 @@ if (item === "Mark Dissolved Gps") {
     return transactionShell(
       <div className="legacy-transaction-form lock-panel auto-lock-panel small-panel">
         <div className="legacy-title">Auto Journal Lock - Pass Monthly Journals for Fund Allocation</div>
-        <div className="lock-heads"><strong>Last Entered<br/>Attendance Date<br/>not entered</strong><strong>Last Entered<br/>Receipt Date<br/>not entered</strong></div>
+        <div className="lock-heads"><strong>Last Entered<br/>Attendance Date<br/>{autoJournalLastAttendanceDate}</strong><strong>Last Entered<br/>Receipt Date<br/>not entered</strong></div>
         <div className="legacy-form-row"><label>Vazhvathram Code</label><input value={autoJournalLockCode} readOnly /></div>
         <div className="legacy-form-row"><label>Month</label><select size={4} value={autoJournalLockMonth} onChange={(event) => setAutoJournalLockMonth(event.target.value)} disabled={autoJournalLockLoading}>{autoJournalLockMonths.map((month) => <option key={month}>{month}</option>)}</select></div>
         <div className="legacy-form-row"><label>Password</label><input type="password" value={autoJournalLockPassword} onChange={(event) => setAutoJournalLockPassword(event.target.value)} disabled={autoJournalLockLoading} /></div>
