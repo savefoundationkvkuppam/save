@@ -20423,12 +20423,29 @@ if (item === "Mark Dissolved Gps") {
         const wantsSpouse = lowerSelected.includes("spouse");
         const isWiseReport = lowerSelected.startsWith("klssp") || lowerSelected.startsWith("clssp");
 
-        const reportYearStart = misSspYear === "Previous Year"
-          ? new Date(2025, 3, 1)
-          : new Date(2026, 3, 1);
-        const reportYearEnd = misSspYear === "Previous Year"
-          ? new Date(2026, 2, 31, 23, 59, 59, 999)
-          : new Date(2027, 2, 31, 23, 59, 59, 999);
+        const currentYearStart = new Date(
+         `${CURRENT_FINANCIAL_YEAR.apiStartDate}T00:00:00`
+         );
+
+       const currentYearEnd = new Date(
+         `${CURRENT_FINANCIAL_YEAR.apiEndDate}T23:59:59.999`
+        );
+
+      const previousYearStart = new Date(currentYearStart);
+      previousYearStart.setFullYear(previousYearStart.getFullYear() - 1);
+
+      const previousYearEnd = new Date(currentYearEnd);
+      previousYearEnd.setFullYear(previousYearEnd.getFullYear() - 1);
+
+      const reportYearStart =
+         misSspYear === "Previous Year"
+           ? previousYearStart
+           : currentYearStart;
+
+      const reportYearEnd =
+         misSspYear === "Previous Year"
+           ? previousYearEnd
+           : currentYearEnd;
 
         const monthNumber = {
           January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
