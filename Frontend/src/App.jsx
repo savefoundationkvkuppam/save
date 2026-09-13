@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const CURRENT_WEBSITE = "website1";
+const CURRENT_WEBSITE =
+  window.location.pathname.startsWith("/website2")
+    ? "website2"
+    : "website1";
 
 const FINANCIAL_YEAR_CONFIG = {
   website1: {
