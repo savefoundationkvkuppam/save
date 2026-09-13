@@ -38,8 +38,9 @@ const CURRENT_FINANCIAL_YEAR =
   FINANCIAL_YEAR_CONFIG[CURRENT_WEBSITE];
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://honest-tenderness-production-54da.up.railway.app/api";
+  CURRENT_WEBSITE === "website2"
+    ? "https://save-production-1fb0.up.railway.app/api"
+    : "https://honest-tenderness-production-54da.up.railway.app/api";
 
 const apiRequest = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
