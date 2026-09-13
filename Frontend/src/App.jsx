@@ -1,6 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
+const CURRENT_WEBSITE = "website1";
+
+const FINANCIAL_YEAR_CONFIG = {
+  website1: {
+    financialYear: "2026 - 27",
+    startDate: "01-04-2026",
+    endDate: "31-03-2027",
+    apiStartDate: "2026-04-01",
+    apiEndDate: "2027-03-31",
+    asOnLabel: "Mar 2027",
+    confirmationMeetingDate: "2026-04-30",
+    legacyRadioDate: "30-09-2026",
+    priorYearEndDate: "31-03-2026",
+    priorYearApiStartDate: "2026-04-01",
+  },
+
+  website2: {
+    financialYear: "2025 - 26",
+    startDate: "01-04-2025",
+    endDate: "31-03-2026",
+    apiStartDate: "2025-04-01",
+    apiEndDate: "2026-03-31",
+    asOnLabel: "Mar 2026",
+    confirmationMeetingDate: "2025-04-30",
+    legacyRadioDate: "30-09-2025",
+    priorYearEndDate: "31-03-2025",
+    priorYearApiStartDate: "2025-04-01",
+  },
+};
+
+const CURRENT_FINANCIAL_YEAR =
+  FINANCIAL_YEAR_CONFIG[CURRENT_WEBSITE];
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   "https://honest-tenderness-production-54da.up.railway.app/api";
@@ -2997,7 +3030,7 @@ useEffect(() => {
     };
   }, []);
   const [savingRateData, setSavingRateData] = useState({
-    vazhvathramCode: "001", subLedger: "", annualRate: "9", dateChange: "2026-04-01"
+    vazhvathramCode: "001", subLedger: "", annualRate: "9", dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate
   });
   const [savingRateRecords, setSavingRateRecords] = useState([]);
   const [savingRateMode, setSavingRateMode] = useState("view");
@@ -3018,7 +3051,7 @@ useEffect(() => {
     return () => { cancelled = true; };
   }, []);
   const [loanRateData, setLoanRateData] = useState({
-    vazhvathramCode: "001", subLedger: "", annualRate: "24", dateChange: "2026-04-01"
+    vazhvathramCode: "001", subLedger: "", annualRate: "24", dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate
   });
   const [loanRateRecords, setLoanRateRecords] = useState([]);
   const [loanRateMode, setLoanRateMode] = useState("view");
@@ -3043,7 +3076,7 @@ useEffect(() => {
   const [insuranceData, setInsuranceData] = useState({
     federationCode: "001", ogiLifeMember: "50", pmLifeMember: "100", nalam: "300", pmHealth: "450",
     ogiLifeSpouse: "50", pmLifeSpouse: "100", pmCow: "450", pmGoat: "45", tataAiaMember: "46",
-    tataAiaSpouse: "46", pmLifeOldAgeMember: "600", pmLifeOldAgeSpouse: "300", dateChange: "2026-04-01"
+    tataAiaSpouse: "46", pmLifeOldAgeMember: "600", pmLifeOldAgeSpouse: "300", dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate
   });
   const [insuranceRecords, setInsuranceRecords] = useState([]);
   const [insuranceMode, setInsuranceMode] = useState("view");
@@ -3405,8 +3438,8 @@ useEffect(() => {
   const [selectedTransactionList, setSelectedTransactionList] = useState(
     transactionListOptions[0]
   );
-  const [transactionListFromDate, setTransactionListFromDate] = useState("01-04-2026");
-  const [transactionListToDate, setTransactionListToDate] = useState("01-04-2026");
+  const [transactionListFromDate, setTransactionListFromDate] = useState(CURRENT_FINANCIAL_YEAR.startDate);
+  const [transactionListToDate, setTransactionListToDate] = useState(CURRENT_FINANCIAL_YEAR.endDate);
   const [transactionListResults, setTransactionListResults] = useState([]);
   const [transactionListLoading, setTransactionListLoading] = useState(false);
   const [transactionListExecuted, setTransactionListExecuted] = useState(false);
@@ -5655,7 +5688,7 @@ const handleBankAccountSave = async () => {
       vazhvathramCode: "001",
       subLedger: "",
       annualRate: "9",
-      dateChange: "2026-04-01",
+      dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setSavingRateMode("view");
     setSelectedSavingRateId(null);
@@ -5666,7 +5699,7 @@ const handleBankAccountSave = async () => {
     vazhvathramCode: "001",
     subLedger: "",
     annualRate: "9",
-    dateChange: "2026-04-01",
+    dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate,
   });
 
   setSelectedSavingRateId(null);
@@ -5682,7 +5715,7 @@ const handleBankAccountSave = async () => {
           vazhvathramCode: record.vazhvathramCode || "001",
           subLedger: record.subLedger || "",
           annualRate: record.annualRate || "9",
-          dateChange: record.dateChange || "2026-04-01",
+          dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
         });
         setSavingRateMode("edit");
         return;
@@ -5702,7 +5735,7 @@ const handleBankAccountSave = async () => {
       vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "9",
-      dateChange: record.dateChange || "2026-04-01",
+      dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setSavingRateMode("edit");
   };
@@ -5783,7 +5816,7 @@ const handleSavingRateSave = async () => {
       vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "9",
-      dateChange: record.dateChange || "2026-04-01",
+      dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setSavingRateMode("view");
     setShowSavingRateList(false);
@@ -5794,7 +5827,7 @@ const handleSavingRateSave = async () => {
       vazhvathramCode: "001",
       subLedger: "",
       annualRate: "24",
-      dateChange: "2026-04-01",
+      dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setLoanRateMode("view");
     setSelectedLoanRateId(null);
@@ -5805,7 +5838,7 @@ const handleSavingRateSave = async () => {
     vazhvathramCode: "001",
     subLedger: "",
     annualRate: "24",
-    dateChange: "2026-04-01",
+    dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate,
   });
 
   setSelectedLoanRateId(null);
@@ -5820,7 +5853,7 @@ const handleSavingRateSave = async () => {
           vazhvathramCode: record.vazhvathramCode || "001",
           subLedger: record.subLedger || "",
           annualRate: record.annualRate || "24",
-          dateChange: record.dateChange || "2026-04-01",
+          dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
         });
         setLoanRateMode("edit");
         return;
@@ -5843,7 +5876,7 @@ const handleSavingRateSave = async () => {
       vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "24",
-      dateChange: record.dateChange || "2026-04-01",
+      dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setLoanRateMode("edit");
   };
@@ -5928,7 +5961,7 @@ const handleLoanRateSave = async () => {
       vazhvathramCode: record.vazhvathramCode || "001",
       subLedger: record.subLedger || "",
       annualRate: record.annualRate || "24",
-      dateChange: record.dateChange || "2026-04-01",
+      dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setLoanRateMode("view");
     setShowLoanRateList(false);
@@ -5949,7 +5982,7 @@ const handleLoanRateSave = async () => {
       tataAiaSpouse: "46",
       pmLifeOldAgeMember: "600",
       pmLifeOldAgeSpouse: "300",
-      dateChange: "2026-04-01",
+      dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setInsuranceMode("view");
     setSelectedInsuranceId(null);
@@ -5970,7 +6003,7 @@ const handleLoanRateSave = async () => {
     tataAiaSpouse: "46",
     pmLifeOldAgeMember: "600",
     pmLifeOldAgeSpouse: "300",
-    dateChange: "2026-04-01",
+    dateChange: CURRENT_FINANCIAL_YEAR.apiStartDate,
   });
 
   setSelectedInsuranceId(null);
@@ -6009,7 +6042,7 @@ const handleLoanRateSave = async () => {
       tataAiaSpouse: record.tataAiaSpouse || "46",
       pmLifeOldAgeMember: record.pmLifeOldAgeMember || "600",
       pmLifeOldAgeSpouse: record.pmLifeOldAgeSpouse || "300",
-      dateChange: record.dateChange || "2026-04-01",
+      dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setInsuranceMode("edit");
   };
@@ -6103,7 +6136,7 @@ const handleLoanRateSave = async () => {
       tataAiaSpouse: record.tataAiaSpouse || "46",
       pmLifeOldAgeMember: record.pmLifeOldAgeMember || "600",
       pmLifeOldAgeSpouse: record.pmLifeOldAgeSpouse || "300",
-      dateChange: record.dateChange || "2026-04-01",
+      dateChange: record.dateChange || CURRENT_FINANCIAL_YEAR.apiStartDate,
     });
     setInsuranceMode("view");
     setShowInsuranceList(false);
@@ -9309,7 +9342,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
 
             <h3>
               Financial Year - From
-              01-04-2026 to 31-03-2027
+              {CURRENT_FINANCIAL_YEAR.startDate} to {CURRENT_FINANCIAL_YEAR.endDate}
             </h3>
 
             <table className="stats-table">
@@ -9320,23 +9353,23 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <th>
                     As on
                     <br />
-                    Mar 2026
+                    {CURRENT_FINANCIAL_YEAR.asOnLabel}
                   </th>
                   <th>
                     Upto
                     <br />
-                    31-03-2027
+                    {CURRENT_FINANCIAL_YEAR.endDate}
                   </th>
                   <th>Particulars</th>
                   <th>
                     As on
                     <br />
-                    Mar 2026
+                    {CURRENT_FINANCIAL_YEAR.asOnLabel}
                   </th>
                   <th>
                     Upto
                     <br />
-                    31-03-2027
+                    {CURRENT_FINANCIAL_YEAR.endDate}
                   </th>
                 </tr>
               </thead>
@@ -9425,7 +9458,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
 
             <h2 className="welcome-text">
               Welcome - SAVE Software
-              (FY 2026 - 27)
+              (FY {FINANCIAL_YEAR_CONFIG.financialYear})
             </h2>
 
             <div className="message">
@@ -16199,7 +16232,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
           <span>DATE :</span>
           <select value={date} onChange={(e) => setDate(e.target.value)}>
             <option value="">Select</option>
-            <option>30-09-2026</option>
+            <option>{CURRENT_FINANCIAL_YEAR.legacyRadioDate}</option>
           </select>
           {button("Save", saveRows)}
           {button("List")}
@@ -20088,8 +20121,8 @@ if (item === "Mark Dissolved Gps") {
     ];
 
     const [masterReportSelection, setMasterReportSelection] = useState("MA 01 - General Ledger Details");
-    const [masterFromDate, setMasterFromDate] = useState("2026-04-01");
-    const [masterToDate, setMasterToDate] = useState("2026-04-01");
+    const [masterFromDate, setMasterFromDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
+    const [masterToDate, setMasterToDate] = useState(CURRENT_FINANCIAL_YEAR.apiEndDate);
     const [masterReportResults, setMasterReportResults] = useState([]);
     const [masterReportLoading, setMasterReportLoading] = useState(false);
     const [masterReportStatus, setMasterReportStatus] = useState("");
@@ -20110,8 +20143,8 @@ if (item === "Mark Dissolved Gps") {
     const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
     const [financialBankBranch, setFinancialBankBranch] = useState("");
     const [financialAcctNo, setFinancialAcctNo] = useState("5243664550");
-    const [financialFromDate, setFinancialFromDate] = useState("2026-04-01");
-    const [financialToDate, setFinancialToDate] = useState("2026-04-01");
+    const [financialFromDate, setFinancialFromDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
+    const [financialToDate, setFinancialToDate] = useState(CURRENT_FINANCIAL_YEAR.apiEndDate);
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
@@ -20121,8 +20154,8 @@ if (item === "Mark Dissolved Gps") {
     const [journalReportSelection, setJournalReportSelection] = useState(
       "JR01 - Complete Journal Report - vazhvathram"
     );
-    const [journalFromDate, setJournalFromDate] = useState("2026-04-01");
-    const [journalToDate, setJournalToDate] = useState("2026-04-01");
+    const [journalFromDate, setJournalFromDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
+    const [journalToDate, setJournalToDate] = useState(CURRENT_FINANCIAL_YEAR.apiEndDate);
     const [journalReportResults, setJournalReportResults] = useState([]);
     const [journalReportLoading, setJournalReportLoading] = useState(false);
     const [journalReportStatus, setJournalReportStatus] = useState("");
@@ -20217,7 +20250,7 @@ if (item === "Mark Dissolved Gps") {
     };
 
     // DEMAND SHEET DATABASE CONNECTION (additive; original page preserved)
-    const [demandMeetingDate, setDemandMeetingDate] = useState("2026-04-01");
+    const [demandMeetingDate, setDemandMeetingDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
     const [demandMemberMode, setDemandMemberMode] = useState("Without Locked Members");
     const [demandReportResults, setDemandReportResults] = useState([]);
     const [demandReportLoading, setDemandReportLoading] = useState(false);
@@ -20225,7 +20258,7 @@ if (item === "Mark Dissolved Gps") {
 
 
     // CONFIRMATION REPORT DATABASE CONNECTION (additive; original page preserved)
-    const [confirmationMeetingDate, setConfirmationMeetingDate] = useState("2026-04-30");
+    const [confirmationMeetingDate, setConfirmationMeetingDate] = useState(CURRENT_FINANCIAL_YEAR.confirmationMeetingDate);
     const [confirmationReportResults, setConfirmationReportResults] = useState([]);
     const [confirmationReportLoading, setConfirmationReportLoading] = useState(false);
     const [confirmationReportStatus, setConfirmationReportStatus] = useState("");
@@ -20244,7 +20277,7 @@ if (item === "Mark Dissolved Gps") {
     const [scheduleAllSubLedgers, setScheduleAllSubLedgers] = useState(false);
     const [scheduleGeneralLedger, setScheduleGeneralLedger] = useState("Administrative Expenses - 4410");
     const [scheduleSubLedger, setScheduleSubLedger] = useState("Bank Charges Not Related to SHG-Bank Linkage - 4415");
-    const [scheduleAsOnDate, setScheduleAsOnDate] = useState("2026-04-01");
+    const [scheduleAsOnDate, setScheduleAsOnDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
     const [scheduleAllDetails, setScheduleAllDetails] = useState(false);
     const [scheduleReportResults, setScheduleReportResults] = useState([]);
     const [scheduleReportLoading, setScheduleReportLoading] = useState(false);
@@ -21260,8 +21293,8 @@ if (item === "Mark Dissolved Gps") {
 
     const dates = (
       <>
-        <div className="legacy-report-row"><strong>From Date</strong><input type="date" defaultValue="2026-04-01" /></div>
-        <div className="legacy-report-row"><strong>To Date</strong><input type="date" defaultValue="2026-04-01" /></div>
+        <div className="legacy-report-row"><strong>From Date</strong><input type="date" defaultValue={CURRENT_FINANCIAL_YEAR.apiStartDate} /></div>
+        <div className="legacy-report-row"><strong>To Date</strong><input type="date" defaultValue={CURRENT_FINANCIAL_YEAR.apiEndDate} /></div>
       </>
     );
 
@@ -26673,7 +26706,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-row"><label>SB A/C or Loan A/C</label><select value={bankAccountData.accountType} onChange={e=>updateData(setBankAccountData,"accountType",e.target.value)}><option>Select A/c Type</option><option>SB A/C</option><option>Loan A/C</option></select></div>
             <div className="master-row"><label>Account Number</label><input value={bankAccountData.accountNumber} onChange={e=>updateData(setBankAccountData,"accountNumber",e.target.value)} /></div>
             <div className="master-row"><label>Account Date</label><input type="date" value={bankAccountData.accountDate} onChange={e=>updateData(setBankAccountData,"accountDate",e.target.value)} /></div>
-            <div className="master-row amount-row"><label>Amount</label><input value={bankAccountData.amount} onChange={e=>updateData(setBankAccountData,"amount",e.target.value)} /><span>Bal. Sheet - Rs. 0 as on 31/03/2026</span></div>
+            <div className="master-row amount-row"><label>Amount</label><input value={bankAccountData.amount} onChange={e=>updateData(setBankAccountData,"amount",e.target.value)} /><span>Bal. Sheet - Rs. 0 as on {new Date(CURRENT_FINANCIAL_YEAR.apiEndDate).toLocaleDateString("en-GB")}</span></div>
             <div className="master-buttons">
               <button onClick={handleBankAccountAdd}>Add</button>
               <button onClick={handleBankAccountEdit}>Edit</button>
@@ -26715,7 +26748,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             </div>
           )}
 
-          <div className="master-note bank-note"><p>For Editing the bank balance, click the list. Copy the Account No. you want to edit, Paste this against account Number. Click Edit Button. You will get the existing Values. Enter the amount you want to update. Then click Save. The new value will get updated.</p><p><b>Notes on Amount entry:</b><br/>1. Account opened in current financial year (date on or after 01-04-2026): Enter Amount as 0. The system will automatically set Amount to 0. No opening balance exists for a current-year account — balance will build through transactions.<br/>2. Account opened in prior year / Opening Balance entry (date on or before 31-03-2026): Enter the actual opening balance in the Amount field. The Balance Sheet (Cash at Bank — 2112) will be updated automatically by summing all account entries dated before 2026-04-01.<br/>3. To record the first deposit made at the time of account opening, go to Other Voucher (Other Payment) → Voucher Type: Cash → GL Head: Cash at Bank (2112) → Amount: the deposit amount → Account Type: SB A/C (or Loan A/C as applicable).</p></div>
+          <div className="master-note bank-note"><p>For Editing the bank balance, click the list. Copy the Account No. you want to edit, Paste this against account Number. Click Edit Button. You will get the existing Values. Enter the amount you want to update. Then click Save. The new value will get updated.</p><p><b>Notes on Amount entry:</b><br/>1. Account opened in current financial year (date on or after {CURRENT_FINANCIAL_YEAR.startDate}): Enter Amount as 0. The system will automatically set Amount to 0. No opening balance exists for a current-year account — balance will build through transactions.<br/>2. Account opened in prior year / Opening Balance entry (date on or before {CURRENT_FINANCIAL_YEAR.priorYearEndDate}): Enter the actual opening balance in the Amount field. The Balance Sheet (Cash at Bank — 2112) will be updated automatically by summing all account entries dated before {CURRENT_FINANCIAL_YEAR.apiStartDate}.<br/>3. To record the first deposit made at the time of account opening, go to Other Voucher (Other Payment) → Voucher Type: Cash → GL Head: Cash at Bank (2112) → Amount: the deposit amount → Account Type: SB A/C (or Loan A/C as applicable).</p></div>
         </div>
       </div></div>
     );
