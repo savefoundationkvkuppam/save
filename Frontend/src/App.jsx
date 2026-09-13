@@ -169,7 +169,10 @@ function App() {
   // COMMON / LOGIN
   // =========================================================
 
-  const [location, setLocation] = useState("Vellore KVKuppam 26-27");
+  const [location, setLocation] = useState(CURRENT_WEBSITE === "website2"
+                                           ? "Vellore KVKuppam 25-26"
+                                           : "Vellore KVKuppam 26-27"
+                                          );
   const [role, setRole] = useState("Block Integrator");
   const [dataMode, setDataMode] = useState("Data Entry");
   const [program, setProgram] = useState("Save");
@@ -2023,7 +2026,11 @@ useEffect(() => {
 
   const [selectedMutualLifeItem, setSelectedMutualLifeItem] = useState("Enrollment");
 
-  const locations = ["Vellore KVKuppam 26-27"];
+  const locations = [
+  CURRENT_WEBSITE === "website2"
+    ? "Vellore KVKuppam 25-26"
+    : "Vellore KVKuppam 26-27",
+  ];
 
   const roles = [
     "Block Integrator",
