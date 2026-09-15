@@ -21484,8 +21484,11 @@ if (item === "Mark Dissolved Gps") {
           marginTop: "14px",
           border: "1px solid #777",
           background: "#fff",
-          overflowX: "auto",
+          overflowX: "hidden",
           padding: "10px",
+          width: "100%",
+          maxWidth: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div
