@@ -22100,6 +22100,8 @@ if (item === "Mark Dissolved Gps") {
           runMISReport();
         } else if (item === "Dem. Sheet" && children === "Execute") {
           runDemandSheetReport();
+        } else if (item === "Confirmation" && children === "Execute") {
+          runConfirmationReport();
         } else if (item === "Schedule" && children === "Execute") {
           runScheduleReport();
         } else if (item === "Grading" && children === "Generate Rating") {
