@@ -7979,8 +7979,9 @@ cursor: pointer;
 }
 
 .legacy-report-card {
-  width: 560px;
+  width: 100%;
   margin: 0 auto;
+  max-width: 1200px;
   background: #aaa8d1;
   border: 1px solid #777;
   color: #000;
