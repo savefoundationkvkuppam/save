@@ -22127,7 +22127,98 @@ if (item === "Mark Dissolved Gps") {
         </>
       );
     } else if (item === "Financial") {
-      body = legacyCard(<><div className="legacy-report-panel"><div className="legacy-report-subtitle">For Member Ledger</div><div className="legacy-fields"><label>Member<input type="text" placeholder="Enter Member Name" /></label><label>Sub Ledger<select><option>Regular Savings</option><option>Special Savings</option><option>Bullet Savings</option><option>Livelihood Loan Support 1</option><option>Livelihood Loan Support 2</option><option>Housing Loan</option></select></label><label>Bank Loan Ledger<select><option>SHG Linkage - Bank</option><option>Sahaya Loan - Covid Reponse - Bank</option><option>ROC - Bank</option><option>SGSY RF - Bank</option><option>Housing Loan - HOPE</option></select></label></div><div className="legacy-report-subtitle">For Bank Book</div><div className="legacy-fields"><label>Acct Type<select><option>Savings Bank AC</option><option>Loan A/C</option></select></label><label>Bank and Branch<select></select></label><label>Acct No<select><option>5243664550</option></select></label></div></div><ListBox options={base.options} size={9}/>{dates}<div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></>);
+      body = legacyCard(
+  <>
+    <div className="legacy-report-panel">
+      <div className="legacy-report-subtitle">
+        For Member Ledger
+      </div>
+
+      <div className="legacy-fields">
+        <label>
+          Member
+          <input
+            type="text"
+            placeholder="Enter Member Name"
+          />
+        </label>
+
+        <label>
+          Sub Ledger
+          <select>
+            <option>Regular Savings</option>
+            <option>Special Savings</option>
+            <option>Bullet Savings</option>
+            <option>Livelihood Loan Support 1</option>
+            <option>Livelihood Loan Support 2</option>
+            <option>Housing Loan</option>
+          </select>
+        </label>
+
+        <label>
+          Bank Loan Ledger
+          <select>
+            <option>SHG Linkage - Bank</option>
+            <option>Sahaya Loan - Covid Reponse - Bank</option>
+            <option>ROC - Bank</option>
+            <option>SGSY RF - Bank</option>
+            <option>Housing Loan - HOPE</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="legacy-report-subtitle">
+        For Bank Book
+      </div>
+
+      <div className="legacy-fields">
+        <label>
+          Acct Type
+          <select>
+            <option>Savings Bank AC</option>
+            <option>Loan A/C</option>
+          </select>
+        </label>
+
+        <label>
+          Bank and Branch
+          <select></select>
+        </label>
+
+        <label>
+          Acct No
+          <select>
+            <option>5243664550</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <ListBox
+      options={base.options}
+      size={9}
+      value={financialReportSelection}
+      onChange={(event) => {
+        setFinancialReportSelection(event.target.value);
+        setFinancialReportStatus("");
+        setFinancialReportResults([]);
+      }}
+    />
+
+    {dates}
+
+    <div className="legacy-check">
+      <label>
+        <input type="checkbox" />
+        Regional Language
+      </label>
+    </div>
+
+    <div className="legacy-report-actions">
+      <Button />
+    </div>
+  </>
+);
     } else if (item === "Journals") {
       body = legacyCard(<><ListBox options={base.options} size={9} value={journalReportSelection} onChange={(event) => { setJournalReportSelection(event.target.value); setJournalReportStatus(""); setJournalReportResults([]); }} /><div className="legacy-report-row"><strong>From Date</strong><input type="date" value={journalFromDate} onChange={(event) => setJournalFromDate(event.target.value)} /></div><div className="legacy-report-row"><strong>To Date</strong><input type="date" value={journalToDate} onChange={(event) => setJournalToDate(event.target.value)} /></div><div className="legacy-report-actions"><Button /></div>{journalReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{journalReportStatus}</div>}{renderJournalReportResults()}</>);
     } else if (item === "MIS") {
