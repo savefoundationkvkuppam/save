@@ -22210,98 +22210,625 @@ if (item === "Mark Dissolved Gps") {
 
     const MonthBox = ({ size = 5 }) => <ListBox options={months} size={size} />;
 
-
     const runJournalReport = async () => {
-      setJournalReportLoading(true);
-      setJournalReportStatus("");
-      setJournalReportResults([]);
+  setJournalReportLoading(true);
+  setJournalReportStatus("");
+  setJournalReportResults([]);
 
-      const isInDateRange = (record) => {
-        const rawDate =
-          record?.date ||
-          record?.journalDate ||
-          record?.jrDate ||
-          record?.createdDate ||
-          record?.createdAt ||
-          "";
-        if (!rawDate) return true;
+  try {
+    /*
+     * =========================================================
+     * JOURNAL REPORT - COMMON DATA
+     * =========================================================
+     */
 
-        const parsed = new Date(rawDate);
-        if (Number.isNaN(parsed.getTime())) return true;
+    const [memberJournalsData, otherJournalsData] =
+      await Promise.all([
+        apiRequest("/member-journals"),
+        apiRequest("/other-journals"),
+      ]);
 
-        const from = journalFromDate ? new Date(`${journalFromDate}T00:00:00`) : null;
-        const to = journalToDate ? new Date(`${journalToDate}T23:59:59`) : null;
-        if (from && parsed < from) return false;
-        if (to && parsed > to) return false;
-        return true;
-      };
+    const memberJournals = Array.isArray(
+      memberJournalsData
+    )
+      ? memberJournalsData
+      : [];
 
-      try {
-        let rows = [];
-        let sourceLabel = "";
+    const otherJournals = Array.isArray(
+      otherJournalsData
+    )
+      ? otherJournalsData
+      : [];
 
-        if (
-          journalReportSelection === "JR01 - Complete Journal Report - vazhvathram" ||
-          journalReportSelection === "JR04 - Complete Journal Report - Cluster" ||
-          journalReportSelection === "JR07 - Complete Journal Report - Federation"
-        ) {
-          const [memberJournals, otherJournals] = await Promise.all([
-            apiRequest("/member-journals"),
-            apiRequest("/other-journals"),
-          ]);
+    /*
+     * =========================================================
+     * DATE HELPER
+     * =========================================================
+     */
 
-          const memberRows = (Array.isArray(memberJournals) ? memberJournals : []).map((record) => ({
-            ...record,
-            journalSource: "Member Journal",
-          }));
-          const otherRows = (Array.isArray(otherJournals) ? otherJournals : []).map((record) => ({
-            ...record,
-            journalSource: "Other Journal",
-          }));
+    const getJournalDate = (record) =>
+      record?.date ||
+      record?.journalDate ||
+      record?.jrDate ||
+      record?.createdDate ||
+      record?.createdAt ||
+      "";
 
-          rows = [...memberRows, ...otherRows].filter(isInDateRange);
-          sourceLabel = "Member Journal + Other Journal";
-        } else if (
-          journalReportSelection === "JR02 - Manual Journal Report - vazhvathram" ||
-          journalReportSelection === "JR05 - Manual Journal Report - Cluster" ||
-          journalReportSelection === "JR08 - Manual Journal Report - Federation"
-        ) {
-          const [memberJournals, otherJournals] = await Promise.all([
-            apiRequest("/member-journals"),
-            apiRequest("/other-journals"),
-          ]);
+    const parseJournalDate = (value) => {
+      if (!value) return null;
 
-          const memberRows = (Array.isArray(memberJournals) ? memberJournals : []).map((record) => ({
-            ...record,
-            journalSource: "Member Journal",
-          }));
-          const otherRows = (Array.isArray(otherJournals) ? otherJournals : []).map((record) => ({
-            ...record,
-            journalSource: "Other Journal",
-          }));
+      const date = new Date(value);
 
-          rows = [...memberRows, ...otherRows].filter(isInDateRange);
-          sourceLabel = "Manual journal data from Member Journal + Other Journal";
-        } else {
-          setJournalReportStatus(
-            `${journalReportSelection} does not have a separate journal-entry database table in the current project yet. No sample data was added.`
-          );
-          return;
-        }
-
-        setJournalReportResults(rows);
-        setJournalReportStatus(
-          `${journalReportSelection}: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded from ${sourceLabel}.`
-        );
-      } catch (error) {
-        console.error("Journal Report execute error:", error);
-        setJournalReportResults([]);
-        setJournalReportStatus(`Unable to load Journal Report data. ${error.message}`);
-      } finally {
-        setJournalReportLoading(false);
+      if (Number.isNaN(date.getTime())) {
+        return null;
       }
+
+      return date;
     };
 
+    const fromDate = journalFromDate
+      ? new Date(`${journalFromDate}T00:00:00`)
+      : null;
+
+    const toDate = journalToDate
+      ? new Date(`${journalToDate}T23:59:59.999`)
+      : null;
+
+    const isInDateRange = (record) => {
+      const rawDate = getJournalDate(record);
+
+      /*
+       * Keep records without a usable date instead of
+       * silently deleting database records.
+       */
+      if (!rawDate) {
+        return true;
+      }
+
+      const parsed = parseJournalDate(rawDate);
+
+      if (!parsed) {
+        return true;
+      }
+
+      if (fromDate && parsed < fromDate) {
+        return false;
+      }
+
+      if (toDate && parsed > toDate) {
+        return false;
+      }
+
+      return true;
+    };
+
+    /*
+     * =========================================================
+     * NORMALIZE MEMBER JOURNALS
+     * =========================================================
+     */
+
+    const memberRows = memberJournals.map(
+      (record) => ({
+        ...record,
+        "Journal Source":
+          "Member Journal",
+        "Journal Number":
+          record?.jrNo ||
+          record?.journalNumber ||
+          record?.id ||
+          "",
+        "Journal Date":
+          getJournalDate(record),
+        "Member Code":
+          record?.memberCode ||
+          record?.member?.memberCode ||
+          "",
+        "Member Name":
+          record?.memberName ||
+          record?.member?.memberName ||
+          "",
+        "General Ledger":
+          record?.genLedger ||
+          "",
+        "Narration":
+          record?.narration ||
+          "",
+        "Credit Total":
+          Number(
+            record?.creditTotal || 0
+          ),
+        "Debit Total":
+          Number(
+            record?.debitTotal || 0
+          ),
+      })
+    );
+
+    /*
+     * =========================================================
+     * NORMALIZE OTHER JOURNALS
+     * =========================================================
+     */
+
+    const otherRows = otherJournals.map(
+      (record) => ({
+        ...record,
+        "Journal Source":
+          "Other Journal",
+        "Journal Number":
+          record?.journalNumber ||
+          record?.jrNo ||
+          record?.id ||
+          "",
+        "Journal Date":
+          getJournalDate(record),
+        "Member Code": "",
+        "Member Name": "",
+        "General Ledger":
+          record?.generalLedger ||
+          "",
+        "Narration":
+          record?.narration ||
+          "",
+        "Credit Total":
+          Number(
+            record?.creditTotal || 0
+          ),
+        "Debit Total":
+          Number(
+            record?.debitTotal || 0
+          ),
+      })
+    );
+
+    /*
+     * =========================================================
+     * DATE FILTER
+     * =========================================================
+     */
+
+    const allRows = [
+      ...memberRows,
+      ...otherRows,
+    ].filter(isInDateRange);
+
+    /*
+     * Sort oldest -> newest.
+     */
+    allRows.sort((a, b) => {
+      const dateA =
+        parseJournalDate(
+          a["Journal Date"]
+        );
+
+      const dateB =
+        parseJournalDate(
+          b["Journal Date"]
+        );
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return dateA - dateB;
+    });
+
+    /*
+     * =========================================================
+     * JR01 - COMPLETE JOURNAL - VAZHVATHRAM
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR01 - Complete Journal Report - vazhvathram"
+    ) {
+      setJournalReportResults(
+        allRows.map((record) => ({
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        }))
+      );
+
+      setJournalReportStatus(
+        `JR01 - Complete Journal Report - vazhvathram: ${allRows.length} record${allRows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR02 - MANUAL JOURNAL - VAZHVATHRAM
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR02 - Manual Journal Report - vazhvathram"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR02 - Manual Journal Report - vazhvathram: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR03 - AUTO JOURNAL - VAZHVATHRAM
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR03 - Auto Journal Report - vazhvathram"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR03 - Auto Journal Report - vazhvathram: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR04 - COMPLETE JOURNAL - CLUSTER
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR04 - Complete Journal Report - Cluster"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Cluster",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR04 - Complete Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR05 - MANUAL JOURNAL - CLUSTER
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR05 - Manual Journal Report - Cluster"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Cluster",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR05 - Manual Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR06 - AUTO JOURNAL - CLUSTER
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR06 - Auto Journal Report - Cluster"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Cluster",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR06 - Auto Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR07 - COMPLETE JOURNAL - FEDERATION
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR07 - Complete Journal Report - Federation"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Federation",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR07 - Complete Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR08 - MANUAL JOURNAL - FEDERATION
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR08 - Manual Journal Report - Federation"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Federation",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR08 - Manual Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR09 - AUTO JOURNAL - FEDERATION
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR09 - Auto Journal Report - Federation"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Federation",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR09 - Auto Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * UNKNOWN REPORT
+     * =========================================================
+     */
+
+    setJournalReportStatus(
+      `${journalReportSelection} is not a recognized Journal Report option.`
+    );
+  } catch (error) {
+    console.error(
+      "Journal Report execute error:",
+      error
+    );
+
+    setJournalReportResults([]);
+
+    setJournalReportStatus(
+      `Unable to load Journal Report data. ${
+        error?.message || error
+      }`
+    );
+  } finally {
+    setJournalReportLoading(false);
+  }
+};
+    
     const renderJournalReportResults = () => {
       if (!journalReportResults.length) return null;
 
