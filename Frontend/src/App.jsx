@@ -21389,9 +21389,220 @@ if (item === "Mark Dissolved Gps") {
       } catch(error) { console.error("Financial Report execute error:",error); setFinancialReportResults([]); setFinancialReportStatus(`Unable to load Financial Report data. ${error.message}`); } finally { setFinancialReportLoading(false); }
     };
     const renderFinancialReportResults = () => {
-      if (!financialReportResults.length) return null; const keys=Array.from(new Set(financialReportResults.flatMap(r=>Object.keys(r||{})))).filter(k=>k!=="id").slice(0,12); if(!keys.length) return null;
-      return <div style={{marginTop:"14px",overflowX:"auto",border:"1px solid #777",background:"#fff"}}><table className="legacy-table"><thead><tr>{keys.map(k=><th key={k}>{k}</th>)}</tr></thead><tbody>{financialReportResults.map((r,i)=><tr key={r.id??i}>{keys.map(k=><td key={k}>{String(r?.[k]??"")}</td>)}</tr>)}</tbody></table></div>;
-    };
+  if (!financialReportResults.length) return null;
+
+  if (financialReportSelection === "Cash Book - FR01") {
+    const receipts = financialReportResults.filter((r) =>
+      ["Member Receipt", "Other Receipt"].includes(r.transactionType)
+    );
+
+    const payments = financialReportResults.filter((r) =>
+      ["Member Payment", "Other Payment"].includes(r.transactionType)
+    );
+
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          background: "#fff",
+          border: "1px solid #777",
+          padding: "16px",
+          overflowX: "auto",
+        }}
+      >
+        <h2 style={{ textAlign: "center", margin: "4px 0" }}>
+          Cash Book From {financialFromDate} To {financialToDate}
+        </h2>
+
+        <h3 style={{ textAlign: "center", margin: "12px 0" }}>
+          Receipts
+        </h3>
+
+        <table
+          className="legacy-table"
+          style={{ width: "100%", minWidth: "1200px" }}
+        >
+          <thead>
+            <tr>
+              <th>Member / Particulars</th>
+              <th>Rec. No.</th>
+              <th>Regular Savings</th>
+              <th>Special Savings</th>
+              <th>Livelihood Support 1</th>
+              <th>Service Cost 1</th>
+              <th>Livelihood Support 2</th>
+              <th>Service Cost 2</th>
+              <th>A/C No.</th>
+              <th>Amount</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {receipts.map((r, i) => (
+              <tr key={r.id ?? `receipt-${i}`}>
+                <td>
+                  {r.memberName ||
+                    r.memberCode ||
+                    r.subLedger ||
+                    r.narration ||
+                    ""}
+                </td>
+
+                <td>{r.receiptNo || ""}</td>
+
+                <td>{r.regularSavings || ""}</td>
+
+                <td>
+                  {r.specialSavings ||
+                    r.specialSavingsAmount ||
+                    ""}
+                </td>
+
+                <td>{r.livelihoodLoanSupport1 || ""}</td>
+
+                <td>{r.serviceCost1 || ""}</td>
+
+                <td>{r.livelihoodLoanSupport2 || ""}</td>
+
+                <td>{r.serviceCost2 || ""}</td>
+
+                <td>{r.accountNo || ""}</td>
+
+                <td>{r.amount || r.cash || ""}</td>
+
+                <td>{r.total || ""}</td>
+              </tr>
+            ))}
+
+            <tr>
+              <th colSpan="2">Total</th>
+              <th colSpan="8"></th>
+              <th>
+                {receipts.reduce(
+                  (sum, r) =>
+                    sum + (parseFloat(r.total) || 0),
+                  0
+                )}
+              </th>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 style={{ textAlign: "center", margin: "18px 0 12px" }}>
+          Payments
+        </h3>
+
+        <table
+          className="legacy-table"
+          style={{ width: "100%", minWidth: "800px" }}
+        >
+          <thead>
+            <tr>
+              <th>Member / Particulars</th>
+              <th>Rec. No.</th>
+              <th>Vr. No.</th>
+              <th>Vr. Date</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {payments.map((r, i) => (
+              <tr key={r.id ?? `payment-${i}`}>
+                <td>
+                  {r.memberName ||
+                    r.memberCode ||
+                    r.narration ||
+                    r.voucherType ||
+                    ""}
+                </td>
+
+                <td>{r.receiptNo || ""}</td>
+
+                <td>{r.voucherNo || ""}</td>
+
+                <td>
+                  {r.voucherDate ||
+                    r.receiptDate ||
+                    ""}
+                </td>
+
+                <td>
+                  {r.amount ||
+                    r.total ||
+                    r.loanAmount ||
+                    ""}
+                </td>
+              </tr>
+            ))}
+
+            <tr>
+              <th colSpan="4">Total</th>
+              <th>
+                {payments.reduce(
+                  (sum, r) =>
+                    sum +
+                    (parseFloat(
+                      r.amount ||
+                        r.total ||
+                        r.loanAmount ||
+                        0
+                    ) || 0),
+                  0
+                )}
+              </th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  // Existing display for all other Financial Reports
+  const keys = Array.from(
+    new Set(
+      financialReportResults.flatMap((r) =>
+        Object.keys(r || {})
+      )
+    )
+  ).filter((k) => k !== "id");
+
+  if (!keys.length) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        overflowX: "auto",
+        border: "1px solid #777",
+        background: "#fff",
+      }}
+    >
+      <table className="legacy-table">
+        <thead>
+          <tr>
+            {keys.map((k) => (
+              <th key={k}>{k}</th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {financialReportResults.map((r, i) => (
+            <tr key={r.id ?? i}>
+              {keys.map((k) => (
+                <td key={k}>
+                  {String(r?.[k] ?? "")}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
     let body;
 
