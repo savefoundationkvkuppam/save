@@ -20207,6 +20207,14 @@ if (item === "Mark Dissolved Gps") {
     const [misSspReportLoading, setMisSspReportLoading] = useState(false);
     const [misSspReportStatus, setMisSspReportStatus] = useState("");
 
+    // MIS KL 01 - Vazhvathram Details
+    const [misReportSelection, setMisReportSelection] = useState(
+      "KL 01 - vazhvathram Details"
+    );
+    const [misReportResults, setMisReportResults] = useState([]);
+    const [misReportLoading, setMisReportLoading] = useState(false);
+    const [misReportStatus, setMisReportStatus] = useState("");
+
 
 
     // VAZHVATHRAM REPORT DATABASE CONNECTION (additive; original page preserved)
