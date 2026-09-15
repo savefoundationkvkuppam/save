@@ -21388,9 +21388,38 @@ if (item === "Mark Dissolved Gps") {
         rows=filterFinancialDateRange(rows); setFinancialReportResults(rows); setFinancialReportStatus(`${financialReportSelection}: ${rows.length} record${rows.length===1?"":"s"} loaded from ${sourceLabel}.`);
       } catch(error) { console.error("Financial Report execute error:",error); setFinancialReportResults([]); setFinancialReportStatus(`Unable to load Financial Report data. ${error.message}`); } finally { setFinancialReportLoading(false); }
     };
+
     const renderFinancialReportResults = () => {
   if (!financialReportResults.length) return null;
 
+  const getValue = (record, names) => {
+    for (const name of names) {
+      const value = record?.[name];
+      if (value !== undefined && value !== null && String(value).trim() !== "") {
+        return value;
+      }
+    }
+    return "";
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const text = String(value);
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+      const [y, m, d] = text.substring(0, 10).split("-");
+      return `${d}-${m}-${y}`;
+    }
+
+    return text;
+  };
+
+  const reportTitle = financialReportSelection || "Financial Report";
+
+  /*
+   * CASH BOOK - FR01
+   * Displayed in the same report-style structure as the reference.
+   */
   if (financialReportSelection === "Cash Book - FR01") {
     const receipts = financialReportResults.filter((r) =>
       ["Member Receipt", "Other Receipt"].includes(r.transactionType)
@@ -21400,102 +21429,173 @@ if (item === "Mark Dissolved Gps") {
       ["Member Payment", "Other Payment"].includes(r.transactionType)
     );
 
+    const journals = financialReportResults.filter((r) =>
+      ["Member Journal", "Other Journal"].includes(r.transactionType)
+    );
+
+    const getMemberName = (r) =>
+      getValue(r, [
+        "memberName",
+        "member",
+        "member_name",
+        "memberCode",
+        "name",
+        "particulars",
+      ]);
+
+    const getReceiptNo = (r) =>
+      getValue(r, [
+        "receiptNo",
+        "receiptNumber",
+        "recNo",
+        "recNumber",
+        "voucherNo",
+      ]);
+
+    const getAmount = (r) =>
+      getValue(r, [
+        "amount",
+        "total",
+        "receiptAmount",
+        "paymentAmount",
+        "regularSavings",
+        "regularSaving",
+      ]);
+
+    const getDate = (r) =>
+      formatDate(
+        getValue(r, [
+          "receiptDate",
+          "voucherDate",
+          "journalDate",
+          "date",
+        ])
+      );
+
+    const totalAmount = (rows) =>
+      rows.reduce((sum, r) => {
+        const value = Number(getAmount(r));
+        return sum + (Number.isFinite(value) ? value : 0);
+      }, 0);
+
     return (
       <div
         style={{
           marginTop: "14px",
-          background: "#fff",
           border: "1px solid #777",
-          padding: "16px",
+          background: "#fff",
           overflowX: "auto",
+          padding: "10px",
         }}
       >
-        <h2 style={{ textAlign: "center", margin: "4px 0" }}>
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "18px",
+            marginBottom: "8px",
+          }}
+        >
           Cash Book From {financialFromDate} To {financialToDate}
-        </h2>
+        </div>
 
-        <h3 style={{ textAlign: "center", margin: "12px 0" }}>
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            marginBottom: "14px",
+          }}
+        >
           Receipts
-        </h3>
+        </div>
 
         <table
           className="legacy-table"
-          style={{ width: "100%", minWidth: "1200px" }}
+          style={{
+            width: "100%",
+            minWidth: "850px",
+            borderCollapse: "collapse",
+          }}
         >
           <thead>
             <tr>
               <th>Member / Particulars</th>
               <th>Rec. No.</th>
+              <th>Date</th>
               <th>Regular Savings</th>
               <th>Special Savings</th>
-              <th>Livelihood Support 1</th>
-              <th>Service Cost 1</th>
-              <th>Livelihood Support 2</th>
-              <th>Service Cost 2</th>
-              <th>A/C No.</th>
-              <th>Amount</th>
+              <th>Livelihood 1</th>
+              <th>Livelihood 2</th>
               <th>Total</th>
             </tr>
           </thead>
 
           <tbody>
-            {receipts.map((r, i) => (
-              <tr key={r.id ?? `receipt-${i}`}>
+            {receipts.map((r, index) => (
+              <tr key={r.id ?? `receipt-${index}`}>
+                <td>{getMemberName(r)}</td>
+                <td>{getReceiptNo(r)}</td>
+                <td>{getDate(r)}</td>
                 <td>
-                  {r.memberName ||
-                    r.memberCode ||
-                    r.subLedger ||
-                    r.narration ||
-                    ""}
+                  {getValue(r, [
+                    "regularSavings",
+                    "regularSaving",
+                    "regSavings",
+                  ])}
                 </td>
-
-                <td>{r.receiptNo || ""}</td>
-
-                <td>{r.regularSavings || ""}</td>
-
                 <td>
-                  {r.specialSavings ||
-                    r.specialSavingsAmount ||
-                    ""}
+                  {getValue(r, [
+                    "specialSavings",
+                    "specialSaving",
+                    "specSavings",
+                  ])}
                 </td>
-
-                <td>{r.livelihoodLoanSupport1 || ""}</td>
-
-                <td>{r.serviceCost1 || ""}</td>
-
-                <td>{r.livelihoodLoanSupport2 || ""}</td>
-
-                <td>{r.serviceCost2 || ""}</td>
-
-                <td>{r.accountNo || ""}</td>
-
-                <td>{r.amount || r.cash || ""}</td>
-
-                <td>{r.total || ""}</td>
+                <td>
+                  {getValue(r, [
+                    "livelihoodSupport1",
+                    "livelihood1",
+                    "loanSupport1",
+                  ])}
+                </td>
+                <td>
+                  {getValue(r, [
+                    "livelihoodSupport2",
+                    "livelihood2",
+                    "loanSupport2",
+                  ])}
+                </td>
+                <td>{getAmount(r)}</td>
               </tr>
             ))}
 
             <tr>
-              <th colSpan="2">Total</th>
-              <th colSpan="8"></th>
-              <th>
-                {receipts.reduce(
-                  (sum, r) =>
-                    sum + (parseFloat(r.total) || 0),
-                  0
-                )}
-              </th>
+              <td colSpan="7" style={{ fontWeight: "bold" }}>
+                Total
+              </td>
+              <td style={{ fontWeight: "bold" }}>
+                {totalAmount(receipts)}
+              </td>
             </tr>
           </tbody>
         </table>
 
-        <h3 style={{ textAlign: "center", margin: "18px 0 12px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            margin: "18px 0 10px",
+          }}
+        >
           Payments
-        </h3>
+        </div>
 
         <table
           className="legacy-table"
-          style={{ width: "100%", minWidth: "800px" }}
+          style={{
+            width: "100%",
+            minWidth: "700px",
+            borderCollapse: "collapse",
+          }}
         >
           <thead>
             <tr>
@@ -21508,92 +21608,197 @@ if (item === "Mark Dissolved Gps") {
           </thead>
 
           <tbody>
-            {payments.map((r, i) => (
-              <tr key={r.id ?? `payment-${i}`}>
+            {payments.map((r, index) => (
+              <tr key={r.id ?? `payment-${index}`}>
+                <td>{getMemberName(r) || "Cash"}</td>
+                <td>{getReceiptNo(r)}</td>
                 <td>
-                  {r.memberName ||
-                    r.memberCode ||
-                    r.narration ||
-                    r.voucherType ||
-                    ""}
+                  {getValue(r, [
+                    "voucherNo",
+                    "vrNo",
+                    "paymentVoucherNo",
+                  ])}
                 </td>
-
-                <td>{r.receiptNo || ""}</td>
-
-                <td>{r.voucherNo || ""}</td>
-
-                <td>
-                  {r.voucherDate ||
-                    r.receiptDate ||
-                    ""}
-                </td>
-
-                <td>
-                  {r.amount ||
-                    r.total ||
-                    r.loanAmount ||
-                    ""}
-                </td>
+                <td>{getDate(r)}</td>
+                <td>{getAmount(r)}</td>
               </tr>
             ))}
 
             <tr>
-              <th colSpan="4">Total</th>
-              <th>
-                {payments.reduce(
-                  (sum, r) =>
-                    sum +
-                    (parseFloat(
-                      r.amount ||
-                        r.total ||
-                        r.loanAmount ||
-                        0
-                    ) || 0),
-                  0
-                )}
-              </th>
+              <td colSpan="4" style={{ fontWeight: "bold" }}>
+                Total
+              </td>
+              <td style={{ fontWeight: "bold" }}>
+                {totalAmount(payments)}
+              </td>
             </tr>
           </tbody>
         </table>
+
+        {journals.length > 0 && (
+          <>
+            <div
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                margin: "18px 0 10px",
+              }}
+            >
+              Journals
+            </div>
+
+            <table
+              className="legacy-table"
+              style={{
+                width: "100%",
+                minWidth: "700px",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th>Member / Particulars</th>
+                  <th>Journal No.</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {journals.map((r, index) => (
+                  <tr key={r.id ?? `journal-${index}`}>
+                    <td>{getMemberName(r)}</td>
+                    <td>
+                      {getValue(r, [
+                        "journalNo",
+                        "voucherNo",
+                        "jrNo",
+                      ])}
+                    </td>
+                    <td>{getDate(r)}</td>
+                    <td>{getAmount(r)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        <div
+          style={{
+            marginTop: "18px",
+            borderTop: "1px solid #777",
+            paddingTop: "10px",
+            fontWeight: "bold",
+          }}
+        >
+          Cash in Hand
+          <span style={{ float: "right" }}>
+            {totalAmount(receipts) - totalAmount(payments)}
+          </span>
+        </div>
       </div>
     );
   }
 
-  // Existing display for all other Financial Reports
-  const keys = Array.from(
-    new Set(
-      financialReportResults.flatMap((r) =>
-        Object.keys(r || {})
-      )
-    )
-  ).filter((k) => k !== "id");
+  /*
+   * ALL OTHER FINANCIAL REPORTS
+   * Every selected report will display its complete available
+   * PostgreSQL data instead of the old generic broken layout.
+   */
+  const rows = financialReportResults;
 
-  if (!keys.length) return null;
+  const preferredKeys = [
+    "memberCode",
+    "memberName",
+    "member",
+    "name",
+    "receiptNo",
+    "receiptNumber",
+    "voucherNo",
+    "journalNo",
+    "receiptDate",
+    "voucherDate",
+    "journalDate",
+    "date",
+    "accountNo",
+    "accountType",
+    "amount",
+    "total",
+    "transactionType",
+    "source",
+  ];
+
+  const allKeys = Array.from(
+    new Set(
+      rows.flatMap((record) => Object.keys(record || {}))
+    )
+  ).filter((key) => key !== "id");
+
+  const keys = [
+    ...preferredKeys.filter((key) => allKeys.includes(key)),
+    ...allKeys.filter((key) => !preferredKeys.includes(key)),
+  ];
 
   return (
     <div
       style={{
         marginTop: "14px",
-        overflowX: "auto",
         border: "1px solid #777",
         background: "#fff",
+        overflowX: "auto",
+        padding: "10px",
       }}
     >
-      <table className="legacy-table">
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          fontSize: "18px",
+          marginBottom: "10px",
+        }}
+      >
+        {reportTitle}
+      </div>
+
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          marginBottom: "14px",
+        }}
+      >
+        From {financialFromDate} To {financialToDate}
+      </div>
+
+      <table
+        className="legacy-table"
+        style={{
+          width: "100%",
+          minWidth: "900px",
+          borderCollapse: "collapse",
+        }}
+      >
         <thead>
           <tr>
-            {keys.map((k) => (
-              <th key={k}>{k}</th>
+            {keys.map((key) => (
+              <th key={key}>
+                {key
+                  .replace(/([A-Z])/g, " $1")
+                  .replace(/^./, (letter) => letter.toUpperCase())}
+              </th>
             ))}
           </tr>
         </thead>
 
         <tbody>
-          {financialReportResults.map((r, i) => (
-            <tr key={r.id ?? i}>
-              {keys.map((k) => (
-                <td key={k}>
-                  {String(r?.[k] ?? "")}
+          {rows.map((record, index) => (
+            <tr key={record.id ?? index}>
+              {keys.map((key) => (
+                <td key={key}>
+                  {key.toLowerCase().includes("date")
+                    ? formatDate(record?.[key])
+                    : String(record?.[key] ?? "")}
                 </td>
               ))}
             </tr>
@@ -21603,7 +21808,6 @@ if (item === "Mark Dissolved Gps") {
     </div>
   );
 };
-
     let body;
 
     if (item === "Master") {
