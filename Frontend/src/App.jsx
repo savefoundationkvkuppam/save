@@ -21163,10 +21163,34 @@ if (item === "Mark Dissolved Gps") {
     };
 
     const Button = ({ children = "Execute", onClick }) => (
-      <button type="button" onClick={onClick || (() => { if (item === "Financial" && children === "Execute") runFinancialReport(); else if (item === "Journals" && children === "Execute") runJournalReport(); else if (item === "MIS-SSP" && children === "Execute") runMISSSPReport(); else if (item === "Dem. Sheet" && children === "Execute") runDemandSheetReport(); else if (item === "Schedule" && children === "Execute") runScheduleReport(); else if (item === "Grading" && children === "Generate Rating") runGradingReport(); else alert(`${item}: ${children}`); })}>
-        {children}
-      </button>
-    );
+  <button
+    type="button"
+    onClick={
+      onClick ||
+      (() => {
+        if (item === "Financial" && children === "Execute") {
+          runFinancialReport();
+        } else if (item === "Journals" && children === "Execute") {
+          runJournalReport();
+        } else if (item === "MIS-SSP" && children === "Execute") {
+          runMISSSPReport();
+        } else if (item === "MIS" && children === "Execute") {
+          runMISReport();
+        } else if (item === "Dem. Sheet" && children === "Execute") {
+          runDemandSheetReport();
+        } else if (item === "Schedule" && children === "Execute") {
+          runScheduleReport();
+        } else if (item === "Grading" && children === "Generate Rating") {
+          runGradingReport();
+        } else {
+          alert(`${item}: ${children}`);
+        }
+      })
+    }
+  >
+    {children}
+  </button>
+);
 
     const ListBox = ({ options, size = 8, multiple = false, value, onChange }) => (
       <select className="legacy-report-list" size={size} multiple={multiple} value={value} onChange={onChange} defaultValue={value === undefined ? (multiple ? [] : undefined) : undefined}>
@@ -22651,8 +22675,146 @@ sourceLabel =
 );
     } else if (item === "Journals") {
       body = legacyCard(<><ListBox options={base.options} size={9} value={journalReportSelection} onChange={(event) => { setJournalReportSelection(event.target.value); setJournalReportStatus(""); setJournalReportResults([]); }} /><div className="legacy-report-row"><strong>From Date</strong><input type="date" value={journalFromDate} onChange={(event) => setJournalFromDate(event.target.value)} /></div><div className="legacy-report-row"><strong>To Date</strong><input type="date" value={journalToDate} onChange={(event) => setJournalToDate(event.target.value)} /></div><div className="legacy-report-actions"><Button /></div>{journalReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{journalReportStatus}</div>}{renderJournalReportResults()}</>);
-    } else if (item === "MIS") {
-      body = legacyCard(<><ListBox options={base.options} size={13}/><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["Livelihood Loan Support 1", "Livelihood Loan Support 2", "Housing Loan"]} size={3}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
+    } } else if (item === "MIS") {
+  body = legacyCard(
+    <>
+      <ListBox
+        options={base.options}
+        size={13}
+        value={misReportSelection}
+        onChange={(event) => {
+          setMisReportSelection(event.target.value);
+          setMisReportStatus("");
+          setMisReportResults([]);
+        }}
+      />
+
+      <div className="legacy-report-two-col">
+        <div>
+          <div className="legacy-report-section-label">
+            Subledger
+          </div>
+
+          <ListBox
+            options={[
+              "Livelihood Loan Support 1",
+              "Livelihood Loan Support 2",
+              "Housing Loan",
+            ]}
+            size={3}
+          />
+        </div>
+
+        <div>
+          <div className="legacy-report-section-label">
+            MONTH
+          </div>
+
+          <MonthBox size={5} />
+        </div>
+      </div>
+
+      <div className="legacy-report-actions">
+        <Button />
+      </div>
+
+      {misReportLoading && (
+        <div
+          style={{
+            marginTop: "10px",
+            padding: "8px",
+            border: "1px solid #777",
+            background: "#f4f4f4",
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          Loading MIS report...
+        </div>
+      )}
+
+      {misReportStatus && (
+        <div
+          style={{
+            marginTop: "10px",
+            padding: "8px",
+            border: "1px solid #777",
+            background: "#f4f4f4",
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          {misReportStatus}
+        </div>
+      )}
+
+      {misReportResults.length > 0 &&
+        misReportSelection ===
+          "KL 01 - vazhvathram Details" && (
+          <div
+            style={{
+              marginTop: "15px",
+              overflowX: "auto",
+            }}
+          >
+            <h2 style={{ textAlign: "center" }}>
+              KL 01 - Vazhvathram Details
+            </h2>
+
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                background: "#fff",
+              }}
+            >
+              <thead>
+                <tr>
+                  {Object.keys(misReportResults[0]).map(
+                    (key) => (
+                      <th
+                        key={key}
+                        style={{
+                          border: "1px solid #777",
+                          padding: "8px",
+                          background: "#e9e9e9",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {key}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+
+              <tbody>
+                {misReportResults.map(
+                  (record, index) => (
+                    <tr key={index}>
+                      {Object.keys(
+                        misReportResults[0]
+                      ).map((key) => (
+                        <td
+                          key={key}
+                          style={{
+                            border: "1px solid #777",
+                            padding: "8px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {record[key] ?? ""}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+    </>
+  );
     } else if (item === "MIS-SSP") {
       body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-row"><strong>Select Year</strong><select><option>Current Year</option><option>Previous Year</option></select></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["Social Security Programme - Member Life", "Social Security Programme - Spouse Life", "Social Security Programme - Livestock", "Social Security Programme - Health", "Social Security Programme - Pension","Social Security Programme - Endowment","Social Security Programme - Crop","Tata - AIA - Member","Tata - AIA - Spouse","Nalam","Mut.Help Prog. Risk share Contr.- Member Life","Mut.Help Prog. Risk share Contr.Spouse Life","Mut.Help Prog. Risk share Contr.- Health","Mut.Help Prog. Risk share Contr.- Livestock","Mut.Help Prog. Risk share Contr.- Crop","Mut.Help Prog. Funeral Fund","Mut.Help Prog.Admin Fund","Mut.Help Prog. Risk Share Contr.-Mem Li OA","Mut.Help Prog.Risk Share Contr. - Spo Li OA","Mut.Help Prog. - Benefit-Member Life","Mut.Help Prog. -Benefit - Spouse Life","Mut.Help Prog.-Benefit - Health","Mut.Help Prog.-Benefit -LiveStock","Mut.Help prog. - Benefit - Crop","Mut.Help prog. - Benefit - Funeral Fund","Mut.Help prog. - Benefit -Mem Life Old Age","Mut.Help prog. - Benefit - Spo Life Old Age","Social Secu. Prog.-Benefit- Health"]} size={6}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
     } else if (item === "Dem. Sheet") {
