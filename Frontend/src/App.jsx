@@ -21370,61 +21370,129 @@ if (item === "Mark Dissolved Gps") {
           const [mr,or,mp,op,mj,oj]=await Promise.all([loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts"),loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/other-payments"),loadFinancialEndpoint("/member-journals"),loadFinancialEndpoint("/other-journals")]);
           rows=[...mr.map(r=>({...r,transactionType:"Member Receipt"})),...or.map(r=>({...r,transactionType:"Other Receipt"})),...mp.map(r=>({...r,transactionType:"Member Payment"})),...op.map(r=>({...r,transactionType:"Other Payment"})),...mj.map(r=>({...r,transactionType:"Member Journal"})),...oj.map(r=>({...r,transactionType:"Other Journal"}))]; sourceLabel="existing receipt, payment and journal tables";
           } else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
-          const [mr, or, mp, op] = await Promise.all([
-          loadFinancialEndpoint("/member-receipts"),
-          loadFinancialEndpoint("/other-receipts"),
-          loadFinancialEndpoint("/member-payments"),
-          loadFinancialEndpoint("/other-payments"),
-        ]);
+         const [mr, or, mp, op, bankAccounts] = await Promise.all([
+  loadFinancialEndpoint("/member-receipts"),
+  loadFinancialEndpoint("/other-receipts"),
+  loadFinancialEndpoint("/member-payments"),
+  loadFinancialEndpoint("/other-payments"),
+  loadFinancialEndpoint("/bank-accounts"),
+]);
 
-        const receiptRows = [
-          ...mr.map(r => ({
-            ...r,
-            transactionType: "Receipt",
-            accountCode: r.accountNo || r.accountType || "",
-            accountName: r.memberName || "Member Receipt",
-            transactionDate: r.receiptDate || "",
-            receiptAmount: Number(r.total || 0),
-            paymentAmount: 0,
-          })),
+const bankAccountRows = Array.isArray(bankAccounts)
+  ? bankAccounts
+  : [];
 
-          ...or.map(r => ({
-            ...r,
-            transactionType: "Receipt",
-            accountCode: r.accountNo || r.accountType || "",
-            accountName: r.receiptType || r.subLedger || "Other Receipt",
-            transactionDate: r.receiptDate || "",
-            receiptAmount: Number(r.total || r.amount || 0),
-            paymentAmount: 0,
-          })),
-        ];
+const findMemberBankAccount = (record) => {
+  const memberCode = String(record?.memberCode || "")
+    .trim()
+    .toLowerCase();
 
-        const paymentRows = [
-          ...mp.map(r => ({
-           ...r,
-            transactionType: "Payment",
-            accountCode: r.accountNo || r.accountType || "",
-            accountName: r.memberName || "Member Payment",
-            transactionDate: r.voucherDate || "",
-            receiptAmount: 0,
-            paymentAmount: Number(r.total || 0),
-          })),
+  const memberName = String(record?.memberName || "")
+    .trim()
+    .toLowerCase();
 
-          ...op.map(r => ({
-            ...r,
-            transactionType: "Payment",
-            accountCode: r.accountNo || r.accountType || "",
-            accountName: r.voucherType || r.accountType || "Other Payment",
-            transactionDate: r.voucherDate || "",
-            receiptAmount: 0,
-            paymentAmount: Number(r.total || r.amount || 0),
-          })),
-        ];
+  return bankAccountRows.find((account) => {
+    const accountMemberCode = String(
+      account?.memberCode || ""
+    )
+      .trim()
+      .toLowerCase();
 
-        rows = [...receiptRows, ...paymentRows];
+    const accountMemberName = String(
+      account?.memberName || ""
+    )
+      .trim()
+      .toLowerCase();
 
-         sourceLabel = "existing receipt and payment tables";
-        } else if (financialReportSelection === "Receipts & Payments - FR03") {
+    return (
+      (memberCode &&
+        accountMemberCode &&
+        memberCode === accountMemberCode) ||
+      (memberName &&
+        accountMemberName &&
+        memberName === accountMemberName)
+    );
+  });
+};
+
+const receiptRows = [
+  ...mr.map((r) => {
+    const bankAccount = findMemberBankAccount(r);
+
+    return {
+      ...r,
+      transactionType: "Receipt",
+      accountCode:
+        bankAccount?.accountNumber ||
+        r.accountNo ||
+        r.accountType ||
+        "",
+      accountName:
+        r.memberName ||
+        bankAccount?.memberName ||
+        "Member Receipt",
+      transactionDate: r.receiptDate || "",
+      receiptAmount: Number(r.total || 0),
+      paymentAmount: 0,
+    };
+  }),
+
+  ...or.map((r) => ({
+    ...r,
+    transactionType: "Receipt",
+    accountCode: r.accountNo || r.accountType || "",
+    accountName:
+      r.receiptType ||
+      r.subLedger ||
+      "Other Receipt",
+    transactionDate: r.receiptDate || "",
+    receiptAmount: Number(r.total || r.amount || 0),
+    paymentAmount: 0,
+  })),
+];
+
+const paymentRows = [
+  ...mp.map((r) => {
+    const bankAccount = findMemberBankAccount(r);
+
+    return {
+      ...r,
+      transactionType: "Payment",
+      accountCode:
+        bankAccount?.accountNumber ||
+        r.accountNo ||
+        r.accountType ||
+        "",
+      accountName:
+        r.memberName ||
+        bankAccount?.memberName ||
+        "Member Payment",
+      transactionDate: r.voucherDate || "",
+      receiptAmount: 0,
+      paymentAmount: Number(r.total || 0),
+    };
+  }),
+
+  ...op.map((r) => ({
+    ...r,
+    transactionType: "Payment",
+    accountCode: r.accountNo || r.accountType || "",
+    accountName:
+      r.voucherType ||
+      r.accountType ||
+      "Other Payment",
+    transactionDate: r.voucherDate || "",
+    receiptAmount: 0,
+    paymentAmount: Number(r.total || r.amount || 0),
+  })),
+];
+
+rows = [...receiptRows, ...paymentRows];
+
+sourceLabel =
+  "existing receipt, payment and bank account tables";}
+          
+        else if (financialReportSelection === "Receipts & Payments - FR03") {
           const [mr,or,mp,op]=await Promise.all([loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts"),loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/other-payments")]);
           rows=[...mr.map(r=>({...r,transactionType:"Member Receipt"})),...or.map(r=>({...r,transactionType:"Other Receipt"})),...mp.map(r=>({...r,transactionType:"Member Payment"})),...op.map(r=>({...r,transactionType:"Other Payment"}))]; sourceLabel="existing receipt and payment tables";
         } else if (["Income & Expenditure - FR04","Balance Sheet - FR05","Trial Balance - FR06"].includes(financialReportSelection)) {
