@@ -21369,9 +21369,61 @@ if (item === "Mark Dissolved Gps") {
         if (financialReportSelection === "Cash Book - FR01") {
           const [mr,or,mp,op,mj,oj]=await Promise.all([loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts"),loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/other-payments"),loadFinancialEndpoint("/member-journals"),loadFinancialEndpoint("/other-journals")]);
           rows=[...mr.map(r=>({...r,transactionType:"Member Receipt"})),...or.map(r=>({...r,transactionType:"Other Receipt"})),...mp.map(r=>({...r,transactionType:"Member Payment"})),...op.map(r=>({...r,transactionType:"Other Payment"})),...mj.map(r=>({...r,transactionType:"Member Journal"})),...oj.map(r=>({...r,transactionType:"Other Journal"}))]; sourceLabel="existing receipt, payment and journal tables";
-        } else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
-          const [ba,bd,br,mr,or]=await Promise.all([loadFinancialEndpoint("/bank-accounts"),loadFinancialEndpoint("/bank-details"),loadFinancialEndpoint("/branches"),loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts")]);
-          rows=[...ba.map(r=>({...r,source:"Bank Account"})),...bd.map(r=>({...r,source:"Bank Details"})),...br.map(r=>({...r,source:"Branch Details"})),...mr.map(r=>({...r,source:"Member Receipt"})),...or.map(r=>({...r,source:"Other Receipt"}))]; sourceLabel="existing bank/account and receipt tables";
+          } else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
+          const [mr, or, mp, op] = await Promise.all([
+          loadFinancialEndpoint("/member-receipts"),
+          loadFinancialEndpoint("/other-receipts"),
+          loadFinancialEndpoint("/member-payments"),
+          loadFinancialEndpoint("/other-payments"),
+        ]);
+
+        const receiptRows = [
+          ...mr.map(r => ({
+            ...r,
+            transactionType: "Receipt",
+            accountCode: r.accountNo || r.accountType || "",
+            accountName: r.memberName || "Member Receipt",
+            transactionDate: r.receiptDate || "",
+            receiptAmount: Number(r.total || 0),
+            paymentAmount: 0,
+          })),
+
+          ...or.map(r => ({
+            ...r,
+            transactionType: "Receipt",
+            accountCode: r.accountNo || r.accountType || "",
+            accountName: r.receiptType || r.subLedger || "Other Receipt",
+            transactionDate: r.receiptDate || "",
+            receiptAmount: Number(r.total || r.amount || 0),
+            paymentAmount: 0,
+          })),
+        ];
+
+        const paymentRows = [
+          ...mp.map(r => ({
+           ...r,
+            transactionType: "Payment",
+            accountCode: r.accountNo || r.accountType || "",
+            accountName: r.memberName || "Member Payment",
+            transactionDate: r.voucherDate || "",
+            receiptAmount: 0,
+            paymentAmount: Number(r.total || 0),
+          })),
+
+          ...op.map(r => ({
+            ...r,
+            transactionType: "Payment",
+            accountCode: r.accountNo || r.accountType || "",
+            accountName: r.voucherType || r.accountType || "Other Payment",
+            transactionDate: r.voucherDate || "",
+            receiptAmount: 0,
+            paymentAmount: Number(r.total || r.amount || 0),
+          })),
+        ];
+
+        rows = [...receiptRows, ...paymentRows];
+
+         sourceLabel = "existing receipt and payment tables";
         } else if (financialReportSelection === "Receipts & Payments - FR03") {
           const [mr,or,mp,op]=await Promise.all([loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts"),loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/other-payments")]);
           rows=[...mr.map(r=>({...r,transactionType:"Member Receipt"})),...or.map(r=>({...r,transactionType:"Other Receipt"})),...mp.map(r=>({...r,transactionType:"Member Payment"})),...op.map(r=>({...r,transactionType:"Other Payment"}))]; sourceLabel="existing receipt and payment tables";
