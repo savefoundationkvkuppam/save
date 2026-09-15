@@ -26689,9 +26689,10 @@ sourceLabel =
               </div>
 
               {attendanceRecords.length > 0 && (
-                <div style={{ marginTop: "20px", overflowX: "auto" }}>
+                <div className="saved-attendance-records ">
                   <h3>Saved Attendance Records</h3>
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <div className="saved-attendance-table-wrapper">
+                  <table className="saved-attendance-table">
                     <thead>
                       <tr>
                         <th>Meeting Date</th>
@@ -26716,6 +26717,7 @@ sourceLabel =
                       ))}
                     </tbody>
                   </table>
+                </div>
                 </div>
               )}
 
