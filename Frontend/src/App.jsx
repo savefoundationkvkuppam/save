@@ -21753,6 +21753,168 @@ if (item === "Mark Dissolved Gps") {
       </div>
     );
   }
+        /*
+   * BANK BOOK - FR02A
+   * Account-number-wise Receipts & Payments report.
+   */
+  if (
+    financialReportSelection ===
+    "Bank Book - Acct No. wise - FR02A"
+  ) {
+    const bankRows = financialReportResults;
+
+    const accountRows = bankRows.reduce((result, record) => {
+      const accountCode =
+        String(
+          record?.accountCode ||
+          record?.accountNo ||
+          record?.accountType ||
+          ""
+        ).trim();
+
+      const accountName =
+        String(
+          record?.accountName ||
+          record?.memberName ||
+          record?.receiptType ||
+          record?.voucherType ||
+          record?.subLedger ||
+          record?.accountType ||
+          "Bank Account"
+        ).trim();
+
+      const key = `${accountCode}|||${accountName}`;
+
+      if (!result[key]) {
+        result[key] = {
+          accountCode,
+          accountName,
+          receipts: 0,
+          payments: 0,
+        };
+      }
+
+      const receiptAmount = Number(record?.receiptAmount || 0);
+      const paymentAmount = Number(record?.paymentAmount || 0);
+
+      if (Number.isFinite(receiptAmount)) {
+        result[key].receipts += receiptAmount;
+      }
+
+      if (Number.isFinite(paymentAmount)) {
+        result[key].payments += paymentAmount;
+      }
+
+      return result;
+    }, {});
+
+    const reportRows = Object.values(accountRows);
+
+    const totalReceipts = reportRows.reduce(
+      (sum, row) => sum + row.receipts,
+      0
+    );
+
+    const totalPayments = reportRows.reduce(
+      (sum, row) => sum + row.payments,
+      0
+    );
+
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          border: "1px solid #777",
+          background: "#fff",
+          overflowX: "auto",
+          padding: "10px",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "18px",
+            marginBottom: "8px",
+          }}
+        >
+          Bank Book - Acct No. wise - FR02A
+        </div>
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            marginBottom: "14px",
+          }}
+        >
+          From {financialFromDate} To {financialToDate}
+        </div>
+
+        <table
+          className="legacy-table"
+          style={{
+            width: "100%",
+            minWidth: "700px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <thead>
+            <tr>
+              <th>A/C Code</th>
+              <th>A/C Name</th>
+              <th>Receipts</th>
+              <th>Payments</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {reportRows.map((row, index) => (
+              <tr key={`${row.accountCode}-${row.accountName}-${index}`}>
+                <td>{row.accountCode}</td>
+                <td>{row.accountName}</td>
+                <td>{row.receipts.toFixed(2)}</td>
+                <td>{row.payments.toFixed(2)}</td>
+              </tr>
+            ))}
+
+            <tr>
+              <td
+                colSpan="2"
+                style={{ fontWeight: "bold", textAlign: "right" }}
+              >
+                Total
+              </td>
+
+              <td style={{ fontWeight: "bold" }}>
+                {totalReceipts.toFixed(2)}
+              </td>
+
+              <td style={{ fontWeight: "bold" }}>
+                {totalPayments.toFixed(2)}
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                colSpan="2"
+                style={{ fontWeight: "bold", textAlign: "right" }}
+              >
+                Difference
+              </td>
+
+              <td
+                colSpan="2"
+                style={{ fontWeight: "bold", textAlign: "center" }}
+              >
+                {(totalReceipts - totalPayments).toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 
   /*
    * ALL OTHER FINANCIAL REPORTS
