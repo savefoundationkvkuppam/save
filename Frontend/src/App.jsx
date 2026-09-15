@@ -21341,13 +21341,12 @@ if (item === "Mark Dissolved Gps") {
       </div>
     );
 
-    const dates = (
-      <>
-        <div className="legacy-report-row"><strong>From Date</strong><input type="date" defaultValue={CURRENT_FINANCIAL_YEAR.apiStartDate} /></div>
-        <div className="legacy-report-row"><strong>To Date</strong><input type="date" defaultValue={CURRENT_FINANCIAL_YEAR.apiEndDate} /></div>
-      </>
+     const dates = (
+       <>
+          <div className="legacy-report-row"><strong>From Date</strong><input type="date" value={financialFromDate} onChange={(event) => setFinancialFromDate(event.target.value)} /></div>
+          <div className="legacy-report-row"><strong>To Date</strong><input type="date" value={financialToDate} onChange={(event) => setFinancialToDate(event.target.value)} /></div>
+       </>
     );
-
 
     const parseFinancialDate = (value) => {
       const text = String(value || "").trim();
