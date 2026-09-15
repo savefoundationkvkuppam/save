@@ -20549,7 +20549,8 @@ if (item === "Mark Dissolved Gps") {
         setMisSspReportLoading(false);
       }
     };
-      const runMISReport = async () => {
+
+     const runMISReport = async () => {
   setMisReportLoading(true);
   setMisReportStatus("");
   setMisReportResults([]);
@@ -20557,7 +20558,7 @@ if (item === "Mark Dissolved Gps") {
   try {
     /*
      * =========================================================
-     * MIS REPORT - COMMON DATABASE DATA
+     * COMMON MIS DATA
      * =========================================================
      */
 
@@ -20601,21 +20602,13 @@ if (item === "Mark Dissolved Gps") {
 
     /*
      * =========================================================
-     * COMMON HELPERS
+     * COMMON VALUES
      * =========================================================
      */
 
-    const selectedReport = String(
-      misReportSelection || ""
-    ).trim();
-
-    const selectedSubledger = String(
-      misReportSubledger || ""
-    ).trim();
-
-    const selectedMonth = String(
-      misReportMonth || "April"
-    ).trim();
+    const selectedReport = String(misReportSelection || "").trim();
+    const selectedSubledger = String(misReportSubledger || "").trim();
+    const selectedMonth = String(misReportMonth || "April").trim();
 
     const monthNumbers = {
       January: 1,
@@ -20634,25 +20627,21 @@ if (item === "Mark Dissolved Gps") {
 
     const monthNumber = monthNumbers[selectedMonth] || 4;
 
-    const financialYearStartYear =
-      CURRENT_FINANCIAL_YEAR?.apiStartDate
-        ? Number(
-            String(CURRENT_FINANCIAL_YEAR.apiStartDate).slice(
-              0,
-              4
-            )
-          )
-        : CURRENT_WEBSITE === "website2"
-        ? 2025
-        : 2026;
+    const financialYearStartYear = Number(
+      String(
+        CURRENT_FINANCIAL_YEAR?.apiStartDate ||
+          (CURRENT_WEBSITE === "website2"
+            ? "2025-04-01"
+            : "2026-04-01")
+      ).slice(0, 4)
+    );
 
     const reportYear =
       monthNumber >= 4
         ? financialYearStartYear
         : financialYearStartYear + 1;
 
-    const pad = (value) =>
-      String(value).padStart(2, "0");
+    const pad = (value) => String(value).padStart(2, "0");
 
     const monthStart = new Date(
       `${reportYear}-${pad(monthNumber)}-01T00:00:00`
@@ -20677,53 +20666,9 @@ if (item === "Mark Dissolved Gps") {
 
       const date = new Date(value);
 
-      if (Number.isNaN(date.getTime())) {
-        return null;
-      }
-
-      return date;
-    };
-
-    const getRecordDate = (record) =>
-      record?.receiptDate ||
-      record?.voucherDate ||
-      record?.journalDate ||
-      record?.date ||
-      record?.accountDate ||
-      record?.formationDate ||
-      record?.createdAt ||
-      "";
-
-    const isInSelectedMonth = (record) => {
-      const date = parseDate(getRecordDate(record));
-
-      if (!date) return false;
-
-      return (
-        date >= monthStart &&
-        date <= monthEnd
-      );
-    };
-
-    const isUptoSelectedMonth = (record) => {
-      const date = parseDate(getRecordDate(record));
-
-      if (!date) return false;
-
-      return (
-        date >= financialYearStart &&
-        date <= monthEnd
-      );
-    };
-
-    const money = (value) => {
-      const number = Number(value || 0);
-
-      if (!Number.isFinite(number)) {
-        return 0;
-      }
-
-      return number;
+      return Number.isNaN(date.getTime())
+        ? null
+        : date;
     };
 
     const formatDate = (value) => {
@@ -20738,17 +20683,52 @@ if (item === "Mark Dissolved Gps") {
       )}-${date.getFullYear()}`;
     };
 
-    const memberName = (member) =>
+    const money = (value) => {
+      const number = Number(value || 0);
+      return Number.isFinite(number) ? number : 0;
+    };
+
+    const getRecordDate = (record) =>
+      record?.receiptDate ||
+      record?.voucherDate ||
+      record?.journalDate ||
+      record?.date ||
+      record?.accountDate ||
+      record?.createdAt ||
+      "";
+
+    const isInSelectedMonth = (record) => {
+      const date = parseDate(getRecordDate(record));
+
+      if (!date) return false;
+
+      return date >= monthStart && date <= monthEnd;
+    };
+
+    const isUptoSelectedMonth = (record) => {
+      const date = parseDate(getRecordDate(record));
+
+      if (!date) return false;
+
+      return (
+        date >= financialYearStart &&
+        date <= monthEnd
+      );
+    };
+
+    const getMemberCode = (member) =>
+      member?.memberCode ||
+      member?.code ||
+      member?.memberId ||
+      member?.id ||
+      "";
+
+    const getMemberName = (member) =>
       member?.memberName ||
       member?.name ||
       "";
 
-    const memberCode = (member) =>
-      member?.memberCode ||
-      member?.code ||
-      "";
-
-    const getMember = (record) => {
+    const getRecordMember = (record) => {
       const code = String(
         record?.memberCode || ""
       )
@@ -20763,33 +20743,94 @@ if (item === "Mark Dissolved Gps") {
 
       return (
         members.find((member) => {
-          const memberCodeValue = String(
-            memberCode(member)
+          const memberCode = String(
+            getMemberCode(member)
           )
             .trim()
             .toLowerCase();
 
-          const memberNameValue = String(
-            memberName(member)
+          const memberName = String(
+            getMemberName(member)
           )
             .trim()
             .toLowerCase();
 
           return (
             (code &&
-              memberCodeValue &&
-              code === memberCodeValue) ||
+              memberCode &&
+              code === memberCode) ||
             (name &&
-              memberNameValue &&
-              name === memberNameValue)
+              memberName &&
+              name === memberName)
           );
         }) || null
       );
     };
 
+    const memberMatchesVazhvathram = (
+      member,
+      vazhvathram
+    ) => {
+      if (!member || !vazhvathram) return false;
+
+      const memberText = JSON.stringify(
+        member
+      ).toLowerCase();
+
+      const code = String(
+        vazhvathram?.vazhvathramCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const name = String(
+        vazhvathram?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        (code && memberText.includes(code)) ||
+        (name && memberText.includes(name))
+      );
+    };
+
+    const getSelectedVazhvathram = () => {
+      const selected = String(
+        selectedVazhvathram || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        vazhvathrams.find((record) => {
+          const code = String(
+            record?.vazhvathramCode || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          const name = String(
+            record?.vazhvathramName || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            selected === code ||
+            selected === name
+          );
+        }) || null
+      );
+    };
+
+    const selectedVazhvathramRecord =
+      getSelectedVazhvathram();
+
     /*
      * =========================================================
-     * 1. KL 01 - VAZHVATHRAM DETAILS
+     * KL 01
+     * VAZHVATHRAM DETAILS
      * =========================================================
      */
 
@@ -20797,426 +20838,104 @@ if (item === "Mark Dissolved Gps") {
       selectedReport ===
       "KL 01 - vazhvathram Details"
     ) {
-      if (!vazhvathrams.length) {
-        setMisReportStatus(
-          "No Vazhvathram records found in the database."
-        );
-        return;
-      }
+      const rows = vazhvathrams.map(
+        (record) => {
+          const code =
+            record?.vazhvathramCode || "";
 
-      const selectedName = String(
-        selectedVazhvathram || ""
-      )
-        .trim()
-        .toLowerCase();
+          const name =
+            record?.vazhvathramName || "";
 
-      const vazhvathram =
-        vazhvathrams.find((record) => {
-          const name = String(
-            record?.vazhvathramName || ""
-          )
-            .trim()
-            .toLowerCase();
+          const relatedMembers =
+            members.filter((member) =>
+              memberMatchesVazhvathram(
+                member,
+                record
+              )
+            );
 
-          const code = String(
-            record?.vazhvathramCode || ""
-          )
-            .trim()
-            .toLowerCase();
+          const bankAccount =
+            bankAccounts.find((account) => {
+              const text = JSON.stringify(
+                account || {}
+              ).toLowerCase();
 
-          return (
-            (selectedName && name === selectedName) ||
-            (selectedName && code === selectedName)
-          );
-        }) || vazhvathrams[0];
+              return (
+                (code &&
+                  text.includes(
+                    String(code).toLowerCase()
+                  )) ||
+                (name &&
+                  text.includes(
+                    String(name).toLowerCase()
+                  ))
+              );
+            });
 
-      const vazhvathramCode =
-        vazhvathram?.vazhvathramCode || "";
+          let ageMonths = "";
 
-      const vazhvathramName =
-        vazhvathram?.vazhvathramName || "";
+          const formation =
+            parseDate(record?.formationDate);
 
-      const villageName =
-        vazhvathram?.villageName || "";
+          if (formation) {
+            const today = new Date();
 
-      const formationDate =
-        vazhvathram?.formationDate || "";
+            ageMonths =
+              (today.getFullYear() -
+                formation.getFullYear()) *
+                12 +
+              (today.getMonth() -
+                formation.getMonth());
 
-      const qualityCheckedDate =
-        vazhvathram?.qualityCheckedDate || "";
-
-      const meetingType =
-        vazhvathram?.meetingType || "";
-
-      const selectedClusterName = String(
-        selectedCluster || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      let cluster = null;
-
-      if (selectedClusterName) {
-        cluster = clusters.find((record) => {
-          const name = String(
-            record?.clusterName || ""
-          )
-            .trim()
-            .toLowerCase();
-
-          const code = String(
-            record?.clusterCode || ""
-          )
-            .trim()
-            .toLowerCase();
-
-          return (
-            name === selectedClusterName ||
-            code === selectedClusterName
-          );
-        });
-      }
-
-      if (!cluster) {
-        cluster = clusters.find((record) => {
-          const text = JSON.stringify(
-            record || ""
-          ).toLowerCase();
-
-          const code = String(
-            vazhvathramCode
-          )
-            .trim()
-            .toLowerCase();
-
-          return (
-            code &&
-            text.includes(code)
-          );
-        });
-      }
-
-      if (!cluster && clusters.length === 1) {
-        cluster = clusters[0];
-      }
-
-      const bankAccount = bankAccounts.find(
-        (account) => {
-          const text = JSON.stringify(
-            account || ""
-          ).toLowerCase();
-
-          const code = String(
-            vazhvathramCode
-          )
-            .trim()
-            .toLowerCase();
-
-          const name = String(
-            vazhvathramName
-          )
-            .trim()
-            .toLowerCase();
-
-          return (
-            (code && text.includes(code)) ||
-            (name && text.includes(name))
-          );
-        }
-      );
-
-      const relatedMembers =
-        members.filter((member) => {
-          const text = JSON.stringify(
-            member || ""
-          ).toLowerCase();
-
-          const code = String(
-            vazhvathramCode
-          )
-            .trim()
-            .toLowerCase();
-
-          const name = String(
-            vazhvathramName
-          )
-            .trim()
-            .toLowerCase();
-
-          return (
-            (code && text.includes(code)) ||
-            (name && text.includes(name))
-          );
-        });
-
-      const membersWithRelationship =
-        members.filter((member) => {
-          const text = JSON.stringify(
-            member || ""
-          ).toLowerCase();
-
-          return (
-            text.includes("vazhvathram") ||
-            text.includes("kalanjiam") ||
-            text.includes("groupcode")
-          );
-        });
-
-      const reportMembers =
-        relatedMembers.length > 0
-          ? relatedMembers
-          : membersWithRelationship.length === 0
-          ? members
-          : [];
-
-      const categoryCounts =
-        reportMembers.reduce(
-          (result, member) => {
-            const category = String(
-              member?.category || ""
-            )
-              .trim()
-              .toLowerCase();
-
-            if (category.includes("s1")) {
-              result.s1 += 1;
-            } else if (
-              category.includes("s2")
+            if (
+              today.getDate() <
+              formation.getDate()
             ) {
-              result.s2 += 1;
-            } else if (
-              category.includes("s3")
-            ) {
-              result.s3 += 1;
+              ageMonths -= 1;
             }
 
-            return result;
-          },
-          {
-            s1: 0,
-            s2: 0,
-            s3: 0,
-          }
-        );
-
-      let ageInMonths = "";
-
-      if (formationDate) {
-        const formation =
-          parseDate(formationDate);
-
-        const today = new Date();
-
-        if (formation) {
-          ageInMonths =
-            (today.getFullYear() -
-              formation.getFullYear()) *
-              12 +
-            (today.getMonth() -
-              formation.getMonth());
-
-          if (
-            today.getDate() <
-            formation.getDate()
-          ) {
-            ageInMonths -= 1;
+            ageMonths = Math.max(
+              0,
+              ageMonths
+            );
           }
 
-          if (ageInMonths < 0) {
-            ageInMonths = 0;
-          }
-        }
-      }
+          const categoryCount =
+            relatedMembers.reduce(
+              (result, member) => {
+                const category = String(
+                  member?.category || ""
+                ).toLowerCase();
 
-      const report = {
-        "Vazhvathram Code":
-          vazhvathramCode,
-        "Vazhvathram Name":
-          vazhvathramName,
-        "Cluster Code":
-          cluster?.clusterCode || "",
-        "Cluster Name":
-          cluster?.clusterName || "",
-        "Federation Name": "",
-        "Panchayat Name": "",
-        "Village Name":
-          villageName,
-        "Formation Date":
-          formatDate(formationDate),
-        "Quality Checked Date":
-          formatDate(
-            qualityCheckedDate
-          ),
-        "Meeting Type":
-          meetingType,
-        "Bank A/C Date":
-          formatDate(
-            bankAccount?.accountDate || ""
-          ),
-        "Bank A/C No":
-          bankAccount?.accountNumber || "",
-        "Total Members":
-          reportMembers.length,
-        "Age (Mon)":
-          ageInMonths,
-        "Member Categorisation":
-          `S1 - ${categoryCounts.s1} S2 - ${categoryCounts.s2} S3 - ${categoryCounts.s3} Total - ${reportMembers.length}`,
-      };
+                if (category.includes("s1"))
+                  result.s1 += 1;
+                else if (
+                  category.includes("s2")
+                )
+                  result.s2 += 1;
+                else if (
+                  category.includes("s3")
+                )
+                  result.s3 += 1;
 
-      setMisReportResults([report]);
+                return result;
+              },
+              {
+                s1: 0,
+                s2: 0,
+                s3: 0,
+              }
+            );
 
-      setMisReportStatus(
-        "KL 01 - Vazhvathram Details generated successfully."
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * 2. MEMBER DETAIL REPORTS
-     * =========================================================
-     */
-
-    if (
-      selectedReport.includes(
-        "KL 02"
-      ) ||
-      selectedReport.includes(
-        "KL 03A"
-      ) ||
-      selectedReport.includes(
-        "KL 03B"
-      ) ||
-      selectedReport.includes(
-        "KL 03C"
-      )
-    ) {
-      let rows = members;
-
-      if (
-        selectedReport.includes(
-          "KL 03A"
-        )
-      ) {
-        rows = members.map((member) => ({
-          "Member Code":
-            memberCode(member),
-          "Member Name":
-            memberName(member),
-          "Designation":
-            member?.designation || "",
-          "Date of Joining":
-            formatDate(
-              member?.dateOfJoining
-            ),
-          "Mobile Number":
-            member?.mobileNumber || "",
-          "Category":
-            member?.category || "",
-        }));
-      } else if (
-        selectedReport.includes(
-          "KL 03B"
-        )
-      ) {
-        rows = members.map((member) => ({
-          "Member Code":
-            memberCode(member),
-          "Member Name":
-            memberName(member),
-          "Social Economic Category":
-            member?.category || "",
-          "Family Category":
-            member?.familyCategory || "",
-          "House Ownership":
-            member?.houseOwnership || "",
-          "Caste":
-            member?.caste || "",
-          "Marital Status":
-            member?.maritalStatus || "",
-        }));
-      } else if (
-        selectedReport.includes(
-          "KL 03C"
-        )
-      ) {
-        rows = members.map((member) => ({
-          "Member Code":
-            memberCode(member),
-          "Member Name":
-            memberName(member),
-          "Family Category":
-            member?.familyCategory || "",
-          "Husband/Father Name":
-            member?.husbandFatherName || "",
-          "Marital Status":
-            member?.maritalStatus || "",
-          "Members Alive":
-            member?.aliveStatus || "",
-        }));
-      } else {
-        rows = members.map((member) => ({
-          "Member Code":
-            memberCode(member),
-          "Member Name":
-            memberName(member),
-          "Regional Name":
-            member?.regionalMemberName || "",
-          "Designation":
-            member?.designation || "",
-          "Date":
-            formatDate(
-              member?.date
-            ),
-          "Date of Joining":
-            formatDate(
-              member?.dateOfJoining
-            ),
-          "Year of Birth":
-            member?.yearOfBirth || "",
-          "Category":
-            member?.category || "",
-          "Family Category":
-            member?.familyCategory || "",
-          "Mobile Number":
-            member?.mobileNumber || "",
-          "Regular Savings":
-            money(
-              member?.regularSavings
-            ),
-        }));
-      }
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth}.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * 3. VAZHVATHRAM MANAGEMENT
-     * =========================================================
-     */
-
-    if (
-      selectedReport.includes(
-        "KL 04"
-      )
-    ) {
-      const rows =
-        vazhvathrams.map(
-          (record) => ({
-            "Vazhvathram Code":
-              record?.vazhvathramCode || "",
-            "Vazhvathram Name":
-              record?.vazhvathramName || "",
-            "Regional Name":
-              record?.regionalVazhvathramName || "",
+          return {
+            "Vazhvathram Code": code,
+            "Vazhvathram Name": name,
+            "Cluster Code": "",
+            "Cluster Name": "",
+            "Federation Name": "",
+            "Panchayat Name": "",
+            "Village Name":
+              record?.villageName || "",
             "Formation Date":
               formatDate(
                 record?.formationDate
@@ -21227,215 +20946,34 @@ if (item === "Mark Dissolved Gps") {
               ),
             "Meeting Type":
               record?.meetingType || "",
-            "Meeting Date":
+            "Bank A/C Date":
               formatDate(
-                record?.meetingDate
+                bankAccount?.accountDate
               ),
-            "Village Name":
-              record?.villageName || "",
-            "Bank Name":
-              record?.bankName || "",
-            "Branch Name":
-              record?.branchName || "",
-            "Service Area Branch":
-              record?.serviceAreaBranch || "",
-          })
-        );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        "KL 04 report generated successfully."
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * 4. SAVINGS REPORTS
-     * =========================================================
-     */
-
-    if (
-      selectedReport.includes(
-        "KL 06"
-      ) ||
-      selectedReport.includes(
-        "KL 07"
-      ) ||
-      selectedReport.includes(
-        "KL 08"
-      ) ||
-      selectedReport.includes(
-        "KL 09"
-      ) ||
-      selectedReport.includes(
-        "KL 10"
-      )
-    ) {
-      const monthlyReceipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
-
-      const rowsByMember = {};
-
-      monthlyReceipts.forEach(
-        (receipt) => {
-          const code = String(
-            receipt?.memberCode ||
-              receipt?.memberName ||
-              receipt?.id ||
-              ""
-          );
-
-          if (!rowsByMember[code]) {
-            rowsByMember[code] = {
-              "Member Code":
-                receipt?.memberCode || "",
-              "Member Name":
-                receipt?.memberName || "",
-              "Regular Savings":
-                0,
-              "Special Savings":
-                0,
-              "Livelihood Loan Support 1":
-                0,
-              "Livelihood Loan Support 2":
-                0,
-              "Housing Loan":
-                0,
-              "Total":
-                0,
-            };
-          }
-
-          rowsByMember[code][
-            "Regular Savings"
-          ] += money(
-            receipt?.regularSavings
-          );
-
-          rowsByMember[code][
-            "Special Savings"
-          ] += money(
-            receipt?.specialSavings
-          );
-
-          rowsByMember[code][
-            "Livelihood Loan Support 1"
-          ] += money(
-            receipt?.livelihoodLoanSupport1
-          );
-
-          rowsByMember[code][
-            "Livelihood Loan Support 2"
-          ] += money(
-            receipt?.livelihoodLoanSupport2
-          );
-
-          rowsByMember[code][
-            "Housing Loan"
-          ] += money(
-            receipt?.housingLoan
-          );
-
-          rowsByMember[code][
-            "Total"
-          ] += money(
-            receipt?.total
-          );
+            "Bank A/C No":
+              bankAccount?.accountNumber ||
+              "",
+            "Total Members":
+              relatedMembers.length,
+            "Age (Mon)": ageMonths,
+            "Member Categorisation":
+              `S1 - ${categoryCount.s1} S2 - ${categoryCount.s2} S3 - ${categoryCount.s3} Total - ${relatedMembers.length}`,
+          };
         }
       );
 
-      let rows = Object.values(
-        rowsByMember
+      setMisReportResults(
+        selectedVazhvathramRecord
+          ? rows.filter(
+              (row) =>
+                row["Vazhvathram Code"] ===
+                selectedVazhvathramRecord.vazhvathramCode
+            )
+          : rows
       );
 
-      if (
-        selectedReport.includes(
-          "KL 08"
-        )
-      ) {
-        rows = rows.filter(
-          (row) =>
-            money(
-              row["Regular Savings"]
-            ) >= 15000
-        );
-      }
-
-      if (
-        selectedReport.includes(
-          "KL 07"
-        )
-      ) {
-        rows = rows.map(
-          (row) => ({
-            "Member Code":
-              row["Member Code"],
-            "Member Name":
-              row["Member Name"],
-            "Special Savings":
-              row["Special Savings"],
-            "Month":
-              selectedMonth,
-          })
-        );
-      }
-
-      if (
-        selectedReport.includes(
-          "KL 06"
-        )
-      ) {
-        rows = rows.map(
-          (row) => ({
-            "Member Code":
-              row["Member Code"],
-            "Member Name":
-              row["Member Name"],
-            "Regular Savings Demand":
-              0,
-            "Regular Savings Collection":
-              row["Regular Savings"],
-            "Difference":
-              0 -
-              row["Regular Savings"],
-            "Month":
-              selectedMonth,
-          })
-        );
-      }
-
-      if (
-        selectedReport.includes(
-          "KL 10"
-        )
-      ) {
-        rows = rows.map(
-          (row) => ({
-            "Member Code":
-              row["Member Code"],
-            "Member Name":
-              row["Member Name"],
-            "Regular Savings":
-              row["Regular Savings"],
-            "Special Savings":
-              row["Special Savings"],
-            "Month":
-              selectedMonth,
-            "Interest":
-              0,
-          })
-        );
-      }
-
-      setMisReportResults(rows);
-
       setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth}.`
+        `KL 01 generated successfully. ${rows.length} Vazhvathram record${rows.length === 1 ? "" : "s"} loaded.`
       );
 
       return;
@@ -21443,102 +20981,469 @@ if (item === "Mark Dissolved Gps") {
 
     /*
      * =========================================================
-     * 5. LOAN / REPAYMENT REPORTS
+     * KL 02
+     * MEMBER DETAILS
      * =========================================================
      */
 
     if (
-      selectedReport.includes(
-        "KL 05"
-      )
+      selectedReport ===
+      "KL 02 - Member Details"
     ) {
-      const payments =
+      const rows = members.map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Regional Name":
+            member?.regionalMemberName ||
+            "",
+          "Designation":
+            member?.designation || "",
+          "Date":
+            formatDate(member?.date),
+          "Date of Joining":
+            formatDate(
+              member?.dateOfJoining
+            ),
+          "Year of Birth":
+            member?.yearOfBirth || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+          "Category":
+            member?.category || "",
+          "Family Category":
+            member?.familyCategory || "",
+          "Mobile Number":
+            member?.mobileNumber || "",
+          "Regular Savings":
+            money(
+              member?.regularSavings
+            ),
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 02 generated successfully. ${rows.length} member${rows.length === 1 ? "" : "s"} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 03A
+     * DESIGNATION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 03A - Member details-Designation"
+    ) {
+      const rows = members.map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Designation":
+            member?.designation || "",
+          "Date of Joining":
+            formatDate(
+              member?.dateOfJoining
+            ),
+          "Mobile Number":
+            member?.mobileNumber || "",
+          "Category":
+            member?.category || "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 03A generated successfully. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 03B
+     * SOCIAL ECONOMIC CATEGORIZATION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 03B - Member details-Social economic Categorization"
+    ) {
+      const rows = members.map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Social Economic Category":
+            member?.category || "",
+          "Family Category":
+            member?.familyCategory || "",
+          "House Ownership":
+            member?.houseOwnership || "",
+          "Caste":
+            member?.caste || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 03B generated successfully. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 03C
+     * FAMILY CATEGORIZATION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 03C - Member details-Family Categorization"
+    ) {
+      const rows = members.map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Family Category":
+            member?.familyCategory || "",
+          "Husband/Father Name":
+            member?.husbandFatherName || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+          "Members Alive":
+            member?.aliveStatus || "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 03C generated successfully. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 04
+     * VAZHVATHRAM MANAGEMENT
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 04 - vazhvathram Management Information Report"
+    ) {
+      const rows = vazhvathrams.map(
+        (record) => ({
+          "Vazhvathram Code":
+            record?.vazhvathramCode || "",
+          "Vazhvathram Name":
+            record?.vazhvathramName || "",
+          "Regional Name":
+            record?.regionalVazhvathramName ||
+            "",
+          "Formation Date":
+            formatDate(
+              record?.formationDate
+            ),
+          "Quality Checked Date":
+            formatDate(
+              record?.qualityCheckedDate
+            ),
+          "Meeting Type":
+            record?.meetingType || "",
+          "Meeting Date":
+            formatDate(
+              record?.meetingDate
+            ),
+          "Village Name":
+            record?.villageName || "",
+          "Bank Name":
+            record?.bankName || "",
+          "Branch Name":
+            record?.branchName || "",
+          "Service Area Branch":
+            record?.serviceAreaBranch ||
+            "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 04 generated successfully. ${rows.length} Vazhvathram records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 05 FAMILY
+     * LOAN / REPAYMENT REPORTS
+     * =========================================================
+     */
+
+    if (
+      /^KL 05/.test(selectedReport)
+    ) {
+      const monthlyPayments =
         memberPayments.filter(
           isInSelectedMonth
         );
 
-      const rows = payments.map(
+      let rows = monthlyPayments.map(
         (payment) => {
           const member =
-            getMember(payment);
-
-          const loanAmount =
-            money(
-              payment?.loanAmount
-            );
-
-          const instalmentAmount =
-            money(
-              payment?.instalmentAmount
-            );
-
-          let selectedAmount = loanAmount;
-
-          if (
-            selectedSubledger ===
-            "Livelihood Loan Support 1"
-          ) {
-            selectedAmount =
-              money(
-                payment?.loanAmount
-              );
-          } else if (
-            selectedSubledger ===
-            "Livelihood Loan Support 2"
-          ) {
-            selectedAmount =
-              money(
-                payment?.loanAmount
-              );
-          } else if (
-            selectedSubledger ===
-            "Housing Loan"
-          ) {
-            selectedAmount =
-              money(
-                payment?.loanAmount
-              );
-          }
+            getRecordMember(payment);
 
           return {
             "Member Code":
               payment?.memberCode ||
-              memberCode(member),
+              getMemberCode(member),
+
             "Member Name":
               payment?.memberName ||
-              memberName(member),
+              getMemberName(member),
+
             "Voucher No":
               payment?.voucherNo || "",
+
             "Voucher Date":
               formatDate(
                 payment?.voucherDate
               ),
+
             "Voucher Type":
               payment?.voucherType || "",
-            "Subledger":
-              selectedSubledger,
+
             "Loan Type":
               payment?.loanType || "",
+
             "Loan Amount":
-              selectedAmount,
+              money(payment?.loanAmount),
+
             "Instalment Amount":
-              instalmentAmount,
+              money(
+                payment?.instalmentAmount
+              ),
+
             "Instalment Type":
               payment?.instalmentType || "",
+
             "Purpose":
               payment?.purpose || "",
+
             "Sub Purpose":
               payment?.subPurpose || "",
+
+            "Narration":
+              payment?.narration || "",
+
             "Total":
               money(payment?.total),
           };
         }
       );
 
+      if (
+        selectedReport ===
+        "KL 05B - Member without Livelihood Loan Support"
+      ) {
+        rows = members
+          .filter((member) => {
+            const code =
+              String(
+                getMemberCode(member)
+              ).toLowerCase();
+
+            const hasLoan =
+              memberPayments.some(
+                (payment) =>
+                  String(
+                    payment?.memberCode ||
+                      ""
+                  ).toLowerCase() ===
+                    code &&
+                  money(
+                    payment?.loanAmount
+                  ) > 0
+              );
+
+            return !hasLoan;
+          })
+          .map((member) => ({
+            "Member Code":
+              getMemberCode(member),
+            "Member Name":
+              getMemberName(member),
+            "Regular Savings":
+              money(
+                member?.regularSavings
+              ),
+            "Status":
+              "No Livelihood Loan Support",
+          }));
+      }
+
+      if (
+        selectedReport ===
+        "KL 05C - Member Total Loan O/S"
+      ) {
+        rows = members.map(
+          (member) => {
+            const code = String(
+              getMemberCode(member)
+            )
+              .trim()
+              .toLowerCase();
+
+            const payments =
+              memberPayments.filter(
+                (payment) =>
+                  String(
+                    payment?.memberCode ||
+                      ""
+                  )
+                    .trim()
+                    .toLowerCase() === code
+              );
+
+            const loanAmount =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.loanAmount
+                  ),
+                0
+              );
+
+            const repayment =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.instalmentAmount
+                  ),
+                0
+              );
+
+            return {
+              "Member Code":
+                getMemberCode(member),
+              "Member Name":
+                getMemberName(member),
+              "Total Loan":
+                loanAmount,
+              "Total Repayment":
+                repayment,
+              "Loan O/S":
+                Math.max(
+                  0,
+                  loanAmount - repayment
+                ),
+            };
+          }
+        );
+      }
+
+      if (
+        selectedReport ===
+        "KL 05D - Member Total Loan O/S OD"
+      ) {
+        rows = members.map(
+          (member) => {
+            const code = String(
+              getMemberCode(member)
+            )
+              .trim()
+              .toLowerCase();
+
+            const payments =
+              memberPayments.filter(
+                (payment) =>
+                  String(
+                    payment?.memberCode ||
+                      ""
+                  )
+                    .trim()
+                    .toLowerCase() === code
+              );
+
+            const loan =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.loanAmount
+                  ),
+                0
+              );
+
+            const repayment =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.instalmentAmount
+                  ),
+                0
+              );
+
+            const outstanding =
+              Math.max(
+                0,
+                loan - repayment
+              );
+
+            return {
+              "Member Code":
+                getMemberCode(member),
+              "Member Name":
+                getMemberName(member),
+              "Loan Amount": loan,
+              "Repayment": repayment,
+              "Outstanding": outstanding,
+              "OD Amount":
+                outstanding > 0
+                  ? outstanding
+                  : 0,
+            };
+          }
+        );
+      }
+
       setMisReportResults(rows);
 
       setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth} - ${selectedSubledger}.`
+        `${selectedReport} generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
       );
 
       return;
@@ -21546,27 +21451,403 @@ if (item === "Mark Dissolved Gps") {
 
     /*
      * =========================================================
-     * 6. CL REPORTS
+     * KL 06
+     * REGULAR SAVINGS DEMAND VS COLLECTION
      * =========================================================
      */
 
     if (
-      selectedReport.startsWith(
-        "CL "
-      )
+      selectedReport ===
+      "KL 06 - Regular Savings - Demand Vs. Collection"
     ) {
-      const monthReceipts =
+      const receipts =
         memberReceipts.filter(
           isInSelectedMonth
         );
 
-      const monthPayments =
+      const grouped = {};
+
+      receipts.forEach((receipt) => {
+        const code =
+          receipt?.memberCode ||
+          receipt?.memberName ||
+          receipt?.id ||
+          "";
+
+        if (!grouped[code]) {
+          grouped[code] = {
+            "Member Code":
+              receipt?.memberCode || "",
+            "Member Name":
+              receipt?.memberName || "",
+            "Regular Savings Collection": 0,
+          };
+        }
+
+        grouped[code][
+          "Regular Savings Collection"
+        ] += money(
+          receipt?.regularSavings
+        );
+      });
+
+      const rows = Object.values(
+        grouped
+      ).map((row) => ({
+        ...row,
+
+        /*
+         * Demand is not stored as a separate
+         * field in the current Member entity.
+         * Therefore the report does not invent
+         * a demand amount.
+         */
+        "Regular Savings Demand":
+          "",
+
+        Difference: "",
+
+        Month: selectedMonth,
+      }));
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 06 generated successfully for ${selectedMonth}. ${rows.length} member records loaded. Demand remains blank because no separate demand field exists in the current database.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 07
+     * SPECIAL SAVINGS
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 07 - Special Savings Report"
+    ) {
+      const receipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const rows = receipts.map(
+        (receipt) => ({
+          "Member Code":
+            receipt?.memberCode || "",
+          "Member Name":
+            receipt?.memberName || "",
+          "Special Savings":
+            money(
+              receipt?.specialSavings
+            ),
+          "Special Savings Amount":
+            money(
+              receipt?.specialSavingsAmount
+            ),
+          "Special Savings More Type":
+            receipt?.specialSavingsMoreType ||
+            "",
+          "Special Savings More Amount":
+            money(
+              receipt?.specialSavingsMoreAmount
+            ),
+          "Month":
+            selectedMonth,
+          "Receipt Date":
+            formatDate(
+              receipt?.receiptDate
+            ),
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 07 generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 08
+     * REGULAR SAVINGS >= 15000
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 08 - Regular Savings Amount >= 15000 Report"
+    ) {
+      const grouped = {};
+
+      memberReceipts
+        .filter(isInSelectedMonth)
+        .forEach((receipt) => {
+          const code =
+            receipt?.memberCode ||
+            receipt?.memberName ||
+            receipt?.id ||
+            "";
+
+          if (!grouped[code]) {
+            grouped[code] = {
+              "Member Code":
+                receipt?.memberCode ||
+                "",
+              "Member Name":
+                receipt?.memberName ||
+                "",
+              "Regular Savings": 0,
+            };
+          }
+
+          grouped[code][
+            "Regular Savings"
+          ] += money(
+            receipt?.regularSavings
+          );
+        });
+
+      const rows = Object.values(
+        grouped
+      ).filter(
+        (row) =>
+          money(
+            row["Regular Savings"]
+          ) >= 15000
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 08 generated successfully for ${selectedMonth}. ${rows.length} qualifying members found.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 09
+     * REGULAR ALL REPORT
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 09 - Regular All Report"
+    ) {
+      const grouped = {};
+
+      memberReceipts
+        .filter(isInSelectedMonth)
+        .forEach((receipt) => {
+          const code =
+            receipt?.memberCode ||
+            receipt?.memberName ||
+            receipt?.id ||
+            "";
+
+          if (!grouped[code]) {
+            grouped[code] = {
+              "Member Code":
+                receipt?.memberCode || "",
+              "Member Name":
+                receipt?.memberName || "",
+              "Regular Savings": 0,
+              "Special Savings": 0,
+              "Livelihood Loan Support 1": 0,
+              "Livelihood Loan Support 2": 0,
+              "Housing Loan": 0,
+              "Total": 0,
+            };
+          }
+
+          grouped[code][
+            "Regular Savings"
+          ] += money(
+            receipt?.regularSavings
+          );
+
+          grouped[code][
+            "Special Savings"
+          ] += money(
+            receipt?.specialSavings
+          );
+
+          grouped[code][
+            "Livelihood Loan Support 1"
+          ] += money(
+            receipt?.livelihoodLoanSupport1
+          );
+
+          grouped[code][
+            "Livelihood Loan Support 2"
+          ] += money(
+            receipt?.livelihoodLoanSupport2
+          );
+
+          grouped[code][
+            "Housing Loan"
+          ] += money(
+            receipt?.housingLoan
+          );
+
+          grouped[code]["Total"] +=
+            money(receipt?.total);
+        });
+
+      const rows = Object.values(
+        grouped
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 09 generated successfully for ${selectedMonth}. ${rows.length} members loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 10
+     * SAVINGS + INTEREST MONTHWISE
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 10 - Member wise Savings and Interest - Monthwise"
+    ) {
+      const receipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const grouped = {};
+
+      receipts.forEach((receipt) => {
+        const code =
+          receipt?.memberCode ||
+          receipt?.memberName ||
+          receipt?.id ||
+          "";
+
+        if (!grouped[code]) {
+          grouped[code] = {
+            "Member Code":
+              receipt?.memberCode || "",
+            "Member Name":
+              receipt?.memberName || "",
+            "Regular Savings": 0,
+            "Special Savings": 0,
+          };
+        }
+
+        grouped[code][
+          "Regular Savings"
+        ] += money(
+          receipt?.regularSavings
+        );
+
+        grouped[code][
+          "Special Savings"
+        ] += money(
+          receipt?.specialSavings
+        );
+      });
+
+      const rows = Object.values(
+        grouped
+      ).map((row) => ({
+        ...row,
+        Month: selectedMonth,
+        Interest: "",
+      }));
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 10 generated successfully for ${selectedMonth}. Interest is blank because the current database does not expose a separate interest field.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 10A
+     * SPECIAL SAVINGS + INTEREST
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 10A - Member wise Special Savings and Interest - Monthwise"
+    ) {
+      const receipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const rows = receipts.map(
+        (receipt) => ({
+          "Member Code":
+            receipt?.memberCode || "",
+          "Member Name":
+            receipt?.memberName || "",
+          "Special Savings":
+            money(
+              receipt?.specialSavings
+            ),
+          "Special Savings Amount":
+            money(
+              receipt?.specialSavingsAmount
+            ),
+          Month: selectedMonth,
+          Interest: "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 10A generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * CL REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.startsWith("CL ")
+    ) {
+      const monthlyReceipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const monthlyPayments =
         memberPayments.filter(
           isInSelectedMonth
         );
 
       const totalSavings =
-        monthReceipts.reduce(
+        monthlyReceipts.reduce(
           (sum, record) =>
             sum +
             money(
@@ -21576,7 +21857,7 @@ if (item === "Mark Dissolved Gps") {
         );
 
       const totalSpecialSavings =
-        monthReceipts.reduce(
+        monthlyReceipts.reduce(
           (sum, record) =>
             sum +
             money(
@@ -21586,136 +21867,15 @@ if (item === "Mark Dissolved Gps") {
         );
 
       const totalLoan =
-        monthPayments.reduce(
+        monthlyPayments.reduce(
           (sum, record) =>
             sum +
-            money(
-              record?.loanAmount
-            ),
+            money(record?.loanAmount),
           0
         );
 
-      const totalMembers =
-        members.length;
-
-      const attendedCount =
-        attendances.filter(
-          isInSelectedMonth
-        ).length;
-
-      const clusterRows =
-        clusters.map(
-          (cluster) => ({
-            "Cluster Code":
-              cluster?.clusterCode || "",
-            "Cluster Name":
-              cluster?.clusterName || "",
-            "Regional Name":
-              cluster?.regionalClusterName || "",
-            "Formation Date":
-              formatDate(
-                cluster?.formationDate
-              ),
-            "Month":
-              selectedMonth,
-            "Total Members":
-              totalMembers,
-            "Members Attended":
-              attendedCount,
-            "Regular Savings":
-              totalSavings,
-            "Special Savings":
-              totalSpecialSavings,
-            "Loan Amount":
-              totalLoan,
-          })
-        );
-
-      if (clusterRows.length) {
-        setMisReportResults(
-          clusterRows
-        );
-      } else {
-        setMisReportResults([
-          {
-            "Report":
-              selectedReport,
-            "Month":
-              selectedMonth,
-            "Total Members":
-              totalMembers,
-            "Members Attended":
-              attendedCount,
-            "Regular Savings":
-              totalSavings,
-            "Special Savings":
-              totalSpecialSavings,
-            "Loan Amount":
-              totalLoan,
-          },
-        ]);
-      }
-
-      setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth}.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * 7. BL REPORTS
-     * =========================================================
-     */
-
-    if (
-      selectedReport.startsWith(
-        "BL"
-      )
-    ) {
-      const monthReceipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
-
-      const monthPayments =
-        memberPayments.filter(
-          isInSelectedMonth
-        );
-
-      const regularSavings =
-        monthReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.regularSavings
-            ),
-          0
-        );
-
-      const specialSavings =
-        monthReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.specialSavings
-            ),
-          0
-        );
-
-      const loanAmount =
-        monthPayments.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.loanAmount
-            ),
-          0
-        );
-
-      const loanRepayment =
-        monthPayments.reduce(
+      const totalRepayment =
+        monthlyPayments.reduce(
           (sum, record) =>
             sum +
             money(
@@ -21724,25 +21884,169 @@ if (item === "Mark Dissolved Gps") {
           0
         );
 
+      const attended =
+        attendances.filter(
+          isInSelectedMonth
+        ).length;
+
+      const rows = clusters.map(
+        (cluster) => ({
+          "Cluster Code":
+            cluster?.clusterCode || "",
+          "Cluster Name":
+            cluster?.clusterName || "",
+          "Regional Name":
+            cluster?.regionalClusterName ||
+            "",
+          "Formation Date":
+            formatDate(
+              cluster?.formationDate
+            ),
+          "Report":
+            selectedReport,
+          "Month":
+            selectedMonth,
+          "Total Members":
+            members.length,
+          "Members Attended":
+            attended,
+          "Regular Savings":
+            totalSavings,
+          "Special Savings":
+            totalSpecialSavings,
+          "Loan Amount":
+            totalLoan,
+          "Loan Repayment":
+            totalRepayment,
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}. ${rows.length} cluster records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * BL REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.startsWith("BL ")
+    ) {
+      const uptoReceipts =
+        memberReceipts.filter(
+          isUptoSelectedMonth
+        );
+
+      const uptoPayments =
+        memberPayments.filter(
+          isUptoSelectedMonth
+        );
+
+      const monthlyReceipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const monthlyPayments =
+        memberPayments.filter(
+          isInSelectedMonth
+        );
+
+      const totalRegularSavings =
+        uptoReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.regularSavings
+            ),
+          0
+        );
+
+      const totalSpecialSavings =
+        uptoReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.specialSavings
+            ),
+          0
+        );
+
+      const totalLoan =
+        uptoPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.loanAmount
+            ),
+          0
+        );
+
+      const totalRepayment =
+        uptoPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.instalmentAmount
+            ),
+          0
+        );
+
+      const monthlyCollection =
+        monthlyReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(record?.total),
+          0
+        );
+
+      const monthlyPayment =
+        monthlyPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(record?.total),
+          0
+        );
+
       const report = {
         "Report":
           selectedReport,
         "Month":
           selectedMonth,
-        "Total Vazhvathrams":
+        "Vazhvathrams":
           vazhvathrams.length,
-        "Total Clusters":
+        "Clusters":
           clusters.length,
-        "Total Members":
+        "Members":
           members.length,
+        "Bank Accounts":
+          bankAccounts.length,
         "Regular Savings":
-          regularSavings,
+          totalRegularSavings,
         "Special Savings":
-          specialSavings,
-        "Loan Amount":
-          loanAmount,
-        "Loan Repayment":
-          loanRepayment,
+          totalSpecialSavings,
+        "Total Loan":
+          totalLoan,
+        "Total Repayment":
+          totalRepayment,
+        "Loan Outstanding":
+          Math.max(
+            0,
+            totalLoan - totalRepayment
+          ),
+        "Monthly Collection":
+          monthlyCollection,
+        "Monthly Payment":
+          monthlyPayment,
+        "Insurance Products":
+          insuranceProducts.length,
       };
 
       setMisReportResults([
@@ -21758,54 +22062,17 @@ if (item === "Mark Dissolved Gps") {
 
     /*
      * =========================================================
-     * 8. GENERIC MIS FALLBACK
+     * UNKNOWN / FUTURE MIS OPTION
      * =========================================================
      *
-     * This ensures a report selection does not remain
-     * completely blank when its legacy Dhanam calculation
-     * requires a database relationship that SAVE does not
-     * currently store.
+     * Do not silently show a fake generic report.
+     * Show a clear message instead.
      */
 
-    const genericRows = [
-      {
-        "MIS Report":
-          selectedReport,
-        "Subledger":
-          selectedSubledger,
-        "Month":
-          selectedMonth,
-        "Vazhvathrams":
-          vazhvathrams.length,
-        "Clusters":
-          clusters.length,
-        "Members":
-          members.length,
-        "Bank Accounts":
-          bankAccounts.length,
-        "Member Receipts":
-          memberReceipts.length,
-        "Member Payments":
-          memberPayments.length,
-        "Member Journals":
-          memberJournals.length,
-        "Other Receipts":
-          otherReceipts.length,
-        "Other Payments":
-          otherPayments.length,
-        "Other Journals":
-          otherJournals.length,
-        "Insurance Products":
-          insuranceProducts.length,
-      },
-    ];
-
-    setMisReportResults(
-      genericRows
-    );
+    setMisReportResults([]);
 
     setMisReportStatus(
-      `${selectedReport} generated successfully for ${selectedMonth}.`
+      `${selectedReport || "Selected MIS report"} is not yet mapped to a database calculation in this SAVE version.`
     );
   } catch (error) {
     console.error(
@@ -21816,7 +22083,9 @@ if (item === "Mark Dissolved Gps") {
     setMisReportResults([]);
 
     setMisReportStatus(
-      `Unable to generate MIS report. ${error?.message || error}`
+      `Unable to generate MIS report. ${
+        error?.message || error
+      }`
     );
   } finally {
     setMisReportLoading(false);
