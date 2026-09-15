@@ -20215,8 +20215,11 @@ if (item === "Mark Dissolved Gps") {
     const [misReportLoading, setMisReportLoading] = useState(false);
     const [misReportStatus, setMisReportStatus] = useState("");
 
-
-
+    const [misReportSubledger, setMisReportSubledger] = useState(
+         "Livelihood Loan Support 1"
+     );
+    const [misReportMonth, setMisReportMonth] = useState("April");
+    
     // VAZHVATHRAM REPORT DATABASE CONNECTION (additive; original page preserved)
     const [vazReportSelection, setVazReportSelection] = useState("VAZ 01 - Member Details");
     const [vazFromAmt, setVazFromAmt] = useState("");
@@ -20546,355 +20549,1274 @@ if (item === "Mark Dissolved Gps") {
         setMisSspReportLoading(false);
       }
     };
-
-    const runMISReport = async () => {
+      const runMISReport = async () => {
   setMisReportLoading(true);
   setMisReportStatus("");
   setMisReportResults([]);
 
   try {
-    if (misReportSelection !== "KL 01 - vazhvathram Details") {
-      setMisReportStatus(
-        `${misReportSelection} is not implemented yet.`
-      );
-      return;
-    }
-
-    const [
-      vazhvathramsData,
-      clustersData,
-      membersData,
-      bankAccountsData,
-    ] = await Promise.all([
-      apiRequest("/vazhvathrams"),
-      apiRequest("/clusters"),
-      apiRequest("/members"),
-      apiRequest("/bank-accounts"),
-    ]);
-
-    const vazhvathrams = Array.isArray(vazhvathramsData)
-      ? vazhvathramsData
-      : [];
-
-    const clusters = Array.isArray(clustersData)
-      ? clustersData
-      : [];
-
-    const members = Array.isArray(membersData)
-      ? membersData
-      : [];
-
-    const bankAccounts = Array.isArray(bankAccountsData)
-      ? bankAccountsData
-      : [];
-
-    if (!vazhvathrams.length) {
-      setMisReportStatus(
-        "No Vazhvathram records found in the database."
-      );
-      return;
-    }
-
     /*
-     * Find the selected Vazhvathram.
-     * If no Vazhvathram is selected, use the first available record.
+     * =========================================================
+     * MIS REPORT - COMMON DATABASE DATA
+     * =========================================================
      */
-    const selectedName = String(
-      selectedVazhvathram || ""
-    )
-      .trim()
-      .toLowerCase();
 
-    const vazhvathram =
-      vazhvathrams.find((record) => {
-        const name = String(
-          record?.vazhvathramName || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        const code = String(
-          record?.vazhvathramCode || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        return (
-          (selectedName && name === selectedName) ||
-          (selectedName && code === selectedName)
-        );
-      }) || vazhvathrams[0];
-
-    /*
-     * Vazhvathram details
-     */
-    const vazhvathramCode =
-      vazhvathram?.vazhvathramCode || "";
-
-    const vazhvathramName =
-      vazhvathram?.vazhvathramName || "";
-
-    const villageName =
-      vazhvathram?.villageName || "";
-
-    const formationDate =
-      vazhvathram?.formationDate || "";
-
-    const qualityCheckedDate =
-      vazhvathram?.qualityCheckedDate || "";
-
-    const meetingType =
-      vazhvathram?.meetingType || "";
-
-    /*
-     * Find matching cluster.
-     */
-    const selectedClusterName = String(
-      selectedCluster || ""
-    )
-      .trim()
-      .toLowerCase();
-
-    let cluster = null;
-
-    if (selectedClusterName) {
-      cluster = clusters.find((record) => {
-        const name = String(
-          record?.clusterName || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        const code = String(
-          record?.clusterCode || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        return (
-          name === selectedClusterName ||
-          code === selectedClusterName
-        );
-      });
-    }
-
-    /*
-     * Try to match the Vazhvathram with a cluster
-     * using available Vazhvathram/cluster fields.
-     */
-    if (!cluster) {
-      cluster = clusters.find((record) => {
-        const clusterText = JSON.stringify(record || "")
-          .toLowerCase();
-
-        const codeText = String(vazhvathramCode)
-          .trim()
-          .toLowerCase();
-
-        return (
-          codeText &&
-          clusterText.includes(codeText)
-        );
-      });
-    }
-
-    if (!cluster && clusters.length === 1) {
-      cluster = clusters[0];
-    }
-
-    const clusterCode =
-      cluster?.clusterCode || "";
-
-    const clusterName =
-      cluster?.clusterName || "";
-
-    /*
-     * Find bank account belonging to the Vazhvathram/group.
-     */
-    const bankAccount = bankAccounts.find((account) => {
-      const accountText = JSON.stringify(account || "")
-        .toLowerCase();
-
-      const code = String(vazhvathramCode)
-        .trim()
-        .toLowerCase();
-
-      const name = String(vazhvathramName)
-        .trim()
-        .toLowerCase();
-
-      return (
-        (code && accountText.includes(code)) ||
-        (name && accountText.includes(name))
-      );
-    });
-
-    const bankAccountDate =
-      bankAccount?.accountDate || "";
-
-    const bankAccountNumber =
-      bankAccount?.accountNumber || "";
-
-    /*
-     * Total members.
-     *
-     * If the member record contains the Vazhvathram
-     * code/name, count only those members.
-     */
-    const relatedMembers = members.filter((member) => {
-      const memberText = JSON.stringify(member || "")
-        .toLowerCase();
-
-      const code = String(vazhvathramCode)
-        .trim()
-        .toLowerCase();
-
-      const name = String(vazhvathramName)
-        .trim()
-        .toLowerCase();
-
-      if (!code && !name) {
-        return false;
+    const safeApiRequest = async (endpoint) => {
+      try {
+        const data = await apiRequest(endpoint);
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.warn(`MIS endpoint unavailable: ${endpoint}`, error);
+        return [];
       }
-
-      return (
-        (code && memberText.includes(code)) ||
-        (name && memberText.includes(name))
-      );
-    });
-
-    /*
-     * If the member table does not contain the
-     * Vazhvathram relationship, use all members
-     * only when there is no relationship information.
-     */
-    const membersWithRelationship = members.filter((member) => {
-      const memberText = JSON.stringify(member || "")
-        .toLowerCase();
-
-      return (
-        memberText.includes("vazhvathram") ||
-        memberText.includes("kalanjiam") ||
-        memberText.includes("groupcode")
-      );
-    });
-
-    const reportMembers =
-      relatedMembers.length > 0
-        ? relatedMembers
-        : membersWithRelationship.length === 0
-        ? members
-        : [];
-
-    const totalMembers = reportMembers.length;
-
-    /*
-     * Member categorisation.
-     *
-     * Your Member entity stores the category field.
-     * We preserve the actual category values from PostgreSQL
-     * and count them into S1 / S2 / S3 where applicable.
-     */
-    const categoryCounts = reportMembers.reduce(
-      (result, member) => {
-        const category = String(
-          member?.category || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        if (
-          category === "s1" ||
-          category.includes("s1")
-        ) {
-          result.s1 += 1;
-        } else if (
-          category === "s2" ||
-          category.includes("s2")
-        ) {
-          result.s2 += 1;
-        } else if (
-          category === "s3" ||
-          category.includes("s3")
-        ) {
-          result.s3 += 1;
-        }
-
-        return result;
-      },
-      {
-        s1: 0,
-        s2: 0,
-        s3: 0,
-      }
-    );
-
-    /*
-     * Age in months.
-     * This follows the Dhanam KL 01 "Age (Mon)"
-     * concept using the Vazhvathram formation date.
-     */
-    let ageInMonths = "";
-
-    if (formationDate) {
-      const formation = new Date(formationDate);
-      const today = new Date();
-
-      if (!Number.isNaN(formation.getTime())) {
-        ageInMonths =
-          (today.getFullYear() -
-            formation.getFullYear()) *
-            12 +
-          (today.getMonth() -
-            formation.getMonth());
-
-        if (today.getDate() < formation.getDate()) {
-          ageInMonths -= 1;
-        }
-
-        if (ageInMonths < 0) {
-          ageInMonths = 0;
-        }
-      }
-    }
-
-    /*
-     * KL 01 report.
-     */
-    const report = {
-      "Vazhvathram Code": vazhvathramCode,
-      "Vazhvathram Name": vazhvathramName,
-      "Cluster Code": clusterCode,
-      "Cluster Name": clusterName,
-      "Federation Name": "",
-      "Panchayat Name": "",
-      "Village Name": villageName,
-      "Formation Date": formationDate,
-      "Quality Checked Date": qualityCheckedDate,
-      "Meeting Type": meetingType,
-      "Bank A/C Date": bankAccountDate,
-      "Bank A/C No": bankAccountNumber,
-      "Total Members": totalMembers,
-      "Age (Mon)": ageInMonths,
-      "Member Categorisation":
-        `S1 - ${categoryCounts.s1} S2 - ${categoryCounts.s2} S3 - ${categoryCounts.s3} Total - ${totalMembers}`,
     };
 
-    setMisReportResults([report]);
+    const [
+      vazhvathrams,
+      clusters,
+      members,
+      bankAccounts,
+      memberReceipts,
+      otherReceipts,
+      memberPayments,
+      otherPayments,
+      memberJournals,
+      otherJournals,
+      attendances,
+      insuranceProducts,
+    ] = await Promise.all([
+      safeApiRequest("/vazhvathrams"),
+      safeApiRequest("/clusters"),
+      safeApiRequest("/members"),
+      safeApiRequest("/bank-accounts"),
+      safeApiRequest("/member-receipts"),
+      safeApiRequest("/other-receipts"),
+      safeApiRequest("/member-payments"),
+      safeApiRequest("/other-payments"),
+      safeApiRequest("/member-journals"),
+      safeApiRequest("/other-journals"),
+      safeApiRequest("/attendances"),
+      safeApiRequest("/insurance-products"),
+    ]);
+
+    /*
+     * =========================================================
+     * COMMON HELPERS
+     * =========================================================
+     */
+
+    const selectedReport = String(
+      misReportSelection || ""
+    ).trim();
+
+    const selectedSubledger = String(
+      misReportSubledger || ""
+    ).trim();
+
+    const selectedMonth = String(
+      misReportMonth || "April"
+    ).trim();
+
+    const monthNumbers = {
+      January: 1,
+      February: 2,
+      March: 3,
+      April: 4,
+      May: 5,
+      June: 6,
+      July: 7,
+      August: 8,
+      September: 9,
+      October: 10,
+      November: 11,
+      December: 12,
+    };
+
+    const monthNumber = monthNumbers[selectedMonth] || 4;
+
+    const financialYearStartYear =
+      CURRENT_FINANCIAL_YEAR?.apiStartDate
+        ? Number(
+            String(CURRENT_FINANCIAL_YEAR.apiStartDate).slice(
+              0,
+              4
+            )
+          )
+        : CURRENT_WEBSITE === "website2"
+        ? 2025
+        : 2026;
+
+    const reportYear =
+      monthNumber >= 4
+        ? financialYearStartYear
+        : financialYearStartYear + 1;
+
+    const pad = (value) =>
+      String(value).padStart(2, "0");
+
+    const monthStart = new Date(
+      `${reportYear}-${pad(monthNumber)}-01T00:00:00`
+    );
+
+    const monthEnd = new Date(
+      reportYear,
+      monthNumber,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+    const financialYearStart = new Date(
+      `${financialYearStartYear}-04-01T00:00:00`
+    );
+
+    const parseDate = (value) => {
+      if (!value) return null;
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+
+      return date;
+    };
+
+    const getRecordDate = (record) =>
+      record?.receiptDate ||
+      record?.voucherDate ||
+      record?.journalDate ||
+      record?.date ||
+      record?.accountDate ||
+      record?.formationDate ||
+      record?.createdAt ||
+      "";
+
+    const isInSelectedMonth = (record) => {
+      const date = parseDate(getRecordDate(record));
+
+      if (!date) return false;
+
+      return (
+        date >= monthStart &&
+        date <= monthEnd
+      );
+    };
+
+    const isUptoSelectedMonth = (record) => {
+      const date = parseDate(getRecordDate(record));
+
+      if (!date) return false;
+
+      return (
+        date >= financialYearStart &&
+        date <= monthEnd
+      );
+    };
+
+    const money = (value) => {
+      const number = Number(value || 0);
+
+      if (!Number.isFinite(number)) {
+        return 0;
+      }
+
+      return number;
+    };
+
+    const formatDate = (value) => {
+      if (!value) return "";
+
+      const date = parseDate(value);
+
+      if (!date) return String(value);
+
+      return `${pad(date.getDate())}-${pad(
+        date.getMonth() + 1
+      )}-${date.getFullYear()}`;
+    };
+
+    const memberName = (member) =>
+      member?.memberName ||
+      member?.name ||
+      "";
+
+    const memberCode = (member) =>
+      member?.memberCode ||
+      member?.code ||
+      "";
+
+    const getMember = (record) => {
+      const code = String(
+        record?.memberCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const name = String(
+        record?.memberName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        members.find((member) => {
+          const memberCodeValue = String(
+            memberCode(member)
+          )
+            .trim()
+            .toLowerCase();
+
+          const memberNameValue = String(
+            memberName(member)
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            (code &&
+              memberCodeValue &&
+              code === memberCodeValue) ||
+            (name &&
+              memberNameValue &&
+              name === memberNameValue)
+          );
+        }) || null
+      );
+    };
+
+    /*
+     * =========================================================
+     * 1. KL 01 - VAZHVATHRAM DETAILS
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 01 - vazhvathram Details"
+    ) {
+      if (!vazhvathrams.length) {
+        setMisReportStatus(
+          "No Vazhvathram records found in the database."
+        );
+        return;
+      }
+
+      const selectedName = String(
+        selectedVazhvathram || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const vazhvathram =
+        vazhvathrams.find((record) => {
+          const name = String(
+            record?.vazhvathramName || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          const code = String(
+            record?.vazhvathramCode || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            (selectedName && name === selectedName) ||
+            (selectedName && code === selectedName)
+          );
+        }) || vazhvathrams[0];
+
+      const vazhvathramCode =
+        vazhvathram?.vazhvathramCode || "";
+
+      const vazhvathramName =
+        vazhvathram?.vazhvathramName || "";
+
+      const villageName =
+        vazhvathram?.villageName || "";
+
+      const formationDate =
+        vazhvathram?.formationDate || "";
+
+      const qualityCheckedDate =
+        vazhvathram?.qualityCheckedDate || "";
+
+      const meetingType =
+        vazhvathram?.meetingType || "";
+
+      const selectedClusterName = String(
+        selectedCluster || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      let cluster = null;
+
+      if (selectedClusterName) {
+        cluster = clusters.find((record) => {
+          const name = String(
+            record?.clusterName || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          const code = String(
+            record?.clusterCode || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            name === selectedClusterName ||
+            code === selectedClusterName
+          );
+        });
+      }
+
+      if (!cluster) {
+        cluster = clusters.find((record) => {
+          const text = JSON.stringify(
+            record || ""
+          ).toLowerCase();
+
+          const code = String(
+            vazhvathramCode
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            code &&
+            text.includes(code)
+          );
+        });
+      }
+
+      if (!cluster && clusters.length === 1) {
+        cluster = clusters[0];
+      }
+
+      const bankAccount = bankAccounts.find(
+        (account) => {
+          const text = JSON.stringify(
+            account || ""
+          ).toLowerCase();
+
+          const code = String(
+            vazhvathramCode
+          )
+            .trim()
+            .toLowerCase();
+
+          const name = String(
+            vazhvathramName
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            (code && text.includes(code)) ||
+            (name && text.includes(name))
+          );
+        }
+      );
+
+      const relatedMembers =
+        members.filter((member) => {
+          const text = JSON.stringify(
+            member || ""
+          ).toLowerCase();
+
+          const code = String(
+            vazhvathramCode
+          )
+            .trim()
+            .toLowerCase();
+
+          const name = String(
+            vazhvathramName
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            (code && text.includes(code)) ||
+            (name && text.includes(name))
+          );
+        });
+
+      const membersWithRelationship =
+        members.filter((member) => {
+          const text = JSON.stringify(
+            member || ""
+          ).toLowerCase();
+
+          return (
+            text.includes("vazhvathram") ||
+            text.includes("kalanjiam") ||
+            text.includes("groupcode")
+          );
+        });
+
+      const reportMembers =
+        relatedMembers.length > 0
+          ? relatedMembers
+          : membersWithRelationship.length === 0
+          ? members
+          : [];
+
+      const categoryCounts =
+        reportMembers.reduce(
+          (result, member) => {
+            const category = String(
+              member?.category || ""
+            )
+              .trim()
+              .toLowerCase();
+
+            if (category.includes("s1")) {
+              result.s1 += 1;
+            } else if (
+              category.includes("s2")
+            ) {
+              result.s2 += 1;
+            } else if (
+              category.includes("s3")
+            ) {
+              result.s3 += 1;
+            }
+
+            return result;
+          },
+          {
+            s1: 0,
+            s2: 0,
+            s3: 0,
+          }
+        );
+
+      let ageInMonths = "";
+
+      if (formationDate) {
+        const formation =
+          parseDate(formationDate);
+
+        const today = new Date();
+
+        if (formation) {
+          ageInMonths =
+            (today.getFullYear() -
+              formation.getFullYear()) *
+              12 +
+            (today.getMonth() -
+              formation.getMonth());
+
+          if (
+            today.getDate() <
+            formation.getDate()
+          ) {
+            ageInMonths -= 1;
+          }
+
+          if (ageInMonths < 0) {
+            ageInMonths = 0;
+          }
+        }
+      }
+
+      const report = {
+        "Vazhvathram Code":
+          vazhvathramCode,
+        "Vazhvathram Name":
+          vazhvathramName,
+        "Cluster Code":
+          cluster?.clusterCode || "",
+        "Cluster Name":
+          cluster?.clusterName || "",
+        "Federation Name": "",
+        "Panchayat Name": "",
+        "Village Name":
+          villageName,
+        "Formation Date":
+          formatDate(formationDate),
+        "Quality Checked Date":
+          formatDate(
+            qualityCheckedDate
+          ),
+        "Meeting Type":
+          meetingType,
+        "Bank A/C Date":
+          formatDate(
+            bankAccount?.accountDate || ""
+          ),
+        "Bank A/C No":
+          bankAccount?.accountNumber || "",
+        "Total Members":
+          reportMembers.length,
+        "Age (Mon)":
+          ageInMonths,
+        "Member Categorisation":
+          `S1 - ${categoryCounts.s1} S2 - ${categoryCounts.s2} S3 - ${categoryCounts.s3} Total - ${reportMembers.length}`,
+      };
+
+      setMisReportResults([report]);
+
+      setMisReportStatus(
+        "KL 01 - Vazhvathram Details generated successfully."
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 2. MEMBER DETAIL REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.includes(
+        "KL 02"
+      ) ||
+      selectedReport.includes(
+        "KL 03A"
+      ) ||
+      selectedReport.includes(
+        "KL 03B"
+      ) ||
+      selectedReport.includes(
+        "KL 03C"
+      )
+    ) {
+      let rows = members;
+
+      if (
+        selectedReport.includes(
+          "KL 03A"
+        )
+      ) {
+        rows = members.map((member) => ({
+          "Member Code":
+            memberCode(member),
+          "Member Name":
+            memberName(member),
+          "Designation":
+            member?.designation || "",
+          "Date of Joining":
+            formatDate(
+              member?.dateOfJoining
+            ),
+          "Mobile Number":
+            member?.mobileNumber || "",
+          "Category":
+            member?.category || "",
+        }));
+      } else if (
+        selectedReport.includes(
+          "KL 03B"
+        )
+      ) {
+        rows = members.map((member) => ({
+          "Member Code":
+            memberCode(member),
+          "Member Name":
+            memberName(member),
+          "Social Economic Category":
+            member?.category || "",
+          "Family Category":
+            member?.familyCategory || "",
+          "House Ownership":
+            member?.houseOwnership || "",
+          "Caste":
+            member?.caste || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+        }));
+      } else if (
+        selectedReport.includes(
+          "KL 03C"
+        )
+      ) {
+        rows = members.map((member) => ({
+          "Member Code":
+            memberCode(member),
+          "Member Name":
+            memberName(member),
+          "Family Category":
+            member?.familyCategory || "",
+          "Husband/Father Name":
+            member?.husbandFatherName || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+          "Members Alive":
+            member?.aliveStatus || "",
+        }));
+      } else {
+        rows = members.map((member) => ({
+          "Member Code":
+            memberCode(member),
+          "Member Name":
+            memberName(member),
+          "Regional Name":
+            member?.regionalMemberName || "",
+          "Designation":
+            member?.designation || "",
+          "Date":
+            formatDate(
+              member?.date
+            ),
+          "Date of Joining":
+            formatDate(
+              member?.dateOfJoining
+            ),
+          "Year of Birth":
+            member?.yearOfBirth || "",
+          "Category":
+            member?.category || "",
+          "Family Category":
+            member?.familyCategory || "",
+          "Mobile Number":
+            member?.mobileNumber || "",
+          "Regular Savings":
+            money(
+              member?.regularSavings
+            ),
+        }));
+      }
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 3. VAZHVATHRAM MANAGEMENT
+     * =========================================================
+     */
+
+    if (
+      selectedReport.includes(
+        "KL 04"
+      )
+    ) {
+      const rows =
+        vazhvathrams.map(
+          (record) => ({
+            "Vazhvathram Code":
+              record?.vazhvathramCode || "",
+            "Vazhvathram Name":
+              record?.vazhvathramName || "",
+            "Regional Name":
+              record?.regionalVazhvathramName || "",
+            "Formation Date":
+              formatDate(
+                record?.formationDate
+              ),
+            "Quality Checked Date":
+              formatDate(
+                record?.qualityCheckedDate
+              ),
+            "Meeting Type":
+              record?.meetingType || "",
+            "Meeting Date":
+              formatDate(
+                record?.meetingDate
+              ),
+            "Village Name":
+              record?.villageName || "",
+            "Bank Name":
+              record?.bankName || "",
+            "Branch Name":
+              record?.branchName || "",
+            "Service Area Branch":
+              record?.serviceAreaBranch || "",
+          })
+        );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        "KL 04 report generated successfully."
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 4. SAVINGS REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.includes(
+        "KL 06"
+      ) ||
+      selectedReport.includes(
+        "KL 07"
+      ) ||
+      selectedReport.includes(
+        "KL 08"
+      ) ||
+      selectedReport.includes(
+        "KL 09"
+      ) ||
+      selectedReport.includes(
+        "KL 10"
+      )
+    ) {
+      const monthlyReceipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const rowsByMember = {};
+
+      monthlyReceipts.forEach(
+        (receipt) => {
+          const code = String(
+            receipt?.memberCode ||
+              receipt?.memberName ||
+              receipt?.id ||
+              ""
+          );
+
+          if (!rowsByMember[code]) {
+            rowsByMember[code] = {
+              "Member Code":
+                receipt?.memberCode || "",
+              "Member Name":
+                receipt?.memberName || "",
+              "Regular Savings":
+                0,
+              "Special Savings":
+                0,
+              "Livelihood Loan Support 1":
+                0,
+              "Livelihood Loan Support 2":
+                0,
+              "Housing Loan":
+                0,
+              "Total":
+                0,
+            };
+          }
+
+          rowsByMember[code][
+            "Regular Savings"
+          ] += money(
+            receipt?.regularSavings
+          );
+
+          rowsByMember[code][
+            "Special Savings"
+          ] += money(
+            receipt?.specialSavings
+          );
+
+          rowsByMember[code][
+            "Livelihood Loan Support 1"
+          ] += money(
+            receipt?.livelihoodLoanSupport1
+          );
+
+          rowsByMember[code][
+            "Livelihood Loan Support 2"
+          ] += money(
+            receipt?.livelihoodLoanSupport2
+          );
+
+          rowsByMember[code][
+            "Housing Loan"
+          ] += money(
+            receipt?.housingLoan
+          );
+
+          rowsByMember[code][
+            "Total"
+          ] += money(
+            receipt?.total
+          );
+        }
+      );
+
+      let rows = Object.values(
+        rowsByMember
+      );
+
+      if (
+        selectedReport.includes(
+          "KL 08"
+        )
+      ) {
+        rows = rows.filter(
+          (row) =>
+            money(
+              row["Regular Savings"]
+            ) >= 15000
+        );
+      }
+
+      if (
+        selectedReport.includes(
+          "KL 07"
+        )
+      ) {
+        rows = rows.map(
+          (row) => ({
+            "Member Code":
+              row["Member Code"],
+            "Member Name":
+              row["Member Name"],
+            "Special Savings":
+              row["Special Savings"],
+            "Month":
+              selectedMonth,
+          })
+        );
+      }
+
+      if (
+        selectedReport.includes(
+          "KL 06"
+        )
+      ) {
+        rows = rows.map(
+          (row) => ({
+            "Member Code":
+              row["Member Code"],
+            "Member Name":
+              row["Member Name"],
+            "Regular Savings Demand":
+              0,
+            "Regular Savings Collection":
+              row["Regular Savings"],
+            "Difference":
+              0 -
+              row["Regular Savings"],
+            "Month":
+              selectedMonth,
+          })
+        );
+      }
+
+      if (
+        selectedReport.includes(
+          "KL 10"
+        )
+      ) {
+        rows = rows.map(
+          (row) => ({
+            "Member Code":
+              row["Member Code"],
+            "Member Name":
+              row["Member Name"],
+            "Regular Savings":
+              row["Regular Savings"],
+            "Special Savings":
+              row["Special Savings"],
+            "Month":
+              selectedMonth,
+            "Interest":
+              0,
+          })
+        );
+      }
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 5. LOAN / REPAYMENT REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.includes(
+        "KL 05"
+      )
+    ) {
+      const payments =
+        memberPayments.filter(
+          isInSelectedMonth
+        );
+
+      const rows = payments.map(
+        (payment) => {
+          const member =
+            getMember(payment);
+
+          const loanAmount =
+            money(
+              payment?.loanAmount
+            );
+
+          const instalmentAmount =
+            money(
+              payment?.instalmentAmount
+            );
+
+          let selectedAmount = loanAmount;
+
+          if (
+            selectedSubledger ===
+            "Livelihood Loan Support 1"
+          ) {
+            selectedAmount =
+              money(
+                payment?.loanAmount
+              );
+          } else if (
+            selectedSubledger ===
+            "Livelihood Loan Support 2"
+          ) {
+            selectedAmount =
+              money(
+                payment?.loanAmount
+              );
+          } else if (
+            selectedSubledger ===
+            "Housing Loan"
+          ) {
+            selectedAmount =
+              money(
+                payment?.loanAmount
+              );
+          }
+
+          return {
+            "Member Code":
+              payment?.memberCode ||
+              memberCode(member),
+            "Member Name":
+              payment?.memberName ||
+              memberName(member),
+            "Voucher No":
+              payment?.voucherNo || "",
+            "Voucher Date":
+              formatDate(
+                payment?.voucherDate
+              ),
+            "Voucher Type":
+              payment?.voucherType || "",
+            "Subledger":
+              selectedSubledger,
+            "Loan Type":
+              payment?.loanType || "",
+            "Loan Amount":
+              selectedAmount,
+            "Instalment Amount":
+              instalmentAmount,
+            "Instalment Type":
+              payment?.instalmentType || "",
+            "Purpose":
+              payment?.purpose || "",
+            "Sub Purpose":
+              payment?.subPurpose || "",
+            "Total":
+              money(payment?.total),
+          };
+        }
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth} - ${selectedSubledger}.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 6. CL REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.startsWith(
+        "CL "
+      )
+    ) {
+      const monthReceipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const monthPayments =
+        memberPayments.filter(
+          isInSelectedMonth
+        );
+
+      const totalSavings =
+        monthReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.regularSavings
+            ),
+          0
+        );
+
+      const totalSpecialSavings =
+        monthReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.specialSavings
+            ),
+          0
+        );
+
+      const totalLoan =
+        monthPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.loanAmount
+            ),
+          0
+        );
+
+      const totalMembers =
+        members.length;
+
+      const attendedCount =
+        attendances.filter(
+          isInSelectedMonth
+        ).length;
+
+      const clusterRows =
+        clusters.map(
+          (cluster) => ({
+            "Cluster Code":
+              cluster?.clusterCode || "",
+            "Cluster Name":
+              cluster?.clusterName || "",
+            "Regional Name":
+              cluster?.regionalClusterName || "",
+            "Formation Date":
+              formatDate(
+                cluster?.formationDate
+              ),
+            "Month":
+              selectedMonth,
+            "Total Members":
+              totalMembers,
+            "Members Attended":
+              attendedCount,
+            "Regular Savings":
+              totalSavings,
+            "Special Savings":
+              totalSpecialSavings,
+            "Loan Amount":
+              totalLoan,
+          })
+        );
+
+      if (clusterRows.length) {
+        setMisReportResults(
+          clusterRows
+        );
+      } else {
+        setMisReportResults([
+          {
+            "Report":
+              selectedReport,
+            "Month":
+              selectedMonth,
+            "Total Members":
+              totalMembers,
+            "Members Attended":
+              attendedCount,
+            "Regular Savings":
+              totalSavings,
+            "Special Savings":
+              totalSpecialSavings,
+            "Loan Amount":
+              totalLoan,
+          },
+        ]);
+      }
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 7. BL REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.startsWith(
+        "BL"
+      )
+    ) {
+      const monthReceipts =
+        memberReceipts.filter(
+          isInSelectedMonth
+        );
+
+      const monthPayments =
+        memberPayments.filter(
+          isInSelectedMonth
+        );
+
+      const regularSavings =
+        monthReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.regularSavings
+            ),
+          0
+        );
+
+      const specialSavings =
+        monthReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.specialSavings
+            ),
+          0
+        );
+
+      const loanAmount =
+        monthPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.loanAmount
+            ),
+          0
+        );
+
+      const loanRepayment =
+        monthPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.instalmentAmount
+            ),
+          0
+        );
+
+      const report = {
+        "Report":
+          selectedReport,
+        "Month":
+          selectedMonth,
+        "Total Vazhvathrams":
+          vazhvathrams.length,
+        "Total Clusters":
+          clusters.length,
+        "Total Members":
+          members.length,
+        "Regular Savings":
+          regularSavings,
+        "Special Savings":
+          specialSavings,
+        "Loan Amount":
+          loanAmount,
+        "Loan Repayment":
+          loanRepayment,
+      };
+
+      setMisReportResults([
+        report,
+      ]);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * 8. GENERIC MIS FALLBACK
+     * =========================================================
+     *
+     * This ensures a report selection does not remain
+     * completely blank when its legacy Dhanam calculation
+     * requires a database relationship that SAVE does not
+     * currently store.
+     */
+
+    const genericRows = [
+      {
+        "MIS Report":
+          selectedReport,
+        "Subledger":
+          selectedSubledger,
+        "Month":
+          selectedMonth,
+        "Vazhvathrams":
+          vazhvathrams.length,
+        "Clusters":
+          clusters.length,
+        "Members":
+          members.length,
+        "Bank Accounts":
+          bankAccounts.length,
+        "Member Receipts":
+          memberReceipts.length,
+        "Member Payments":
+          memberPayments.length,
+        "Member Journals":
+          memberJournals.length,
+        "Other Receipts":
+          otherReceipts.length,
+        "Other Payments":
+          otherPayments.length,
+        "Other Journals":
+          otherJournals.length,
+        "Insurance Products":
+          insuranceProducts.length,
+      },
+    ];
+
+    setMisReportResults(
+      genericRows
+    );
 
     setMisReportStatus(
-      "KL 01 - Vazhvathram Details generated successfully."
+      `${selectedReport} generated successfully for ${selectedMonth}.`
     );
   } catch (error) {
     console.error(
-      "MIS KL 01 report error:",
+      "MIS report error:",
       error
     );
 
     setMisReportResults([]);
 
     setMisReportStatus(
-      `Unable to generate KL 01 report. ${error.message}`
+      `Unable to generate MIS report. ${error?.message || error}`
     );
   } finally {
     setMisReportLoading(false);
@@ -22675,7 +23597,7 @@ sourceLabel =
 );
     } else if (item === "Journals") {
       body = legacyCard(<><ListBox options={base.options} size={9} value={journalReportSelection} onChange={(event) => { setJournalReportSelection(event.target.value); setJournalReportStatus(""); setJournalReportResults([]); }} /><div className="legacy-report-row"><strong>From Date</strong><input type="date" value={journalFromDate} onChange={(event) => setJournalFromDate(event.target.value)} /></div><div className="legacy-report-row"><strong>To Date</strong><input type="date" value={journalToDate} onChange={(event) => setJournalToDate(event.target.value)} /></div><div className="legacy-report-actions"><Button /></div>{journalReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{journalReportStatus}</div>}{renderJournalReportResults()}</>);
-    } } else if (item === "MIS") {
+    } else if (item === "MIS") {
   body = legacyCard(
     <>
       <ListBox
@@ -22702,6 +23624,12 @@ sourceLabel =
               "Housing Loan",
             ]}
             size={3}
+            value={misReportSubledger}
+            onChange={(event) => {
+              setMisReportSubledger(event.target.value);
+              setMisReportStatus("");
+              setMisReportResults([]);
+            }}
           />
         </div>
 
@@ -22710,7 +23638,16 @@ sourceLabel =
             MONTH
           </div>
 
-          <MonthBox size={5} />
+          <ListBox
+            options={months}
+            size={5}
+            value={misReportMonth}
+            onChange={(event) => {
+              setMisReportMonth(event.target.value);
+              setMisReportStatus("");
+              setMisReportResults([]);
+            }}
+          />
         </div>
       </div>
 
@@ -22748,74 +23685,71 @@ sourceLabel =
         </div>
       )}
 
-      {misReportResults.length > 0 &&
-        misReportSelection ===
-          "KL 01 - vazhvathram Details" && (
-          <div
+      {misReportResults.length > 0 && (
+        <div
+          style={{
+            marginTop: "15px",
+            overflowX: "auto",
+          }}
+        >
+          <h2 style={{ textAlign: "center" }}>
+            {misReportSelection}
+            {" - "}
+            {misReportSubledger}
+            {" - "}
+            {misReportMonth}
+          </h2>
+
+          <table
             style={{
-              marginTop: "15px",
-              overflowX: "auto",
+              width: "100%",
+              borderCollapse: "collapse",
+              background: "#fff",
             }}
           >
-            <h2 style={{ textAlign: "center" }}>
-              KL 01 - Vazhvathram Details
-            </h2>
+            <thead>
+              <tr>
+                {Object.keys(misReportResults[0]).map((key) => (
+                  <th
+                    key={key}
+                    style={{
+                      border: "1px solid #777",
+                      padding: "8px",
+                      background: "#e9e9e9",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {key}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                background: "#fff",
-              }}
-            >
-              <thead>
-                <tr>
-                  {Object.keys(misReportResults[0]).map(
-                    (key) => (
-                      <th
-                        key={key}
-                        style={{
-                          border: "1px solid #777",
-                          padding: "8px",
-                          background: "#e9e9e9",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {key}
-                      </th>
-                    )
-                  )}
+            <tbody>
+              {misReportResults.map((record, index) => (
+                <tr key={index}>
+                  {Object.keys(misReportResults[0]).map((key) => (
+                    <td
+                      key={key}
+                      style={{
+                        border: "1px solid #777",
+                        padding: "8px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {record[key] ?? ""}
+                    </td>
+                  ))}
                 </tr>
-              </thead>
-
-              <tbody>
-                {misReportResults.map(
-                  (record, index) => (
-                    <tr key={index}>
-                      {Object.keys(
-                        misReportResults[0]
-                      ).map((key) => (
-                        <td
-                          key={key}
-                          style={{
-                            border: "1px solid #777",
-                            padding: "8px",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {record[key] ?? ""}
-                        </td>
-                      ))}
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   );
-    } else if (item === "MIS-SSP") {
+    
+    }   else if (item === "MIS-SSP") {
       body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-row"><strong>Select Year</strong><select><option>Current Year</option><option>Previous Year</option></select></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["Social Security Programme - Member Life", "Social Security Programme - Spouse Life", "Social Security Programme - Livestock", "Social Security Programme - Health", "Social Security Programme - Pension","Social Security Programme - Endowment","Social Security Programme - Crop","Tata - AIA - Member","Tata - AIA - Spouse","Nalam","Mut.Help Prog. Risk share Contr.- Member Life","Mut.Help Prog. Risk share Contr.Spouse Life","Mut.Help Prog. Risk share Contr.- Health","Mut.Help Prog. Risk share Contr.- Livestock","Mut.Help Prog. Risk share Contr.- Crop","Mut.Help Prog. Funeral Fund","Mut.Help Prog.Admin Fund","Mut.Help Prog. Risk Share Contr.-Mem Li OA","Mut.Help Prog.Risk Share Contr. - Spo Li OA","Mut.Help Prog. - Benefit-Member Life","Mut.Help Prog. -Benefit - Spouse Life","Mut.Help Prog.-Benefit - Health","Mut.Help Prog.-Benefit -LiveStock","Mut.Help prog. - Benefit - Crop","Mut.Help prog. - Benefit - Funeral Fund","Mut.Help prog. - Benefit -Mem Life Old Age","Mut.Help prog. - Benefit - Spo Life Old Age","Social Secu. Prog.-Benefit- Health"]} size={6}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
     } else if (item === "Dem. Sheet") {
       body = <div className="legacy-report-simple"><h1>Demand Sheet</h1><div className="legacy-report-card demand-card"><div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div><div className="legacy-report-row"><strong>Meeting Date</strong><input type="date"/></div><div className="legacy-report-row"><strong>Members</strong><select><option>Without Locked Members</option><option>With Locked Members</option></select></div><div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></div></div>;
