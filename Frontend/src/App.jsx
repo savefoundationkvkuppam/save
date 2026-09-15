@@ -20547,6 +20547,360 @@ if (item === "Mark Dissolved Gps") {
       }
     };
 
+    const runMISReport = async () => {
+  setMisReportLoading(true);
+  setMisReportStatus("");
+  setMisReportResults([]);
+
+  try {
+    if (misReportSelection !== "KL 01 - vazhvathram Details") {
+      setMisReportStatus(
+        `${misReportSelection} is not implemented yet.`
+      );
+      return;
+    }
+
+    const [
+      vazhvathramsData,
+      clustersData,
+      membersData,
+      bankAccountsData,
+    ] = await Promise.all([
+      apiRequest("/vazhvathrams"),
+      apiRequest("/clusters"),
+      apiRequest("/members"),
+      apiRequest("/bank-accounts"),
+    ]);
+
+    const vazhvathrams = Array.isArray(vazhvathramsData)
+      ? vazhvathramsData
+      : [];
+
+    const clusters = Array.isArray(clustersData)
+      ? clustersData
+      : [];
+
+    const members = Array.isArray(membersData)
+      ? membersData
+      : [];
+
+    const bankAccounts = Array.isArray(bankAccountsData)
+      ? bankAccountsData
+      : [];
+
+    if (!vazhvathrams.length) {
+      setMisReportStatus(
+        "No Vazhvathram records found in the database."
+      );
+      return;
+    }
+
+    /*
+     * Find the selected Vazhvathram.
+     * If no Vazhvathram is selected, use the first available record.
+     */
+    const selectedName = String(
+      selectedVazhvathram || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const vazhvathram =
+      vazhvathrams.find((record) => {
+        const name = String(
+          record?.vazhvathramName || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const code = String(
+          record?.vazhvathramCode || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        return (
+          (selectedName && name === selectedName) ||
+          (selectedName && code === selectedName)
+        );
+      }) || vazhvathrams[0];
+
+    /*
+     * Vazhvathram details
+     */
+    const vazhvathramCode =
+      vazhvathram?.vazhvathramCode || "";
+
+    const vazhvathramName =
+      vazhvathram?.vazhvathramName || "";
+
+    const villageName =
+      vazhvathram?.villageName || "";
+
+    const formationDate =
+      vazhvathram?.formationDate || "";
+
+    const qualityCheckedDate =
+      vazhvathram?.qualityCheckedDate || "";
+
+    const meetingType =
+      vazhvathram?.meetingType || "";
+
+    /*
+     * Find matching cluster.
+     */
+    const selectedClusterName = String(
+      selectedCluster || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    let cluster = null;
+
+    if (selectedClusterName) {
+      cluster = clusters.find((record) => {
+        const name = String(
+          record?.clusterName || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const code = String(
+          record?.clusterCode || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        return (
+          name === selectedClusterName ||
+          code === selectedClusterName
+        );
+      });
+    }
+
+    /*
+     * Try to match the Vazhvathram with a cluster
+     * using available Vazhvathram/cluster fields.
+     */
+    if (!cluster) {
+      cluster = clusters.find((record) => {
+        const clusterText = JSON.stringify(record || "")
+          .toLowerCase();
+
+        const codeText = String(vazhvathramCode)
+          .trim()
+          .toLowerCase();
+
+        return (
+          codeText &&
+          clusterText.includes(codeText)
+        );
+      });
+    }
+
+    if (!cluster && clusters.length === 1) {
+      cluster = clusters[0];
+    }
+
+    const clusterCode =
+      cluster?.clusterCode || "";
+
+    const clusterName =
+      cluster?.clusterName || "";
+
+    /*
+     * Find bank account belonging to the Vazhvathram/group.
+     */
+    const bankAccount = bankAccounts.find((account) => {
+      const accountText = JSON.stringify(account || "")
+        .toLowerCase();
+
+      const code = String(vazhvathramCode)
+        .trim()
+        .toLowerCase();
+
+      const name = String(vazhvathramName)
+        .trim()
+        .toLowerCase();
+
+      return (
+        (code && accountText.includes(code)) ||
+        (name && accountText.includes(name))
+      );
+    });
+
+    const bankAccountDate =
+      bankAccount?.accountDate || "";
+
+    const bankAccountNumber =
+      bankAccount?.accountNumber || "";
+
+    /*
+     * Total members.
+     *
+     * If the member record contains the Vazhvathram
+     * code/name, count only those members.
+     */
+    const relatedMembers = members.filter((member) => {
+      const memberText = JSON.stringify(member || "")
+        .toLowerCase();
+
+      const code = String(vazhvathramCode)
+        .trim()
+        .toLowerCase();
+
+      const name = String(vazhvathramName)
+        .trim()
+        .toLowerCase();
+
+      if (!code && !name) {
+        return false;
+      }
+
+      return (
+        (code && memberText.includes(code)) ||
+        (name && memberText.includes(name))
+      );
+    });
+
+    /*
+     * If the member table does not contain the
+     * Vazhvathram relationship, use all members
+     * only when there is no relationship information.
+     */
+    const membersWithRelationship = members.filter((member) => {
+      const memberText = JSON.stringify(member || "")
+        .toLowerCase();
+
+      return (
+        memberText.includes("vazhvathram") ||
+        memberText.includes("kalanjiam") ||
+        memberText.includes("groupcode")
+      );
+    });
+
+    const reportMembers =
+      relatedMembers.length > 0
+        ? relatedMembers
+        : membersWithRelationship.length === 0
+        ? members
+        : [];
+
+    const totalMembers = reportMembers.length;
+
+    /*
+     * Member categorisation.
+     *
+     * Your Member entity stores the category field.
+     * We preserve the actual category values from PostgreSQL
+     * and count them into S1 / S2 / S3 where applicable.
+     */
+    const categoryCounts = reportMembers.reduce(
+      (result, member) => {
+        const category = String(
+          member?.category || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        if (
+          category === "s1" ||
+          category.includes("s1")
+        ) {
+          result.s1 += 1;
+        } else if (
+          category === "s2" ||
+          category.includes("s2")
+        ) {
+          result.s2 += 1;
+        } else if (
+          category === "s3" ||
+          category.includes("s3")
+        ) {
+          result.s3 += 1;
+        }
+
+        return result;
+      },
+      {
+        s1: 0,
+        s2: 0,
+        s3: 0,
+      }
+    );
+
+    /*
+     * Age in months.
+     * This follows the Dhanam KL 01 "Age (Mon)"
+     * concept using the Vazhvathram formation date.
+     */
+    let ageInMonths = "";
+
+    if (formationDate) {
+      const formation = new Date(formationDate);
+      const today = new Date();
+
+      if (!Number.isNaN(formation.getTime())) {
+        ageInMonths =
+          (today.getFullYear() -
+            formation.getFullYear()) *
+            12 +
+          (today.getMonth() -
+            formation.getMonth());
+
+        if (today.getDate() < formation.getDate()) {
+          ageInMonths -= 1;
+        }
+
+        if (ageInMonths < 0) {
+          ageInMonths = 0;
+        }
+      }
+    }
+
+    /*
+     * KL 01 report.
+     */
+    const report = {
+      "Vazhvathram Code": vazhvathramCode,
+      "Vazhvathram Name": vazhvathramName,
+      "Cluster Code": clusterCode,
+      "Cluster Name": clusterName,
+      "Federation Name": "",
+      "Panchayat Name": "",
+      "Village Name": villageName,
+      "Formation Date": formationDate,
+      "Quality Checked Date": qualityCheckedDate,
+      "Meeting Type": meetingType,
+      "Bank A/C Date": bankAccountDate,
+      "Bank A/C No": bankAccountNumber,
+      "Total Members": totalMembers,
+      "Age (Mon)": ageInMonths,
+      "Member Categorisation":
+        `S1 - ${categoryCounts.s1} S2 - ${categoryCounts.s2} S3 - ${categoryCounts.s3} Total - ${totalMembers}`,
+    };
+
+    setMisReportResults([report]);
+
+    setMisReportStatus(
+      "KL 01 - Vazhvathram Details generated successfully."
+    );
+  } catch (error) {
+    console.error(
+      "MIS KL 01 report error:",
+      error
+    );
+
+    setMisReportResults([]);
+
+    setMisReportStatus(
+      `Unable to generate KL 01 report. ${error.message}`
+    );
+  } finally {
+    setMisReportLoading(false);
+  }
+};
+
     const renderMISSSPReportResults = () => {
       if (!misSspReportResults.length) return null;
       const keys = Array.from(
