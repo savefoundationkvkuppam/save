@@ -13110,6 +13110,125 @@ cursor: pointer;
   }
 }
 
+/* =========================================================
+   SAVED ATTENDANCE RECORDS - CLEAN PROFESSIONAL STYLE
+   ========================================================= */
+
+.saved-attendance-records {
+  width: min(1180px, 96%);
+  margin: 24px auto 30px;
+  background: #ffffff;
+  border: 1px solid #d9e1dc;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  text-align: left;
+}
+
+.saved-attendance-records h3 {
+  margin: 0;
+  padding: 12px 16px;
+  background: #eaf5ef;
+  border-bottom: 1px solid #d9e1dc;
+  color: #155440;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.saved-attendance-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.saved-attendance-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+}
+
+.saved-attendance-table th {
+  padding: 10px 8px;
+  background: #f5faf7;
+  border-bottom: 1px solid #cfded6;
+  color: #155440;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.saved-attendance-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid #e1e7e4;
+  color: #222;
+  background: #ffffff;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.saved-attendance-table tbody tr:hover td {
+  background: #f7fbf9;
+}
+
+.saved-attendance-table td.attendance-reason {
+  text-align: left;
+  font-weight: 600;
+}
+
+.saved-attendance-table td.attended-members {
+  text-align: left;
+  line-height: 1.45;
+  max-width: 360px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.saved-attendance-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.saved-attendance-actions button {
+  min-width: 58px;
+  height: 30px;
+  padding: 4px 10px;
+  border: 1px solid #c8ddd4;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #155440;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.saved-attendance-actions button:hover {
+  background: #eaf5ef;
+}
+
+.saved-attendance-actions button:last-child {
+  color: #a33a3a;
+  border-color: #e2caca;
+}
+
+.saved-attendance-actions button:last-child:hover {
+  background: #fff2f2;
+}
+
+@media (max-width: 900px) {
+  .saved-attendance-records {
+    width: 96%;
+  }
+
+  .saved-attendance-table {
+    min-width: 800px;
+  }
+}
 
 
 
