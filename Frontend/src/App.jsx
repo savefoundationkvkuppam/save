@@ -25897,7 +25897,7 @@ sourceLabel =
           <div className="legacy-grid-row double" key={row}>
             <label>Sub Led.</label>
             <select
-              ref={left === 1 ? firstOtherPaymentSubLedgerRef : null}
+              ref={left === 1 ? firstOtherPaymentSubLedgerRef : undefined}
               value={otherPaymentForm[`subLed${left}`]}
               onChange={(e) => updateOtherPaymentField(`subLed${left}`, e.target.value)}
             >
