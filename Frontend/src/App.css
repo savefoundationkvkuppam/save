@@ -13243,7 +13243,8 @@ cursor: pointer;
   border: 1px solid #d7e3dd;
   border-radius: 14px;
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .member-list h2 {
@@ -13259,8 +13260,9 @@ cursor: pointer;
 
 .member-list .stats-table {
   width: 100%;
+  min-width: 1000px;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
   font-family: "Times New Roman", serif;
   font-size: 14px;
 }
