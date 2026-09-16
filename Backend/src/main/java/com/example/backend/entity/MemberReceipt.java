@@ -34,6 +34,33 @@ public class MemberReceipt {
     private String housingServiceCost;
     private String total;
 
+    private String donation;
+    private String jothiFund;
+    private String riskFund;
+    private String drrFund;
+    private String subsEntFee;
+    private String specifiedProgFund;
+
+    private String memberLife;
+    private String spouseLife;
+    private String livestock;
+    private String health;
+    private String pension;
+    private String endowment;
+    private String crop;
+
+    private String tataAiaMember;
+    private String tataAiaSpouse;
+
+    private String lifeMember;
+    private String lifeSpouse;
+    private String mutualHealth;
+    private String mutualLivestock;
+    private String mutualCrop;
+    private String funeral;
+    private String admin;
+    private String nalam;
+
     @Column(columnDefinition = "TEXT")
     private String additionalDetails;
 
@@ -84,6 +111,74 @@ public class MemberReceipt {
     public void setHousingServiceCost(String housingServiceCost) { this.housingServiceCost = housingServiceCost; }
     public String getTotal() { return total; }
     public void setTotal(String total) { this.total = total; }
+    public String getDonation() { return donation; }
+public void setDonation(String donation) { this.donation = donation; }
+
+public String getJothiFund() { return jothiFund; }
+public void setJothiFund(String jothiFund) { this.jothiFund = jothiFund; }
+
+public String getRiskFund() { return riskFund; }
+public void setRiskFund(String riskFund) { this.riskFund = riskFund; }
+
+public String getDrrFund() { return drrFund; }
+public void setDrrFund(String drrFund) { this.drrFund = drrFund; }
+
+public String getSubsEntFee() { return subsEntFee; }
+public void setSubsEntFee(String subsEntFee) { this.subsEntFee = subsEntFee; }
+
+public String getSpecifiedProgFund() { return specifiedProgFund; }
+public void setSpecifiedProgFund(String specifiedProgFund) { this.specifiedProgFund = specifiedProgFund; }
+
+public String getMemberLife() { return memberLife; }
+public void setMemberLife(String memberLife) { this.memberLife = memberLife; }
+
+public String getSpouseLife() { return spouseLife; }
+public void setSpouseLife(String spouseLife) { this.spouseLife = spouseLife; }
+
+public String getLivestock() { return livestock; }
+public void setLivestock(String livestock) { this.livestock = livestock; }
+
+public String getHealth() { return health; }
+public void setHealth(String health) { this.health = health; }
+
+public String getPension() { return pension; }
+public void setPension(String pension) { this.pension = pension; }
+
+public String getEndowment() { return endowment; }
+public void setEndowment(String endowment) { this.endowment = endowment; }
+
+public String getCrop() { return crop; }
+public void setCrop(String crop) { this.crop = crop; }
+
+public String getTataAiaMember() { return tataAiaMember; }
+public void setTataAiaMember(String tataAiaMember) { this.tataAiaMember = tataAiaMember; }
+
+public String getTataAiaSpouse() { return tataAiaSpouse; }
+public void setTataAiaSpouse(String tataAiaSpouse) { this.tataAiaSpouse = tataAiaSpouse; }
+
+public String getLifeMember() { return lifeMember; }
+public void setLifeMember(String lifeMember) { this.lifeMember = lifeMember; }
+
+public String getLifeSpouse() { return lifeSpouse; }
+public void setLifeSpouse(String lifeSpouse) { this.lifeSpouse = lifeSpouse; }
+
+public String getMutualHealth() { return mutualHealth; }
+public void setMutualHealth(String mutualHealth) { this.mutualHealth = mutualHealth; }
+
+public String getMutualLivestock() { return mutualLivestock; }
+public void setMutualLivestock(String mutualLivestock) { this.mutualLivestock = mutualLivestock; }
+
+public String getMutualCrop() { return mutualCrop; }
+public void setMutualCrop(String mutualCrop) { this.mutualCrop = mutualCrop; }
+
+public String getFuneral() { return funeral; }
+public void setFuneral(String funeral) { this.funeral = funeral; }
+
+public String getAdmin() { return admin; }
+public void setAdmin(String admin) { this.admin = admin; }
+
+public String getNalam() { return nalam; }
+public void setNalam(String nalam) { this.nalam = nalam; }
     public String getAdditionalDetails() { return additionalDetails; }
     public void setAdditionalDetails(String additionalDetails) { this.additionalDetails = additionalDetails; }
 }
