@@ -2610,7 +2610,7 @@ useEffect(() => {
 
   if (field === "amountType" && value === "More") {
     setTimeout(() => {
-      firstOtherPaymentSubLedgerRef.current?.focus();
+      document.getElementById("first-other-payment-subledger")?.focus();
     }, 0);
   }
 };
