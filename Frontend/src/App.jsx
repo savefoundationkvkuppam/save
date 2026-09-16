@@ -25864,7 +25864,7 @@ sourceLabel =
         <div className="legacy-grid-row compact">
           <label>S.L.</label>
           <select
-            ref={firstOtherPaymentsSubLedgerRef}
+            ref={firstOtherPaymentSubLedgerRef}
             value={otherPaymentForm.sl}
             onChange={(e) => updateOtherPaymentField("sl", e.target.value)}
           >
