@@ -56,6 +56,32 @@ public class MemberReceiptController {
                     existing.setHousingLoan(details.getHousingLoan());
                     existing.setHousingServiceCost(details.getHousingServiceCost());
                     existing.setTotal(details.getTotal());
+                    existing.setDonation(details.getDonation());
+                    existing.setJothiFund(details.getJothiFund());
+                    existing.setRiskFund(details.getRiskFund());
+                    existing.setDrrFund(details.getDrrFund());
+                    existing.setSubsEntFee(details.getSubsEntFee());
+                    existing.setSpecifiedProgFund(details.getSpecifiedProgFund());
+
+                    existing.setMemberLife(details.getMemberLife());
+                    existing.setSpouseLife(details.getSpouseLife());
+                    existing.setLivestock(details.getLivestock());
+                    existing.setHealth(details.getHealth());
+                    existing.setPension(details.getPension());
+                    existing.setEndowment(details.getEndowment());
+                    existing.setCrop(details.getCrop());
+
+                    existing.setTataAiaMember(details.getTataAiaMember());
+                    existing.setTataAiaSpouse(details.getTataAiaSpouse());
+
+                    existing.setLifeMember(details.getLifeMember());
+                    existing.setLifeSpouse(details.getLifeSpouse());
+                    existing.setMutualHealth(details.getMutualHealth());
+                    existing.setMutualLivestock(details.getMutualLivestock());
+                    existing.setMutualCrop(details.getMutualCrop());
+                    existing.setFuneral(details.getFuneral());
+                    existing.setAdmin(details.getAdmin());
+                    existing.setNalam(details.getNalam());
                     existing.setAdditionalDetails(details.getAdditionalDetails());
                     return ResponseEntity.ok(repository.save(existing));
                 })
