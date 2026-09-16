@@ -22211,71 +22211,342 @@ if (item === "Mark Dissolved Gps") {
     };
 
     const runConfirmationReport = async () => {
-      setConfirmationReportLoading(true);
-      setConfirmationReportStatus("");
-      setConfirmationReportResults([]);
+  setConfirmationReportLoading(true);
+  setConfirmationReportStatus("");
+  setConfirmationReportResults([]);
 
-      try {
-        const [membersData, locksData] = await Promise.all([
-          apiRequest("/members"),
-          apiRequest("/auto-journal-locks")
-        ]);
+  try {
+    const [
+      membersData,
+      locksData,
+      vazhvathramsData,
+    ] = await Promise.all([
+      apiRequest("/members"),
+      apiRequest("/auto-journal-locks"),
+      apiRequest("/vazhvathrams"),
+    ]);
 
-        const members = Array.isArray(membersData) ? membersData : [];
-        const locks = Array.isArray(locksData) ? locksData : [];
-        const targetDate = confirmationMeetingDate ? new Date(`${confirmationMeetingDate}T00:00:00`) : null;
-        const monthName = targetDate && !Number.isNaN(targetDate.getTime())
-          ? targetDate.toLocaleString("en-US", { month: "long" })
-          : "";
-        const year = targetDate && !Number.isNaN(targetDate.getTime()) ? targetDate.getFullYear() : null;
+    const members = Array.isArray(membersData) ? membersData : [];
+    const locks = Array.isArray(locksData) ? locksData : [];
+    const vazhvathrams = Array.isArray(vazhvathramsData)
+      ? vazhvathramsData
+      : [];
 
-        const monthLocked = locks.some((lock) => {
-          const lockMonth = String(lock?.month || "").trim().toLowerCase();
-          const lockDate = String(lock?.lockedDate || lock?.createdAt || "");
-          const lockYear = lockDate ? new Date(lockDate).getFullYear() : null;
-          return lockMonth === monthName.toLowerCase() && (!year || !lockYear || lockYear === year);
+    const targetDate = confirmationMeetingDate
+      ? new Date(`${confirmationMeetingDate}T00:00:00`)
+      : null;
+
+    const monthName =
+      targetDate && !Number.isNaN(targetDate.getTime())
+        ? targetDate.toLocaleString("en-US", {
+            month: "long",
+          })
+        : "";
+
+    const year =
+      targetDate && !Number.isNaN(targetDate.getTime())
+        ? targetDate.getFullYear()
+        : null;
+
+    const getLockStatus = (vazhvathram) => {
+      const vazhvathramCode = String(
+        vazhvathram?.vazhvathramCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const vazhvathramName = String(
+        vazhvathram?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const locked = locks.some((lock) => {
+        const lockMonth = String(lock?.month || "")
+          .trim()
+          .toLowerCase();
+
+        const lockDate = String(
+          lock?.lockedDate || lock?.createdAt || ""
+        );
+
+        const lockYear = lockDate
+          ? new Date(lockDate).getFullYear()
+          : null;
+
+        const lockCode = String(
+          lock?.vazhvathramCode || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const lockName = String(
+          lock?.vazhvathramName || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const sameGroup =
+          !lockCode ||
+          !vazhvathramCode ||
+          lockCode === vazhvathramCode ||
+          (!!lockName &&
+            !!vazhvathramName &&
+            lockName === vazhvathramName);
+
+        return (
+          sameGroup &&
+          lockMonth === monthName.toLowerCase() &&
+          (!year || !lockYear || lockYear === year)
+        );
+      });
+
+      return locked
+        ? "Ready for Confirmation"
+        : "Auto Journal Not Locked";
+    };
+
+    const rows = [];
+
+    vazhvathrams.forEach((vazhvathram) => {
+      const vazhvathramCode = String(
+        vazhvathram?.vazhvathramCode || ""
+      ).trim();
+
+      const vazhvathramName =
+        vazhvathram?.vazhvathramName || "";
+
+      const membersForGroup = members.filter((member) => {
+        const memberVazCode = String(
+          member?.vazhvathramCode ||
+            member?.vazhvathram ||
+            ""
+        ).trim();
+
+        const memberCode = String(
+          member?.memberCode ||
+            member?.code ||
+            member?.memberId ||
+            member?.id ||
+            ""
+        ).trim();
+
+        if (
+          memberVazCode &&
+          vazhvathramCode
+        ) {
+          return (
+            memberVazCode.toLowerCase() ===
+            vazhvathramCode.toLowerCase()
+          );
+        }
+
+        if (vazhvathramCode && memberCode) {
+          return memberCode.startsWith(vazhvathramCode);
+        }
+
+        return false;
+      });
+
+      const confirmationStatus =
+        getLockStatus(vazhvathram);
+
+      if (membersForGroup.length === 0) {
+        rows.push({
+          vazhvathramCode,
+          vazhvathramName,
+          regionalVazhvathramName:
+            vazhvathram?.regionalVazhvathramName || "",
+          formationDate:
+            vazhvathram?.formationDate || "",
+          qualityCheckedDate:
+            vazhvathram?.qualityCheckedDate || "",
+          meetingType:
+            vazhvathram?.meetingType || "",
+          meetingDate:
+            vazhvathram?.meetingDate || "",
+          formedBy:
+            vazhvathram?.formedBy || "",
+          villageName:
+            vazhvathram?.villageName || "",
+          bankName:
+            vazhvathram?.bankName || "",
+          branchName:
+            vazhvathram?.branchName || "",
+          serviceAreaBranch:
+            vazhvathram?.serviceAreaBranch || "",
+          memberCode: "",
+          memberName: "",
+          memberRegionalName: "",
+          memberMobile: "",
+          memberCategory: "",
+          memberCaste: "",
+          selectedMeetingDate: confirmationMeetingDate,
+          confirmationStatus,
         });
 
-        const rows = members.map((member) => ({
-          memberCode: member?.memberCode || member?.code || member?.memberId || member?.id || "",
-          memberName: member?.memberName || member?.name || member?.member_name || "",
-          vazhvathramCode: member?.vazhvathramCode || member?.vazhvathram || "",
-          meetingDate: confirmationMeetingDate,
-          confirmationStatus: monthLocked ? "Ready for Confirmation" : "Auto Journal Not Locked"
-        }));
-
-        setConfirmationReportResults(rows);
-        setConfirmationReportStatus(
-          monthLocked
-            ? `Confirmation data loaded for ${monthName} ${year}. ${rows.length} member${rows.length === 1 ? "" : "s"} found.`
-            : `No Auto Journal Lock found for ${monthName || "the selected month"}. Member data loaded, but confirmation is not ready.`
-        );
-      } catch (error) {
-        console.error("Confirmation Report execute error:", error);
-        setConfirmationReportResults([]);
-        setConfirmationReportStatus(`Unable to load Confirmation data. ${error.message}`);
-      } finally {
-        setConfirmationReportLoading(false);
+        return;
       }
-    };
 
-    const renderConfirmationReportResults = () => {
-      if (!confirmationReportResults.length) return null;
-      const keys = ["memberCode", "memberName", "vazhvathramCode", "meetingDate", "confirmationStatus"];
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table">
-            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>
-              {confirmationReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
+      membersForGroup.forEach((member) => {
+        rows.push({
+          vazhvathramCode,
+          vazhvathramName,
+          regionalVazhvathramName:
+            vazhvathram?.regionalVazhvathramName || "",
+          formationDate:
+            vazhvathram?.formationDate || "",
+          qualityCheckedDate:
+            vazhvathram?.qualityCheckedDate || "",
+          meetingType:
+            vazhvathram?.meetingType || "",
+          meetingDate:
+            vazhvathram?.meetingDate || "",
+          formedBy:
+            vazhvathram?.formedBy || "",
+          villageName:
+            vazhvathram?.villageName || "",
+          bankName:
+            vazhvathram?.bankName || "",
+          branchName:
+            vazhvathram?.branchName || "",
+          serviceAreaBranch:
+            vazhvathram?.serviceAreaBranch || "",
 
+          memberCode:
+            member?.memberCode ||
+            member?.code ||
+            member?.memberId ||
+            member?.id ||
+            "",
+
+          memberName:
+            member?.memberName ||
+            member?.name ||
+            member?.member_name ||
+            "",
+
+          memberRegionalName:
+            member?.regionalMemberName || "",
+
+          memberMobile:
+            member?.mobileNumber || "",
+
+          memberCategory:
+            member?.category || "",
+
+          memberCaste:
+            member?.caste || "",
+
+          selectedMeetingDate:
+            confirmationMeetingDate,
+
+          confirmationStatus,
+        });
+      });
+    });
+
+    setConfirmationReportResults(rows);
+
+    setConfirmationReportStatus(
+      rows.length
+        ? `Confirmation data loaded for ${monthName || "the selected date"} ${year || ""}. ${rows.length} record${rows.length === 1 ? "" : "s"} found.`
+        : "No Vazhvathram or Member records found in the database."
+    );
+  } catch (error) {
+    console.error(
+      "Confirmation Report execute error:",
+      error
+    );
+
+    setConfirmationReportResults([]);
+
+    setConfirmationReportStatus(
+      `Unable to load Confirmation data. ${error.message}`
+    );
+  } finally {
+    setConfirmationReportLoading(false);
+  }
+};
+
+const renderConfirmationReportResults = () => {
+  if (!confirmationReportResults.length) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        overflowX: "auto",
+        border: "1px solid #777",
+        background: "#fff",
+      }}
+    >
+      <table
+        className="legacy-table"
+        style={{
+          minWidth: "2200px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <thead>
+          <tr>
+            <th>Vazhvathram Code</th>
+            <th>Vazhvathram Name</th>
+            <th>Regional Vazhvathram Name</th>
+            <th>Formation Date</th>
+            <th>Quality Checked Date</th>
+            <th>Meeting Type</th>
+            <th>Meeting Date / Day</th>
+            <th>Formed By</th>
+            <th>Village Name</th>
+            <th>Bank Name</th>
+            <th>Branch Name</th>
+            <th>Service Area Branch</th>
+
+            <th>Member Code</th>
+            <th>Member Name</th>
+            <th>Regional Member Name</th>
+            <th>Mobile Number</th>
+            <th>Category</th>
+            <th>Caste</th>
+
+            <th>Selected Meeting Date</th>
+            <th>Confirmation Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {confirmationReportResults.map((record, index) => (
+            <tr key={record.id ?? index}>
+              <td>{record.vazhvathramCode}</td>
+              <td>{record.vazhvathramName}</td>
+              <td>{record.regionalVazhvathramName}</td>
+              <td>{record.formationDate}</td>
+              <td>{record.qualityCheckedDate}</td>
+              <td>{record.meetingType}</td>
+              <td>{record.meetingDate}</td>
+              <td>{record.formedBy}</td>
+              <td>{record.villageName}</td>
+              <td>{record.bankName}</td>
+              <td>{record.branchName}</td>
+              <td>{record.serviceAreaBranch}</td>
+
+              <td>{record.memberCode}</td>
+              <td>{record.memberName}</td>
+              <td>{record.memberRegionalName}</td>
+              <td>{record.memberMobile}</td>
+              <td>{record.memberCategory}</td>
+              <td>{record.memberCaste}</td>
+
+              <td>{record.selectedMeetingDate}</td>
+              <td>{record.confirmationStatus}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
     const runScheduleReport = async () => {
       setScheduleReportLoading(true);
       setScheduleReportStatus("");
