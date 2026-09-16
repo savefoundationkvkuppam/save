@@ -2610,7 +2610,7 @@ useEffect(() => {
 
   if (field === "amountType" && value === "More") {
     setTimeout(() => {
-      document.getElementById("first-other-payment-subledger")?.focus();
+      firstOtherPaymentSubLedgerRef.current?.focus();
     }, 0);
   }
 };
@@ -25861,6 +25861,7 @@ sourceLabel =
         <div className="legacy-grid-row compact">
           <label>S.L.</label>
           <select
+            ref={firstOtherPaymentsSubLedgerRef}
             value={otherPaymentForm.sl}
             onChange={(e) => updateOtherPaymentField("sl", e.target.value)}
           >
