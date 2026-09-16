@@ -13388,4 +13388,48 @@ cursor: pointer;
   }
 }
 
+/* =========================================================
+   MEMBER RECEIPT LIST - COLUMN SPACING
+   ========================================================= */
+
+.legacy-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.legacy-table th,
+.legacy-table td {
+  padding: 8px 14px;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.legacy-table th {
+  text-align: center;
+}
+
+.legacy-table td {
+  text-align: center;
+}
+
+.legacy-table th:first-child,
+.legacy-table td:first-child {
+  min-width: 80px;
+}
+
+.legacy-table th:nth-child(2),
+.legacy-table td:nth-child(2) {
+  min-width: 110px;
+}
+
+.legacy-table th:nth-child(3),
+.legacy-table td:nth-child(3) {
+  min-width: 180px;
+}
+
+.legacy-table th:last-child,
+.legacy-table td:last-child {
+  min-width: 150px;
+}
+
 
