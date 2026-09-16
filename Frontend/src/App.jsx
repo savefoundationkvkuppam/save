@@ -2383,7 +2383,35 @@ useEffect(() => {
     housingLoan: "",
     housingServiceCost: "",
     total: "",
-    additionalDetails: "",
+
+    donation: "",
+    jothiFund: "",
+    riskFund: "",
+    drrFund: "",
+    subsEntFee: "",
+    specifiedProgFund: "",
+
+    memberLife: "",
+    spouseLife: "",
+    livestock: "",
+    health: "",
+    pension: "",
+    endowment: "",
+    crop: "",
+
+    tataAiaMember: "",
+    tataAiaSpouse: "",
+
+    lifeMember: "",
+    lifeSpouse: "",
+    mutualHealth: "",
+    mutualLivestock: "",
+    mutualCrop: "",
+    funeral: "",
+    admin: "",
+    nalam: "",
+
+   additionalDetails: "",
   };
 
   const [memberReceiptForm, setMemberReceiptForm] =
