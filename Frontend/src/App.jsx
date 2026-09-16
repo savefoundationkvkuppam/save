@@ -2609,7 +2609,7 @@ useEffect(() => {
   }));
 
   if (field === "amountType" && value === "More") {
-    const slDropdown = firstOtherPaymentsSubLedgerRef.current;
+    const slDropdown = firstOtherPaymentSubLedgerRef.current;
 
     if (slDropdown) {
       slDropdown.focus();
