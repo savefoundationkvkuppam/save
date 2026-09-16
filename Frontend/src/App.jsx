@@ -2609,9 +2609,12 @@ useEffect(() => {
   }));
 
   if (field === "amountType" && value === "More") {
-    setTimeout(() => {
-      firstOtherPaymentSubLedgerRef.current?.focus();
-    }, 0);
+    const slDropdown = firstOtherPaymentsSubLedgerRef.current;
+
+    if (slDropdown) {
+      slDropdown.focus();
+      slDropdown.showPicker?.();
+    }
   }
 };
 
