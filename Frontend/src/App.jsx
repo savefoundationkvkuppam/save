@@ -25335,33 +25335,155 @@ sourceLabel =
         <div className="legacy-inline-fields">Life(M) <input value={memberReceiptForm.lifeMember || ""} onChange={(e) => updateMemberReceiptField("lifeMember", e.target.value)} /> Life(S) <input value={memberReceiptForm.lifeSpouse || ""} onChange={(e) => updateMemberReceiptField("lifeSpouse", e.target.value)} /> Health <input value={memberReceiptForm.mutualHealth || ""} onChange={(e) => updateMemberReceiptField("mutualHealth", e.target.value)} /> Livestock <input value={memberReceiptForm.mutualLivestock || ""} onChange={(e) => updateMemberReceiptField("mutualLivestock", e.target.value)} /> Crop <input value={memberReceiptForm.mutualCrop || ""} onChange={(e) => updateMemberReceiptField("mutualCrop", e.target.value)} /> Funeral <input value={memberReceiptForm.funeral || ""} onChange={(e) => updateMemberReceiptField("funeral", e.target.value)} /> Admin <input value={memberReceiptForm.admin || ""} onChange={(e) => updateMemberReceiptField("admin", e.target.value)} /> Nalam <input value={memberReceiptForm.nalam || ""} onChange={(e) => updateMemberReceiptField("nalam", e.target.value)} /></div>
 
         {memberReceiptMode === "list" && (
-          <div style={{ marginTop: "18px" }}>
-            <div className="legacy-subtitle">Member Receipt List</div>
-            <table className="legacy-table">
-              <thead>
-                <tr><th>Rcpt No.</th><th>Date</th><th>Member</th><th>Regular Savings</th><th>Bullet Savings</th><th>Total</th><th>Action</th></tr>
-              </thead>
-              <tbody>
-                {additionalRows.length === 0 ? (
-                  <tr><td colSpan="7" style={{ textAlign: "center", padding: "12px" }}>No Member Receipts found.</td></tr>
-                ) : additionalRows.map((record) => (
-                  <tr key={record.id}>
-                    <td>{record.receiptNo}</td>
-                    <td>{record.receiptDate}</td>
-                    <td>{record.memberCode}{record.memberName ? ` - ${record.memberName}` : ""}</td>
-                    <td>{record.regularSavings}</td>
-                    <td>{record.bulletSavings}</td>
-                    <td>{record.total}</td>
-                    <td>
-                      <button type="button" onClick={() => selectMemberReceipt(record)}>Select</button>
-                      <button type="button" onClick={() => deleteMemberReceipt(record)}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+  <div style={{ marginTop: "18px", overflowX: "auto" }}>
+    <div className="legacy-subtitle">Member Receipt List</div>
+
+    <table
+      className="legacy-table"
+      style={{
+        minWidth: "2200px",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <thead>
+        <tr>
+          <th>Rcpt No.</th>
+          <th>Date</th>
+          <th>Member</th>
+          <th>Regular Savings</th>
+          <th>Bullet Savings</th>
+          <th>Special Savings</th>
+          <th>Special Savings Amount</th>
+          <th>Livelihood Loan Support 1</th>
+          <th>Service Cost 1</th>
+          <th>Livelihood Loan Support 2</th>
+          <th>Service Cost 2</th>
+          <th>Housing Loan</th>
+          <th>Housing Service Cost</th>
+          <th>Total</th>
+
+          <th>Donation</th>
+          <th>Jothi Fund</th>
+          <th>Risk Fund</th>
+          <th>DRR Fund</th>
+          <th>Subs./Ent. Fee</th>
+          <th>Specified.Prog.Fund</th>
+
+          <th>Mem. Life</th>
+          <th>Spouse Life</th>
+          <th>Livestock</th>
+          <th>Health</th>
+          <th>Pension</th>
+          <th>Endowment</th>
+          <th>Crop</th>
+
+          <th>Tata AIA(M)</th>
+          <th>Tata AIA(S)</th>
+
+          <th>Life(M)</th>
+          <th>Life(S)</th>
+          <th>Mutual Health</th>
+          <th>Mutual Livestock</th>
+          <th>Mutual Crop</th>
+          <th>Funeral</th>
+          <th>Admin</th>
+          <th>Nalam</th>
+
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {additionalRows.length === 0 ? (
+          <tr>
+            <td
+              colSpan="38"
+              style={{
+                textAlign: "center",
+                padding: "12px",
+              }}
+            >
+              No Member Receipts found.
+            </td>
+          </tr>
+        ) : (
+          additionalRows.map((record) => (
+            <tr key={record.id}>
+              <td>{record.receiptNo}</td>
+              <td>{record.receiptDate}</td>
+
+              <td>
+                {record.memberCode}
+                {record.memberName
+                  ? ` - ${record.memberName}`
+                  : ""}
+              </td>
+
+              <td>{record.regularSavings}</td>
+              <td>{record.bulletSavings}</td>
+              <td>{record.specialSavings}</td>
+              <td>{record.specialSavingsAmount}</td>
+
+              <td>{record.livelihoodLoanSupport1}</td>
+              <td>{record.serviceCost1}</td>
+
+              <td>{record.livelihoodLoanSupport2}</td>
+              <td>{record.serviceCost2}</td>
+
+              <td>{record.housingLoan}</td>
+              <td>{record.housingServiceCost}</td>
+
+              <td>{record.total}</td>
+
+              <td>{record.donation}</td>
+              <td>{record.jothiFund}</td>
+              <td>{record.riskFund}</td>
+              <td>{record.drrFund}</td>
+              <td>{record.subsEntFee}</td>
+              <td>{record.specifiedProgFund}</td>
+
+              <td>{record.memberLife}</td>
+              <td>{record.spouseLife}</td>
+              <td>{record.livestock}</td>
+              <td>{record.health}</td>
+              <td>{record.pension}</td>
+              <td>{record.endowment}</td>
+              <td>{record.crop}</td>
+
+              <td>{record.tataAiaMember}</td>
+              <td>{record.tataAiaSpouse}</td>
+
+              <td>{record.lifeMember}</td>
+              <td>{record.lifeSpouse}</td>
+              <td>{record.mutualHealth}</td>
+              <td>{record.mutualLivestock}</td>
+              <td>{record.mutualCrop}</td>
+              <td>{record.funeral}</td>
+              <td>{record.admin}</td>
+              <td>{record.nalam}</td>
+
+              <td>
+                <button
+                  type="button"
+                  onClick={() => selectMemberReceipt(record)}
+                >
+                  Select
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deleteMemberReceipt(record)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))
         )}
+      </tbody>
+    </table>
+  </div>
+)}
       </div>
     );
   }
