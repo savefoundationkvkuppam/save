@@ -2596,15 +2596,26 @@ useEffect(() => {
   };
 
   const [otherPaymentForm, setOtherPaymentForm] = useState({ ...emptyOtherPayment });
+  const firstOtherPaymentSubLedgerRef = useRef(null);
   const [otherPaymentRecords, setOtherPaymentRecords] = useState([]);
   const [otherPaymentLoading, setOtherPaymentLoading] = useState(false);
   const [selectedOtherPaymentId, setSelectedOtherPaymentId] = useState(null);
   const [otherPaymentMode, setOtherPaymentMode] = useState("view");
 
   const updateOtherPaymentField = (field, value) => {
-    setOtherPaymentForm((previous) => ({ ...previous, [field]: value }));
-  };
+  setOtherPaymentForm((previous) => ({
+    ...previous,
+    [field]: value,
+  }));
 
+  if (field === "amountType" && value === "More") {
+    setTimeout(() => {
+      firstOtherPaymentSubLedgerRef.current?.focus();
+    }, 0);
+  }
+};
+
+  
   const resetOtherPaymentForm = () => {
     setOtherPaymentForm({ ...emptyOtherPayment });
     setSelectedOtherPaymentId(null);
@@ -25886,6 +25897,7 @@ sourceLabel =
           <div className="legacy-grid-row double" key={row}>
             <label>Sub Led.</label>
             <select
+              ref={left === 1 ? firstOtherPaymentSubLedgerRef : null}
               value={otherPaymentForm[`subLed${left}`]}
               onChange={(e) => updateOtherPaymentField(`subLed${left}`, e.target.value)}
             >
