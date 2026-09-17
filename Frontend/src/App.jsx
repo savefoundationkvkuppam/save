@@ -22560,7 +22560,7 @@ const renderConfirmationReportResults = () => {
               <td>{record.serviceAreaBranch}</td>
 
               <td>{record.memberCode}</td>
-              <td>{record.memberName}</td>
+              <td>{getMemberDisplayName(record.memberCode,record.memberName )}</td>
               <td>{record.memberRegionalName}</td>
               <td>{record.memberMobile}</td>
               <td>{record.memberCategory}</td>
