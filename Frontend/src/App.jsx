@@ -2307,6 +2307,22 @@ useEffect(() => {
   return member?.memberName || "";
 };
 
+  const getMemberDisplayName = (memberCode, memberName = "") => {
+  const code = String(memberCode || "").trim();
+
+  if (!code) {
+    return memberName || "";
+  }
+
+  const masterName = getMemberNameByCode(code);
+
+  return masterName
+    ? `${code} - ${masterName}`
+    : memberName
+      ? `${code} - ${memberName}`
+      : code;
+};
+
   const [showMemberList, setShowMemberList] = useState(false);
 
 
