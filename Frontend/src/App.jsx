@@ -11898,7 +11898,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {familyMemberRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.serialNo || ""}</td>
                             <td>{record.name || ""}</td>
                             <td>{record.relationship || ""}</td>
