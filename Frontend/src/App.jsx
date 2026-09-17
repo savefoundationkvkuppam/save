@@ -2306,23 +2306,64 @@ useEffect(() => {
 
   return member?.memberName || "";
 };
-
-  const getMemberDisplayName = (memberCode, memberName = "") => {
+  const getSavedMemberCode = (memberId, memberCode = "") => {
+  const id = String(memberId || "").trim();
   const code = String(memberCode || "").trim();
 
-  if (!code) {
+  if (id) {
+    const memberById = memberRecords.find(
+      (member) => String(member.id || "").trim() === id
+    );
+
+    if (memberById?.memberCode) {
+      return String(memberById.memberCode).trim();
+    }
+  }
+
+  if (code) {
+    const memberByCode = memberRecords.find(
+      (member) =>
+        String(member.memberCode || "").trim().toLowerCase() ===
+        code.toLowerCase()
+    );
+
+    if (memberByCode?.memberCode) {
+      return String(memberByCode.memberCode).trim();
+    }
+  }
+
+  return code;
+};
+
+const getMemberDisplayName = (memberIdOrCode, memberName = "") => {
+  const valueToFind = String(memberIdOrCode || "").trim();
+
+  if (!valueToFind) {
     return memberName || "";
   }
 
-  const masterName = getMemberNameByCode(code);
+  const masterMember = memberRecords.find(
+    (member) =>
+      String(member.id || "").trim() === valueToFind ||
+      String(member.memberCode || "").trim().toLowerCase() ===
+        valueToFind.toLowerCase()
+  );
 
-  return masterName
-    ? `${code} - ${masterName}`
-    : memberName
-      ? `${code} - ${memberName}`
-      : code;
+  if (masterMember) {
+    const savedCode = String(masterMember.memberCode || "").trim();
+    const savedName = String(masterMember.memberName || "").trim();
+
+    if (savedCode && savedName) {
+      return `${savedCode} - ${savedName}`;
+    }
+
+    return savedName || savedCode || memberName || "";
+  }
+
+  return memberName
+    ? `${valueToFind} - ${memberName}`
+    : valueToFind;
 };
-
   const [showMemberList, setShowMemberList] = useState(false);
 
 
