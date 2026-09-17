@@ -11950,7 +11950,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       case "Livelihood":
         content = (
           <>
-            {input("Member Name", "memberName", [""])}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={livelihoodLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {input("3.2 Family Member", "familyMember", [""])}
             {input("3.3 Master Occupation", "masterOccupation", ["Agri Labour", "Agriculture Farmer", "Animal Husbandry", "General Labour", "Professional Practice", "Salaried - Govt", "Salaried - Private", "Skilled Labour", "Small Scale Enterprises - Service", "Small Scale Enterpreneur - Production", "Weaving"])}
             {input("Pri. Occupation", "primaryOccupation", ["Agriculture Labor", "Others"])}
