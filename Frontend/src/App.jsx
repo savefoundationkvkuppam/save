@@ -12368,7 +12368,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       case "Savings":
         content = (
           <>
-            {input("Member Name", "memberName", [""], "dis-member-select")}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={savingLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {twoColRows([
               [input("11.2 Source", "source", ["1. Commercial Banks", "2. Cooperative Banks", "3. Societies", "4. Post Office", "5. Vazhvatharam", "6.Finance Company", "7. Chit Fund", "8. LIC", "9. Other SHGs"]), input("11.3 Total Cumulative Amount", "totalCumulativeAmount")],
               [input("11.4 Savings frequency", "savingsFrequency", ["1. Daily", "2. Weekly", "3. Fortnightly", "4. Monthly", "5. Quarterly", "6. Half Yearly", "7. Annually", "8. Others"]), input("11.5 Interest Rate (%)", "interestRate")],
@@ -12382,7 +12405,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       case "Bank Account":
         content = (
           <>
-            {input("Member Name", "memberName", [""], "dis-member-select")}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={bankAccountDisLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {twoColRows([
               [input("12.2 Family Member No.", "familyMemberNo"), input("12.3 Account Number", "accountNumber")],
               [input("12.4 Bank Name", "bankName", [""]), input("Bank A/c Name", "bankAccountName")],
@@ -12540,7 +12586,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {input("Vazhvatharam Code", "VazhvatharamCode")}
-            {input("Member Name", "memberName", [""])}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={legalLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {input("14.2 Particulars", "particulars", ["1. Family Dispute", "2. Land Dispute", "3. Other"])}
             {input("14.3 Details of Dispute", "disputeDetails")}
             {showLegalList && (
@@ -12591,7 +12660,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       case "Entitlements":
         content = (
           <>
-            {input("Member Name", "memberName", [""])}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={entitlementLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {input("Family Member", "familyMember", [""])}
             <div className="entitlement-grid">
               {[
