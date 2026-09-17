@@ -12314,7 +12314,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
               [input("10.7 Interest rate","interestRate"),input("10.8 Purpose of loan","loanPurpose",["Consumption","Medical","Housing","Education","Debt Redemption","Business Activites","Agriculture","Social Obligations","Asset Creation","Others"])],
               [input("10.9 Repayment frequency","repaymentFrequency",["1. Daily","2. Weekly","3. Fortnightly","4. Monthly","5. Quarterly","6. Half Yearly","7. Annually","8. Others"]),<div key="debt-empty" className="dis-field"></div>]
             ])}
-            {showDebtList && <div className="dis-member-list"><div className="dis-member-list-title">Debt Records from PostgreSQL</div>{debtRows.length===0?<div className="dis-member-empty">No Debt records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Debt Type</th><th>Source</th><th>Loan Amount</th><th>Outstanding</th><th>Borrowing Year</th><th>Interest Rate</th><th>Select</th></tr></thead><tbody>{debtRows.map(r=><tr key={r.id}><td>{r.memberName||""}</td><td>{r.debtType||""}</td><td>{r.source||""}</td><td>{r.loanAmount||""}</td><td>{r.presentOutstanding||""}</td><td>{r.borrowingYear||""}</td><td>{r.interestRate||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectDebt(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
+            {showDebtList && <div className="dis-member-list"><div className="dis-member-list-title">Debt Records from PostgreSQL</div>{debtRows.length===0?<div className="dis-member-empty">No Debt records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Debt Type</th><th>Source</th><th>Loan Amount</th><th>Outstanding</th><th>Borrowing Year</th><th>Interest Rate</th><th>Select</th></tr></thead><tbody>{debtRows.map(r=><tr key={r.id}><td>{getMemberDisplayName(r.memberId, r.memberName)}</td><td>{r.debtType||""}</td><td>{r.source||""}</td><td>{r.loanAmount||""}</td><td>{r.presentOutstanding||""}</td><td>{r.borrowingYear||""}</td><td>{r.interestRate||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectDebt(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
           </>
         );
         break;
@@ -12328,7 +12328,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
               [input("11.4 Savings frequency", "savingsFrequency", ["1. Daily", "2. Weekly", "3. Fortnightly", "4. Monthly", "5. Quarterly", "6. Half Yearly", "7. Annually", "8. Others"]), input("11.5 Interest Rate (%)", "interestRate")],
               [input("11.6 Monthly Savings", "monthlySavings"), <div key="savings-empty" className="dis-field"></div>]
             ])}
-            {showSavingsList && <div className="dis-member-list"><div className="dis-member-list-title">Savings Records from PostgreSQL</div>{savingsRows.length===0?<div className="dis-member-empty">No Savings records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Source</th><th>Total Cumulative Amount</th><th>Savings Frequency</th><th>Interest Rate</th><th>Monthly Savings</th><th>Select</th></tr></thead><tbody>{savingsRows.map(r=><tr key={r.id}><td>{r.memberName||""}</td><td>{r.source||""}</td><td>{r.totalCumulativeAmount||""}</td><td>{r.savingsFrequency||""}</td><td>{r.interestRate||""}</td><td>{r.monthlySavings||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectSavings(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
+            {showSavingsList && <div className="dis-member-list"><div className="dis-member-list-title">Savings Records from PostgreSQL</div>{savingsRows.length===0?<div className="dis-member-empty">No Savings records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Source</th><th>Total Cumulative Amount</th><th>Savings Frequency</th><th>Interest Rate</th><th>Monthly Savings</th><th>Select</th></tr></thead><tbody>{savingsRows.map(r=><tr key={r.id}><td>{getMemberDisplayName(r.memberId, r.memberName)}</td><td>{r.source||""}</td><td>{r.totalCumulativeAmount||""}</td><td>{r.savingsFrequency||""}</td><td>{r.interestRate||""}</td><td>{r.monthlySavings||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectSavings(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
           </>
         );
         break;
@@ -12365,7 +12365,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {bankAccountDisRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.familyMemberNo || ""}</td>
                             <td>{record.accountNumber || ""}</td>
                             <td>{record.bankName || ""}</td>
@@ -12460,7 +12460,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {healthRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.familyMember || ""}</td>
                             <td>{record.chronicIllness || ""}</td>
                             <td>{record.hospitalReferred || ""}</td>
@@ -12518,7 +12518,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                         {legalRows.map((record) => (
                           <tr key={record.id}>
                             <td>{record.vazhvatharamCode || ""}</td>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.particulars || ""}</td>
                             <td>{record.disputeDetails || ""}</td>
                             <td>
@@ -12590,7 +12590,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
               <div className="dis-member-list">
                 <div className="dis-member-list-title">Entitlement Records from PostgreSQL</div>
                 {entitlementRows.length === 0 ? <div className="dis-member-empty">No Entitlement records found.</div> : (
-                  <div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Family Member</th><th>Voter ID</th><th>Bank Account</th><th>Aadhar</th><th>Ration Card</th><th>Others</th><th>Select</th></tr></thead><tbody>{entitlementRows.map(record => <tr key={record.id}><td>{record.memberName||""}</td><td>{record.familyMember||""}</td><td>{record.voterIdCard||""}</td><td>{record.bankAccount||""}</td><td>{record.aadharCard||""}</td><td>{record.rationCard||""}</td><td>{record.others||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectEntitlement(record)}>Select</button></td></tr>)}</tbody></table></div>
+                  <div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Family Member</th><th>Voter ID</th><th>Bank Account</th><th>Aadhar</th><th>Ration Card</th><th>Others</th><th>Select</th></tr></thead><tbody>{entitlementRows.map(record => <tr key={record.id}><td>{getMemberDisplayName(record.memberId, record.memberName)}</td><td>{record.familyMember||""}</td><td>{record.voterIdCard||""}</td><td>{record.bankAccount||""}</td><td>{record.aadharCard||""}</td><td>{record.rationCard||""}</td><td>{record.others||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectEntitlement(record)}>Select</button></td></tr>)}</tbody></table></div>
                 )}
               </div>
             )}
