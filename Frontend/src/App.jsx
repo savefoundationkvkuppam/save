@@ -11888,7 +11888,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             <div className="dis-field">
-  <label>Select Existing Member</label>
+  <label> Member Code</label>
   <select
     value={value("memberId")}
     onChange={(e) => {
@@ -11902,7 +11902,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     }}
     disabled={disMemberLoading}
   >
-    <option value="">Select Existing Member</option>
+    <option value="">Select Member Code</option>
 
     {memberRecords.map((member) => (
       <option key={member.id} value={member.id}>
