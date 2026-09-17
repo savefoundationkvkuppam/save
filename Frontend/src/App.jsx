@@ -20525,8 +20525,8 @@ if (item === "Mark Dissolved Gps") {
     const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
     const [financialBankBranch, setFinancialBankBranch] = useState("");
     const [financialAcctNo, setFinancialAcctNo] = useState("5243664550");
-    const [financialFromDate, setFinancialFromDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
-    const [financialToDate, setFinancialToDate] = useState(CURRENT_FINANCIAL_YEAR.apiEndDate);
+    const [financialFromDate, setFinancialFromDate] = useState("");
+    const [financialToDate, setFinancialToDate] = useState("");
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
@@ -24174,12 +24174,47 @@ const renderConfirmationReportResults = () => {
       </div>
     );
 
-     const dates = (
-       <>
-          <div className="legacy-report-row"><strong>From Date</strong><input type="date" value={financialFromDate} onChange={(event) => setFinancialFromDate(event.target.value)} /></div>
-          <div className="legacy-report-row"><strong>To Date</strong><input type="date" value={financialToDate} onChange={(event) => setFinancialToDate(event.target.value)} /></div>
-       </>
-    );
+    const dates = (
+  <>
+    <div className="legacy-report-row">
+      <strong>From Date</strong>
+      <select
+        value={financialFromDate}
+        onChange={(event) => {
+          setFinancialFromDate(event.target.value);
+          setFinancialReportStatus("");
+          setFinancialReportResults([]);
+        }}
+      >
+        <option value="">Select Date</option>
+        {reportAvailableDates.map((date) => (
+          <option key={`from-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="legacy-report-row">
+      <strong>To Date</strong>
+      <select
+        value={financialToDate}
+        onChange={(event) => {
+          setFinancialToDate(event.target.value);
+          setFinancialReportStatus("");
+          setFinancialReportResults([]);
+        }}
+      >
+        <option value="">Select Date</option>
+        {reportAvailableDates.map((date) => (
+          <option key={`to-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+  </>
+);
 
     const parseFinancialDate = (value) => {
       const text = String(value || "").trim();
