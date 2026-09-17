@@ -11906,9 +11906,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
 
     {memberRecords.map((member) => (
       <option key={member.id} value={member.id}>
-        {member.memberCode
-          ? `${member.memberCode} - ${member.memberName || ""}`
-          : member.memberName || member.id}
+        {member.memberCode || member.id}
       </option>
     ))}
   </select>
