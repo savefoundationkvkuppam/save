@@ -9851,7 +9851,31 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState(null);
     const [familyMemberLoading, setFamilyMemberLoading] = useState(false);
     const [showFamilyMemberList, setShowFamilyMemberList] = useState(false);
+    useEffect(() => {
+  let cancelled = false;
 
+  const loadSavedFamilyMembers = async () => {
+    try {
+      const rows = await apiRequest("/family-members");
+      const list = Array.isArray(rows) ? rows : [];
+
+      if (!cancelled) {
+        setFamilyMemberRows(list);
+      }
+    } catch (error) {
+      console.error(
+        "Could not load saved Family Member names:",
+        error
+      );
+    }
+  };
+
+  loadSavedFamilyMembers();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
     // =========================================================
     // DIS -> LIVELIHOOD
     // PostgreSQL-backed livelihood details.
@@ -10456,29 +10480,59 @@ const bankOutstanding = dashboardDebtRecords.reduce(
 
     const value = (key) => values[key] ?? "";
 
-    const input = (label, key, options = null, extraClass = "") => (
-      <div className="dis-field" key={key}>
-        <label>{label}</label>
-        {options ? (
-          <select
-            value={value(key)}
-            onChange={(e) => setValue(key, e.target.value)}
-            className={extraClass}
-          >
-            <option value="">Select</option>
-            {options.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        ) : (
-          <input
-            value={value(key)}
-            onChange={(e) => setValue(key, e.target.value)}
-            className={extraClass}
-          />
-        )}
-      </div>
-    );
+    const input = (label, key, options = null, extraClass = "") => {
+  const isFamilyMemberField = key === "familyMember";
+
+  const savedFamilyMembers = isFamilyMemberField
+    ? familyMemberRows.filter(
+        (record) =>
+          !value("memberId") ||
+          String(record.memberId ?? "") === String(value("memberId"))
+      )
+    : [];
+
+  return (
+    <div className="dis-field" key={key}>
+      <label>{label}</label>
+
+      {isFamilyMemberField ? (
+        <select
+          value={value(key)}
+          onChange={(e) => setValue(key, e.target.value)}
+          className={extraClass}
+        >
+          <option value="">Select Family Member</option>
+
+          {savedFamilyMembers.map((record) => (
+            <option key={record.id} value={record.name || ""}>
+              {record.name || ""}
+            </option>
+          ))}
+        </select>
+      ) : options ? (
+        <select
+          value={value(key)}
+          onChange={(e) => setValue(key, e.target.value)}
+          className={extraClass}
+        >
+          <option value="">Select</option>
+
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          value={value(key)}
+          onChange={(e) => setValue(key, e.target.value)}
+          className={extraClass}
+        />
+      )}
+    </div>
+  );
+};
 
     const twoColRows = (rows) => (
       <div className="dis-two-col">
