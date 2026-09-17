@@ -20541,7 +20541,114 @@ if (item === "Mark Dissolved Gps") {
     const [journalReportResults, setJournalReportResults] = useState([]);
     const [journalReportLoading, setJournalReportLoading] = useState(false);
     const [journalReportStatus, setJournalReportStatus] = useState("");
+    const [reportAvailableDates, setReportAvailableDates] = useState([]);
 
+    useEffect(() => {
+  let cancelled = false;
+
+  const loadReportAvailableDates = async () => {
+    try {
+      const [
+        memberReceipts,
+        otherReceipts,
+        memberPayments,
+        otherPayments,
+        memberJournals,
+        otherJournals,
+        attendances,
+      ] = await Promise.all([
+        apiRequest("/member-receipts"),
+        apiRequest("/other-receipts"),
+        apiRequest("/member-payments"),
+        apiRequest("/other-payments"),
+        apiRequest("/member-journals"),
+        apiRequest("/other-journals"),
+        apiRequest("/attendances"),
+      ]);
+
+      const allRecords = [
+        ...(Array.isArray(memberReceipts) ? memberReceipts : []),
+        ...(Array.isArray(otherReceipts) ? otherReceipts : []),
+        ...(Array.isArray(memberPayments) ? memberPayments : []),
+        ...(Array.isArray(otherPayments) ? otherPayments : []),
+        ...(Array.isArray(memberJournals) ? memberJournals : []),
+        ...(Array.isArray(otherJournals) ? otherJournals : []),
+        ...(Array.isArray(attendances) ? attendances : []),
+      ];
+
+      const dateSet = new Set();
+
+      allRecords.forEach((record) => {
+        const rawDate =
+          record?.receiptDate ||
+          record?.voucherDate ||
+          record?.journalDate ||
+          record?.meetingDate ||
+          record?.date ||
+          record?.transactionDate ||
+          record?.entryDate ||
+          record?.createdDate ||
+          "";
+
+        if (!rawDate) return;
+
+        const text = String(rawDate).trim();
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+          dateSet.add(text);
+          return;
+        }
+
+        if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
+          const [day, month, year] = text.split("-");
+          dateSet.add(`${year}-${month}-${day}`);
+          return;
+        }
+
+        const parsed = new Date(text);
+
+        if (!Number.isNaN(parsed.getTime())) {
+          const year = parsed.getFullYear();
+          const month = String(parsed.getMonth() + 1).padStart(2, "0");
+          const day = String(parsed.getDate()).padStart(2, "0");
+          dateSet.add(`${year}-${month}-${day}`);
+        }
+      });
+
+      const currentYearStart =
+        CURRENT_FINANCIAL_YEAR.apiStartDate;
+      const currentYearEnd =
+        CURRENT_FINANCIAL_YEAR.apiEndDate;
+
+      const availableDates = Array.from(dateSet)
+        .filter(
+          (date) =>
+            date >= currentYearStart &&
+            date <= currentYearEnd
+        )
+        .sort((a, b) => b.localeCompare(a));
+
+      if (!cancelled) {
+        setReportAvailableDates(availableDates);
+      }
+    } catch (error) {
+      console.error(
+        "Could not load available report dates:",
+        error
+      );
+
+      if (!cancelled) {
+        setReportAvailableDates([]);
+      }
+    }
+  };
+
+  loadReportAvailableDates();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
     // MIS-SSP DATABASE CONNECTION (additive; original MIS-SSP page is preserved below)
     const [misSspReportSelection, setMisSspReportSelection] = useState(
