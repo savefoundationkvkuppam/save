@@ -24655,7 +24655,9 @@ sourceLabel =
           <input
             type="text"
             placeholder="Enter Member Name"
-          />
+            value={financialMember}
+            onChange={(e) => setFinancialMember(e.target.value)}
+            />
         </label>
 
         <label>
