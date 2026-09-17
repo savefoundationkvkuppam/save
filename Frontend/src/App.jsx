@@ -11964,7 +11964,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {livelihoodRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.familyMember || ""}</td>
                             <td>{record.primaryOccupation || ""}</td>
                             <td>{record.primaryMonthlyIncome || ""}</td>
@@ -12046,7 +12046,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {otherIncomeRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.houseRent || ""}</td>
                             <td>{record.emptyLandRent || ""}</td>
                             <td>
@@ -12129,7 +12129,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {migrationRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.familyMember || ""}</td>
                             <td>{record.placeOfMigration || ""}</td>
                             <td>{record.natureOfOccupation || ""}</td>
@@ -12216,7 +12216,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                       <tbody>
                         {livestockRows.map((record) => (
                           <tr key={record.id}>
-                            <td>{record.memberName || ""}</td>
+                            <td>{getMemberDisplayName(record.memberId, record.memberName)}</td>
                             <td>{record.livestock || ""}</td>
                             <td>{record.quantity || ""}</td>
                             <td>{record.presentValue || ""}</td>
@@ -12269,7 +12269,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
               [input("If Yes Area","housePlotArea"),input("Value","plotValue")],
               [input("Name in House Plot Patta","plotPattaName",[""]),null],
             ])}
-            {showHousingList && <div className="dis-member-list"><div className="dis-member-list-title">Housing Records from PostgreSQL</div>{housingRows.length===0?<div className="dis-member-empty">No Housing records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Type of House</th><th>Ownership</th><th>Rent Amount</th><th>House Value</th><th>Toilet</th><th>Electricity</th><th>Select</th></tr></thead><tbody>{housingRows.map(r=><tr key={r.id}><td>{r.memberName||""}</td><td>{r.typeOfHouse||""}</td><td>{r.ownership||""}</td><td>{r.rentAmount||""}</td><td>{r.houseValue||""}</td><td>{r.toiletFacility||""}</td><td>{r.electricity||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectHousing(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
+            {showHousingList && <div className="dis-member-list"><div className="dis-member-list-title">Housing Records from PostgreSQL</div>{housingRows.length===0?<div className="dis-member-empty">No Housing records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Type of House</th><th>Ownership</th><th>Rent Amount</th><th>House Value</th><th>Toilet</th><th>Electricity</th><th>Select</th></tr></thead><tbody>{housingRows.map(r=><tr key={r.id}><td>{getMemberDisplayName(r.memberId, r.memberName)}</td><td>{r.typeOfHouse||""}</td><td>{r.ownership||""}</td><td>{r.rentAmount||""}</td><td>{r.houseValue||""}</td><td>{r.toiletFacility||""}</td><td>{r.electricity||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectHousing(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
           </>
         );
         break;
@@ -12286,7 +12286,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
               [input("9 Yield / Acre - Crop2","yieldCrop2"),input("10 Market Place","marketPlace")],
               [input("11 Enrolled in Crop Insurance","cropInsurance",["Yes","No"]),input("12 Annual Value","annualValue")]
             ])}
-            {showLandList && <div className="dis-member-list"><div className="dis-member-list-title">Land Records from PostgreSQL</div>{landRows.length===0?<div className="dis-member-empty">No Land records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Ownership</th><th>Area (Acre)</th><th>Land Value</th><th>Land Patta</th><th>Irrigation</th><th>Crop 1</th><th>Annual Value</th><th>Select</th></tr></thead><tbody>{landRows.map(r=><tr key={r.id}><td>{r.memberName||""}</td><td>{r.landOwnership||""}</td><td>{r.areaInAcre||""}</td><td>{r.landValue||""}</td><td>{r.landPatta||""}</td><td>{r.irrigationType||""}</td><td>{r.crop1||""}</td><td>{r.annualValue||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectLand(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
+            {showLandList && <div className="dis-member-list"><div className="dis-member-list-title">Land Records from PostgreSQL</div>{landRows.length===0?<div className="dis-member-empty">No Land records found.</div>:<div className="dis-member-table-wrap"><table className="dis-member-table"><thead><tr><th>Member Name</th><th>Ownership</th><th>Area (Acre)</th><th>Land Value</th><th>Land Patta</th><th>Irrigation</th><th>Crop 1</th><th>Annual Value</th><th>Select</th></tr></thead><tbody>{landRows.map(r=><tr key={r.id}><td>{getMemberDisplayName(r.memberId, r.memberName)}</td><td>{r.landOwnership||""}</td><td>{r.areaInAcre||""}</td><td>{r.landValue||""}</td><td>{r.landPatta||""}</td><td>{r.irrigationType||""}</td><td>{r.crop1||""}</td><td>{r.annualValue||""}</td><td><button type="button" className="dis-member-select-btn" onClick={()=>selectLand(r)}>Select</button></td></tr>)}</tbody></table></div>}</div>}
           </>
         );
         break;
@@ -18624,7 +18624,7 @@ if (item === "External Debt") {
                       }}
                     >
                       <td style={{ padding: "10px", borderTop: "1px solid #e7efeb" }}>
-                        {record.memberName || ""}
+                        {getMemberDisplayName(record.memberId, record.memberName)}
                       </td>
                       <td style={{ padding: "10px", borderTop: "1px solid #e7efeb" }}>
                         {record.debtType || ""}
@@ -25713,13 +25713,7 @@ sourceLabel =
               <td>{record.receiptNo}</td>
               <td>{record.receiptDate}</td>
 
-              <td>
-                {record.memberCode}
-                {record.memberName
-                  ? ` - ${record.memberName}`
-                  : ""}
-              </td>
-
+              <td>{getMemberDisplayName(record.memberCode, record.memberName)}</td>
               <td>{record.regularSavings}</td>
               <td>{record.bulletSavings}</td>
               <td>{record.specialSavings}</td>
