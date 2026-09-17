@@ -20503,8 +20503,8 @@ if (item === "Mark Dissolved Gps") {
     ];
 
     const [masterReportSelection, setMasterReportSelection] = useState("MA 01 - General Ledger Details");
-    const [masterFromDate, setMasterFromDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
-    const [masterToDate, setMasterToDate] = useState(CURRENT_FINANCIAL_YEAR.apiEndDate);
+    const [masterFromDate, setMasterFromDate] = useState("");
+    const [masterToDate, setMasterToDate] = useState("");
     const [masterReportResults, setMasterReportResults] = useState([]);
     const [masterReportLoading, setMasterReportLoading] = useState(false);
     const [masterReportStatus, setMasterReportStatus] = useState("");
@@ -24976,13 +24976,42 @@ sourceLabel =
             ))}
           </select>
           <div className="legacy-report-row">
-            <strong>From Date</strong>
-            <input type="date" value={masterFromDate} onChange={(event) => setMasterFromDate(event.target.value)} />
-          </div>
-          <div className="legacy-report-row">
-            <strong>To Date</strong>
-            <input type="date" value={masterToDate} onChange={(event) => setMasterToDate(event.target.value)} />
-          </div>
+  <strong>From Date</strong>
+  <select
+    value={masterFromDate}
+    onChange={(event) => {
+      setMasterFromDate(event.target.value);
+      setMasterReportStatus("");
+      setMasterReportResults([]);
+    }}
+  >
+    <option value="">Select Date</option>
+    {reportAvailableDates.map((date) => (
+      <option key={`master-from-${date}`} value={date}>
+        {date}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="legacy-report-row">
+  <strong>To Date</strong>
+  <select
+    value={masterToDate}
+    onChange={(event) => {
+      setMasterToDate(event.target.value);
+      setMasterReportStatus("");
+      setMasterReportResults([]);
+    }}
+  >
+    <option value="">Select Date</option>
+    {reportAvailableDates.map((date) => (
+      <option key={`master-to-${date}`} value={date}>
+        {date}
+      </option>
+    ))}
+  </select>
+</div>    
           <div className="legacy-report-actions">
             <Button onClick={runMasterReport}>{masterReportLoading ? "Loading..." : "Execute"}</Button>
           </div>
