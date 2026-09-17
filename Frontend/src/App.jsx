@@ -2294,6 +2294,18 @@ useEffect(() => {
 
   const [selectedMemberRecordId, setSelectedMemberRecordId] =
     useState(null);
+  const getMemberNameByCode = (memberCode) => {
+  const code = String(memberCode || "").trim();
+
+  if (!code) return "";
+
+  const member = memberRecords.find(
+    (record) =>
+      String(record.memberCode || "").trim() === code
+  );
+
+  return member?.memberName || "";
+};
 
   const [showMemberList, setShowMemberList] = useState(false);
 
