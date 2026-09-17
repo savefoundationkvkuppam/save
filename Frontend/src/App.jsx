@@ -11793,7 +11793,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {input("Member Code", "memberCode")}
-            {input("Member Name", "memberName")}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={disMemberLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {input("Regional Member Name", "regionalMemberName")}
             {twoColRows([
               [input("Designation", "designation", ["Member", "Leader", "Secretary", "Treasurer"]), input("Date", "date")],
@@ -12380,7 +12403,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       setValue("memberId", selectedMember?.id ?? "");
       setValue("memberName", selectedMember?.memberName ?? "");
     }}
-    disabled={savingLoading}
+    disabled={savingsLoading}
   >
     <option value="">Select Member</option>
     {memberRecords.map((member) => (
