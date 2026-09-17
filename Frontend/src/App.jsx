@@ -11846,7 +11846,32 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       case "Gen. Detail":
         content = (
           <>
-            {input("Member Code", "memberCode")}
+            <div className="dis-field">
+  <label>Select Existing Member</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberCode", selectedMember?.memberCode ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={disMemberLoading}
+  >
+    <option value="">Select Existing Member</option>
+
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             <div className="dis-field">
   <label>Member Name</label>
   <select
