@@ -25158,8 +25158,80 @@ sourceLabel =
   </>
 );
     } else if (item === "Journals") {
-      body = legacyCard(<><ListBox options={base.options} size={9} value={journalReportSelection} onChange={(event) => { setJournalReportSelection(event.target.value); setJournalReportStatus(""); setJournalReportResults([]); }} /><div className="legacy-report-row"><strong>From Date</strong><input type="date" value={journalFromDate} onChange={(event) => setJournalFromDate(event.target.value)} /></div><div className="legacy-report-row"><strong>To Date</strong><input type="date" value={journalToDate} onChange={(event) => setJournalToDate(event.target.value)} /></div><div className="legacy-report-actions"><Button /></div>{journalReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{journalReportStatus}</div>}{renderJournalReportResults()}</>);
-    } else if (item === "MIS") {
+      body = legacyCard(
+  <>
+    <ListBox
+      options={base.options}
+      size={9}
+      value={journalReportSelection}
+      onChange={(event) => {
+        setJournalReportSelection(event.target.value);
+        setJournalReportStatus("");
+        setJournalReportResults([]);
+      }}
+    />
+
+    <div className="legacy-report-row">
+      <strong>From Date</strong>
+      <select
+        value={journalFromDate}
+        onChange={(event) => {
+          setJournalFromDate(event.target.value);
+          setJournalReportStatus("");
+          setJournalReportResults([]);
+        }}
+      >
+        <option value="">Select Date</option>
+        {reportAvailableDates.map((date) => (
+          <option key={`journal-from-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="legacy-report-row">
+      <strong>To Date</strong>
+      <select
+        value={journalToDate}
+        onChange={(event) => {
+          setJournalToDate(event.target.value);
+          setJournalReportStatus("");
+          setJournalReportResults([]);
+        }}
+      >
+        <option value="">Select Date</option>
+        {reportAvailableDates.map((date) => (
+          <option key={`journal-to-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="legacy-report-actions">
+      <Button />
+    </div>
+
+    {journalReportStatus && (
+      <div
+        style={{
+          marginTop: "10px",
+          padding: "8px",
+          border: "1px solid #777",
+          background: "#f4f4f4",
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        {journalReportStatus}
+      </div>
+    )}
+
+    {renderJournalReportResults()}
+  </>
+);
+    }else if (item === "MIS") {
   body = legacyCard(
     <>
       <ListBox
