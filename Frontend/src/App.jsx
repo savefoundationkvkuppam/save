@@ -26101,7 +26101,7 @@ sourceLabel =
                   <tr><td colSpan="6" style={{ textAlign: "center", padding: "12px" }}>No Member Payments found.</td></tr>
                 ) : memberPaymentRecords.map((record) => (
                   <tr key={record.id}>
-                    <td>{record.voucherNo}</td><td>{record.voucherDate}</td><td>{record.memberCode}{record.memberName ? `-${record.memberName}` : ""}</td><td>{record.voucherType}</td><td>{record.total}</td>
+                    <td>{record.voucherNo}</td><td>{record.voucherDate}</td><td>{getMemberDisplayName(record.memberCode, record.memberName)}</td><td>{record.voucherType}</td><td>{record.total}</td>
                     <td><button type="button" onClick={() => selectMemberPayment(record)}>Select</button><button type="button" onClick={() => deleteMemberPayment(record)}>Delete</button></td>
                   </tr>
                 ))}
