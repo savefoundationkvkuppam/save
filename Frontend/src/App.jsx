@@ -20536,8 +20536,8 @@ if (item === "Mark Dissolved Gps") {
     const [journalReportSelection, setJournalReportSelection] = useState(
       "JR01 - Complete Journal Report - vazhvathram"
     );
-    const [journalFromDate, setJournalFromDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
-    const [journalToDate, setJournalToDate] = useState(CURRENT_FINANCIAL_YEAR.apiEndDate);
+    const [journalFromDate, setJournalFromDate] = useState("");
+    const [journalToDate, setJournalToDate] = useState("");
     const [journalReportResults, setJournalReportResults] = useState([]);
     const [journalReportLoading, setJournalReportLoading] = useState(false);
     const [journalReportStatus, setJournalReportStatus] = useState("");
