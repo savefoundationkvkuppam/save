@@ -11863,7 +11863,30 @@ const bankOutstanding = dashboardDebtRecords.reduce(
       case "Family Member":
         content = (
           <>
-            {input("Member Name", "memberName")}
+            <div className="dis-field">
+  <label>Member Name</label>
+  <select
+    value={value("memberId")}
+    onChange={(e) => {
+      const selectedMember = memberRecords.find(
+        (member) => String(member.id) === String(e.target.value)
+      );
+
+      setValue("memberId", selectedMember?.id ?? "");
+      setValue("memberName", selectedMember?.memberName ?? "");
+    }}
+    disabled={familyMemberLoading}
+  >
+    <option value="">Select Member</option>
+    {memberRecords.map((member) => (
+      <option key={member.id} value={member.id}>
+        {member.memberCode
+          ? `${member.memberCode} - ${member.memberName || ""}`
+          : member.memberName || member.id}
+      </option>
+    ))}
+  </select>
+</div>
             {twoColRows([
               [input("2.1 Serial No.", "serialNo", ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"]), input("2.2 Name", "name")],
               [input("2.3 Date of Birth", "dateOfBirth"), input("2.4 Gender", "gender", ["Female", "Male"] )],
