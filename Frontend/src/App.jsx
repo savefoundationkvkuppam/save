@@ -25959,7 +25959,6 @@ if (
   setOpeningBalanceStatus(
     `OB 02 - Balance Sheet - vazhvathram generated successfully from PostgreSQL.`
   );
-}
 } else if (
   openingBalanceSelection ===
   "OB 03 - Bank Loan - vazhvathram"
