@@ -25516,14 +25516,13 @@ if (
 ) {
   // =========================================================
   // OB 02 - BALANCE SHEET - VAZHVATHRAM
+  // DATABASE DRIVEN
   // =========================================================
-  // This report uses whatever data is currently available
-  // in PostgreSQL.
-  //
-  // Empty tables/fields are treated as 0.00.
-  // When data is added later, the report will automatically
-  // include the new values.
-  // =========================================================
+
+  const normalizeOB02 = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
 
   const numberOB02 = (value) => {
     if (
@@ -25541,467 +25540,320 @@ if (
         .trim()
     );
 
-    return Number.isFinite(number) ? number : 0;
+    return Number.isFinite(number)
+      ? number
+      : 0;
   };
 
-  const valueOB02 = (record, fields) => {
-    if (!record || !Array.isArray(fields)) {
-      return 0;
+  const selectedVazText =
+    normalizeOB02(selectedVazhvathram);
+
+  const selectedVazRecord =
+    vazhvathrams.find((record) => {
+      const code = normalizeOB02(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB02(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazText ||
+        name === selectedVazText
+      );
+    }) || null;
+
+  const vazCode =
+    selectedVazRecord?.vazhvathramCode ||
+    selectedVazRecord?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVazRecord?.vazhvathramName ||
+    selectedVazRecord?.name ||
+    "";
+
+  const belongsToVazOB02 = (record) => {
+    const text = normalizeOB02(
+      JSON.stringify(record || {})
+    );
+
+    if (!selectedVazText) {
+      return true;
     }
 
-    for (const field of fields) {
-      if (
-        record[field] !== undefined &&
-        record[field] !== null &&
-        record[field] !== ""
-      ) {
-        return numberOB02(record[field]);
-      }
-    }
-
-    return 0;
+    return (
+      text.includes(selectedVazText) ||
+      (vazCode &&
+        text.includes(
+          normalizeOB02(vazCode)
+        )) ||
+      (vazName &&
+        text.includes(
+          normalizeOB02(vazName)
+        ))
+    );
   };
 
-  const textOB02 = (record, fields) => {
-    if (!record || !Array.isArray(fields)) {
-      return "";
-    }
+  const financialRecords = [
+    ...(Array.isArray(memberReceipts)
+      ? memberReceipts
+      : []),
+    ...(Array.isArray(memberPayments)
+      ? memberPayments
+      : []),
+    ...(Array.isArray(otherReceipts)
+      ? otherReceipts
+      : []),
+    ...(Array.isArray(otherPayments)
+      ? otherPayments
+      : []),
+    ...(Array.isArray(memberJournals)
+      ? memberJournals
+      : []),
+    ...(Array.isArray(otherJournals)
+      ? otherJournals
+      : []),
+    ...(Array.isArray(bankAccounts)
+      ? bankAccounts
+      : []),
+    ...(Array.isArray(fixedDeposits)
+      ? fixedDeposits
+      : []),
+  ].filter(belongsToVazOB02);
 
-    for (const field of fields) {
-      if (
-        record[field] !== undefined &&
-        record[field] !== null &&
-        String(record[field]).trim() !== ""
-      ) {
-        return String(record[field])
-          .trim()
-          .toLowerCase();
-      }
-    }
+  const accountNameOB02 = (record) => {
+    const values = [
+      record?.generalLedger,
+      record?.genLedger,
+      record?.generalLedgerName,
+      record?.accountName,
+      record?.ledgerName,
+      record?.subLedger,
+      record?.subledger,
+      record?.subLedgerMain,
+      record?.subLed1,
+      record?.subLed2,
+      record?.subLed3,
+      record?.subLed4,
+      record?.subLed5,
+      record?.subLed6,
+      record?.particulars,
+      record?.description,
+    ];
 
-    return "";
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
   };
 
-  // ---------------------------------------------------------
-  // ASSET 1 - CASH AT BANK (2112)
-  // ---------------------------------------------------------
-  // bank_accounts is currently empty in PostgreSQL.
-  // When bank account opening/current balances are entered,
-  // they will automatically appear here.
-  // ---------------------------------------------------------
+  const accountCodeOB02 = (record) => {
+    const values = [
+      record?.generalLedgerCode,
+      record?.genLedgerCode,
+      record?.accountCode,
+      record?.ledgerCode,
+      record?.subLedgerCode,
+      record?.subledgerCode,
+      record?.code,
+    ];
 
-  const bankBalance = bankAccounts.reduce(
-    (total, record) =>
-      total +
-      valueOB02(record, [
-        "amount",
-        "balance",
-        "openingBalance",
-        "opening_balance",
-        "currentBalance",
-        "current_balance",
-      ]),
-    0
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  const amountOB02 = (record) => {
+    const values = [
+      record?.amount,
+      record?.total,
+      record?.amountMain,
+      record?.amount1,
+      record?.amount2,
+      record?.amount3,
+      record?.amount4,
+      record?.amount5,
+      record?.amount6,
+      record?.receiptAmount,
+      record?.paymentAmount,
+      record?.fdAmount,
+      record?.balance,
+      record?.openingBalance,
+      record?.currentBalance,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        item !== ""
+    );
+
+    return numberOB02(value);
+  };
+
+  const typeOB02 = (record) =>
+    normalizeOB02(
+      record?.debitCredit ||
+      record?.type ||
+      record?.type1 ||
+      record?.transactionType ||
+      ""
+    );
+
+  const ledgerMapOB02 = new Map();
+
+  financialRecords.forEach((record) => {
+    const name = accountNameOB02(record);
+
+    if (!name) {
+      return;
+    }
+
+    const code = accountCodeOB02(record);
+
+    const key =
+      `${code}|${name}`.toLowerCase();
+
+    const existing =
+      ledgerMapOB02.get(key) || {
+        code,
+        name,
+        debit: 0,
+        credit: 0,
+        balance: 0,
+      };
+
+    const amount =
+      amountOB02(record);
+
+    const type =
+      typeOB02(record);
+
+    if (
+      type.includes("credit") ||
+      type === "cr"
+    ) {
+      existing.credit += amount;
+    } else {
+      existing.debit += amount;
+    }
+
+    existing.balance =
+      existing.debit -
+      existing.credit;
+
+    ledgerMapOB02.set(
+      key,
+      existing
+    );
+  });
+
+  const ledgerRowsOB02 =
+    Array.from(
+      ledgerMapOB02.values()
+    );
+
+  const liabilityRows =
+    ledgerRowsOB02.filter(
+      (row) => row.balance < 0
+    );
+
+  const assetRows =
+    ledgerRowsOB02.filter(
+      (row) => row.balance >= 0
+    );
+
+  const maxRows = Math.max(
+    liabilityRows.length,
+    assetRows.length
   );
 
-  // ---------------------------------------------------------
-  // ASSET 2 - FIXED DEPOSITS
-  // ---------------------------------------------------------
+  rows = Array.from(
+    { length: maxRows },
+    (_, index) => {
+      const liability =
+        liabilityRows[index];
 
-  const fixedDepositBalance = fixedDeposits.reduce(
-    (total, record) =>
-      total +
-      valueOB02(record, [
-        "fdAmount",
-        "fd_amount",
-        "amount",
-        "balance",
-        "depositAmount",
-        "deposit_amount",
-        "principalAmount",
-        "principal_amount",
-        "openingBalance",
-        "opening_balance",
-      ]),
-    0
+      const asset =
+        assetRows[index];
+
+      return {
+        vazhvathramCode: vazCode,
+        vazhvathramName: vazName,
+
+        liabilityCode:
+          liability?.code || "",
+
+        liabilityName:
+          liability?.name || "",
+
+        liabilityAmount:
+          liability
+            ? Math.abs(liability.balance)
+            : 0,
+
+        assetCode:
+          asset?.code || "",
+
+        assetName:
+          asset?.name || "",
+
+        assetAmount:
+          asset
+            ? asset.balance
+            : 0,
+      };
+    }
   );
 
-  // ---------------------------------------------------------
-  // LIABILITY 1 - REGULAR SAVINGS
-  // ---------------------------------------------------------
-  // Current member records contain regular_savings.
-  // Example from your database: SUBHA = 200.
-  // ---------------------------------------------------------
-
-  const regularSavings = members.reduce(
-    (total, record) =>
-      total +
-      valueOB02(record, [
-        "regularSavings",
-        "regular_savings",
-        "regularSavingsAmount",
-        "regular_savings_amount",
-        "regularSavingsBalance",
-        "regular_savings_balance",
-      ]),
-    0
-  );
-
-  // ---------------------------------------------------------
-  // LIABILITY 2 - BULLET SAVINGS
-  // ---------------------------------------------------------
-
-  const bulletSavings = members.reduce(
-    (total, record) =>
-      total +
-      valueOB02(record, [
-        "bulletSavings",
-        "bullet_savings",
-        "bulletSavingsAmount",
-        "bullet_savings_amount",
-        "bulletSavingsBalance",
-        "bullet_savings_balance",
-      ]),
-    0
-  );
-
-  // ---------------------------------------------------------
-  // LIABILITY 3 - SPECIAL SAVINGS
-  // ---------------------------------------------------------
-
-  const specialSavings = members.reduce(
-    (total, record) =>
-      total +
-      valueOB02(record, [
-        "specialSavingsAmount",
-        "special_savings_amount",
-        "specialSavingsBalance",
-        "special_savings_balance",
-      ]),
-    0
-  );
-
-  // ---------------------------------------------------------
-  // ASSET 3 - LIVELIHOOD LOAN SUPPORT 1
-  // ---------------------------------------------------------
-  // Member Receipts = loan amount issued/received.
-  // Member Payments = loan repayment.
-  // Outstanding = receipts - repayments.
-  // ---------------------------------------------------------
-
-  const livelihoodLoanSupport1Issued =
-    memberReceipts.reduce(
-      (total, record) =>
-        total +
-        valueOB02(record, [
-          "livelihoodLoanSupport1",
-          "livelihood_loan_support1",
-          "livelihoodLoanSupport1Amount",
-          "livelihood_loan_support1_amount",
-        ]),
+  const liabilityTotal =
+    liabilityRows.reduce(
+      (total, row) =>
+        total + Math.abs(row.balance),
       0
     );
 
-  const livelihoodLoanSupport1Repaid =
-    memberPayments.reduce(
-      (total, record) => {
-        const loanType = textOB02(record, [
-          "loanType",
-          "loan_type",
-          "accountType",
-          "account_type",
-        ]);
-
-        if (
-          loanType.includes(
-            "livelihood loan support 1"
-          ) ||
-          loanType.includes(
-            "livelihood_loan_support1"
-          )
-        ) {
-          return (
-            total +
-            valueOB02(record, [
-              "loanAmount",
-              "loan_amount",
-            ])
-          );
-        }
-
-        return total;
-      },
+  const assetTotal =
+    assetRows.reduce(
+      (total, row) =>
+        total + row.balance,
       0
     );
 
-  const livelihoodLoanSupport1 = Math.max(
-    0,
-    livelihoodLoanSupport1Issued -
-      livelihoodLoanSupport1Repaid
-  );
+  rows.push({
+    vazhvathramCode: vazCode,
+    vazhvathramName: vazName,
 
-  // ---------------------------------------------------------
-  // ASSET 4 - LIVELIHOOD LOAN SUPPORT 2
-  // ---------------------------------------------------------
+    liabilityCode: "",
+    liabilityName: "Total",
+    liabilityAmount: liabilityTotal,
 
-  const livelihoodLoanSupport2Issued =
-    memberReceipts.reduce(
-      (total, record) =>
-        total +
-        valueOB02(record, [
-          "livelihoodLoanSupport2",
-          "livelihood_loan_support2",
-          "livelihoodLoanSupport2Amount",
-          "livelihood_loan_support2_amount",
-        ]),
-      0
-    );
-
-  const livelihoodLoanSupport2Repaid =
-    memberPayments.reduce(
-      (total, record) => {
-        const loanType = textOB02(record, [
-          "loanType",
-          "loan_type",
-          "accountType",
-          "account_type",
-        ]);
-
-        if (
-          loanType.includes(
-            "livelihood loan support 2"
-          ) ||
-          loanType.includes(
-            "livelihood_loan_support2"
-          )
-        ) {
-          return (
-            total +
-            valueOB02(record, [
-              "loanAmount",
-              "loan_amount",
-            ])
-          );
-        }
-
-        return total;
-      },
-      0
-    );
-
-  const livelihoodLoanSupport2 = Math.max(
-    0,
-    livelihoodLoanSupport2Issued -
-      livelihoodLoanSupport2Repaid
-  );
-
-  // ---------------------------------------------------------
-  // ASSET 5 - HOUSING LOAN
-  // ---------------------------------------------------------
-
-  const housingLoanIssued =
-    memberReceipts.reduce(
-      (total, record) =>
-        total +
-        valueOB02(record, [
-          "housingLoan",
-          "housing_loan",
-          "housingLoanAmount",
-          "housing_loan_amount",
-        ]),
-      0
-    );
-
-  const housingLoanRepaid =
-    memberPayments.reduce(
-      (total, record) => {
-        const loanType = textOB02(record, [
-          "loanType",
-          "loan_type",
-          "accountType",
-          "account_type",
-        ]);
-
-        if (
-          loanType.includes("housing loan") ||
-          loanType.includes("housing_loan")
-        ) {
-          return (
-            total +
-            valueOB02(record, [
-              "loanAmount",
-              "loan_amount",
-            ])
-          );
-        }
-
-        return total;
-      },
-      0
-    );
-
-  const housingLoan = Math.max(
-    0,
-    housingLoanIssued - housingLoanRepaid
-  );
-
-  // ---------------------------------------------------------
-  // TOTAL ASSETS
-  // ---------------------------------------------------------
-
-  const totalAssets =
-    bankBalance +
-    fixedDepositBalance +
-    livelihoodLoanSupport1 +
-    livelihoodLoanSupport2 +
-    housingLoan;
-
-  // ---------------------------------------------------------
-  // TOTAL LIABILITIES
-  // ---------------------------------------------------------
-
-  const totalLiabilities =
-    regularSavings +
-    bulletSavings +
-    specialSavings;
-
-  // ---------------------------------------------------------
-  // GENERAL FUND
-  // ---------------------------------------------------------
-  // This is calculated as the balancing equity amount.
-  // Therefore the report remains mathematically balanced
-  // even while the database is being populated.
-  // ---------------------------------------------------------
-
-  const generalFund =
-    totalAssets - totalLiabilities;
-
-  const totalLiabilitiesAndEquity =
-    totalLiabilities + generalFund;
-
-  const balanceCheck =
-    totalAssets -
-    totalLiabilitiesAndEquity;
-
-  // ---------------------------------------------------------
-  // REPORT ROWS
-  // ---------------------------------------------------------
-
-  rows = [
-    {
-      "Particulars": "ASSETS",
-      "Amount": "",
-      "Type": "Header",
-    },
-
-    {
-      "Particulars": "Cash at Bank (2112)",
-      "Amount": bankBalance.toFixed(2),
-      "Type": "Asset",
-    },
-
-    {
-      "Particulars": "Fixed Deposits",
-      "Amount": fixedDepositBalance.toFixed(2),
-      "Type": "Asset",
-    },
-
-    {
-      "Particulars": "Livelihood Loan Support 1",
-      "Amount":
-        livelihoodLoanSupport1.toFixed(2),
-      "Type": "Asset",
-    },
-
-    {
-      "Particulars": "Livelihood Loan Support 2",
-      "Amount":
-        livelihoodLoanSupport2.toFixed(2),
-      "Type": "Asset",
-    },
-
-    {
-      "Particulars": "Housing Loan",
-      "Amount":
-        housingLoan.toFixed(2),
-      "Type": "Asset",
-    },
-
-    {
-      "Particulars": "TOTAL ASSETS",
-      "Amount": totalAssets.toFixed(2),
-      "Type": "Total",
-    },
-
-    {
-      "Particulars": "LIABILITIES",
-      "Amount": "",
-      "Type": "Header",
-    },
-
-    {
-      "Particulars": "Regular Savings",
-      "Amount":
-        regularSavings.toFixed(2),
-      "Type": "Liability",
-    },
-
-    {
-      "Particulars": "Bullet Savings",
-      "Amount":
-        bulletSavings.toFixed(2),
-      "Type": "Liability",
-    },
-
-    {
-      "Particulars": "Special Savings",
-      "Amount":
-        specialSavings.toFixed(2),
-      "Type": "Liability",
-    },
-
-    {
-      "Particulars": "TOTAL LIABILITIES",
-      "Amount":
-        totalLiabilities.toFixed(2),
-      "Type": "Total",
-    },
-
-    {
-      "Particulars": "EQUITY",
-      "Amount": "",
-      "Type": "Header",
-    },
-
-    {
-      "Particulars": "General Fund",
-      "Amount":
-        generalFund.toFixed(2),
-      "Type": "Equity",
-    },
-
-    {
-      "Particulars":
-        "TOTAL LIABILITIES + EQUITY",
-      "Amount":
-        totalLiabilitiesAndEquity.toFixed(2),
-      "Type": "Total",
-    },
-
-    {
-      "Particulars": "BALANCE CHECK",
-      "Amount":
-        balanceCheck.toFixed(2),
-      "Type": "Check",
-    },
-  ];
+    assetCode: "",
+    assetName: "Total",
+    assetAmount: assetTotal,
+  });
 
   setOpeningBalanceResults(rows);
 
   setOpeningBalanceStatus(
-    `OB 02 - Balance Sheet - vazhvathram: ${rows.length} report rows generated from PostgreSQL.`
+    `OB 02 - Balance Sheet - vazhvathram: ${ledgerRowsOB02.length} database account records loaded.`
   );
-
   
 } else if (
   openingBalanceSelection ===
