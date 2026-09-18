@@ -25360,6 +25360,8 @@ sourceLabel =
               bankAccounts: bankAccounts.length,
               memberReceipts: memberReceipts.length,
               memberPayments: memberPayments.length,
+              membersData: members,
+              memberReceiptsData: memberReceipts,
               memberJournals: memberJournals.length,
               otherReceipts: otherReceipts.length,
               otherPayments: otherPayments.length,
