@@ -25034,143 +25034,480 @@ sourceLabel =
         "Other Activity",
       ];
 
-      const runOpeningBalanceReport = async () => {
-  setOpeningBalanceLoading(true);
-  setOpeningBalanceStatus("");
-  setOpeningBalanceResults([]);
+            const runOpeningBalanceReport = async () => {
+        setOpeningBalanceLoading(true);
+        setOpeningBalanceStatus("");
+        setOpeningBalanceResults([]);
 
-  try {
-    const [
-      membersData,
-      vazhvathramsData,
-      clustersData,
-      groupsData,
-      bankAccountsData,
-      memberReceiptsData,
-      memberPaymentsData,
-      memberJournalsData,
-      otherReceiptsData,
-      otherPaymentsData,
-      otherJournalsData,
-      fixedDepositsData,
-      debtsData,
-      savingsData,
-      livelihoodsData,
-      housingsData,
-      sbAccountStatusesData,
-      sbAccountApprovalsData,
-      bankDetailsData,
-    ] = await Promise.all([
-      apiRequest("/members"),
-      apiRequest("/vazhvathrams"),
-      apiRequest("/clusters"),
-      apiRequest("/groups"),
-      apiRequest("/bank-accounts"),
-      apiRequest("/member-receipts"),
-      apiRequest("/member-payments"),
-      apiRequest("/member-journals"),
-      apiRequest("/other-receipts"),
-      apiRequest("/other-payments"),
-      apiRequest("/other-journals"),
-      apiRequest("/fixed-deposits"),
-      apiRequest("/debts"),
-      apiRequest("/savings"),
-      apiRequest("/livelihoods"),
-      apiRequest("/housings"),
-      apiRequest("/sb-account-statuses"),
-      apiRequest("/sb-account-approvals"),
-      apiRequest("/bank-details"),
-    ]);
+        try {
+          /*
+           * =========================================================
+           * OPENING BALANCE - COMMON DATABASE ENGINE
+           * =========================================================
+           * Load all existing PostgreSQL source tables once.
+           * Individual OB reports will use these records below.
+           */
 
-    const members = Array.isArray(membersData) ? membersData : [];
-    const vazhvathrams = Array.isArray(vazhvathramsData)
-      ? vazhvathramsData
-      : [];
-    const clusters = Array.isArray(clustersData)
-      ? clustersData
-      : [];
-    const groups = Array.isArray(groupsData) ? groupsData : [];
-    const bankAccounts = Array.isArray(bankAccountsData)
-      ? bankAccountsData
-      : [];
-    const memberReceipts = Array.isArray(memberReceiptsData)
-      ? memberReceiptsData
-      : [];
-    const memberPayments = Array.isArray(memberPaymentsData)
-      ? memberPaymentsData
-      : [];
-    const memberJournals = Array.isArray(memberJournalsData)
-      ? memberJournalsData
-      : [];
-    const otherReceipts = Array.isArray(otherReceiptsData)
-      ? otherReceiptsData
-      : [];
-    const otherPayments = Array.isArray(otherPaymentsData)
-      ? otherPaymentsData
-      : [];
-    const otherJournals = Array.isArray(otherJournalsData)
-      ? otherJournalsData
-      : [];
-    const fixedDeposits = Array.isArray(fixedDepositsData)
-      ? fixedDepositsData
-      : [];
-    const debts = Array.isArray(debtsData) ? debtsData : [];
-    const savings = Array.isArray(savingsData) ? savingsData : [];
-    const livelihoods = Array.isArray(livelihoodsData)
-      ? livelihoodsData
-      : [];
-    const housings = Array.isArray(housingsData)
-      ? housingsData
-      : [];
-    const sbAccountStatuses = Array.isArray(sbAccountStatusesData)
-      ? sbAccountStatusesData
-      : [];
-    const sbAccountApprovals = Array.isArray(sbAccountApprovalsData)
-      ? sbAccountApprovalsData
-      : [];
-    const bankDetails = Array.isArray(bankDetailsData)
-      ? bankDetailsData
-      : [];
+          const [
+            membersData,
+            vazhvathramsData,
+            clustersData,
+            groupsData,
+            bankAccountsData,
+            memberReceiptsData,
+            memberPaymentsData,
+            memberJournalsData,
+            otherReceiptsData,
+            otherPaymentsData,
+            otherJournalsData,
+            fixedDepositsData,
+            debtsData,
+            savingsData,
+            livelihoodsData,
+            housingsData,
+            sbAccountStatusesData,
+            sbAccountApprovalsData,
+            bankDetailsData,
+          ] = await Promise.all([
+            apiRequest("/members"),
+            apiRequest("/vazhvathrams"),
+            apiRequest("/clusters"),
+            apiRequest("/groups"),
+            apiRequest("/bank-accounts"),
+            apiRequest("/member-receipts"),
+            apiRequest("/member-payments"),
+            apiRequest("/member-journals"),
+            apiRequest("/other-receipts"),
+            apiRequest("/other-payments"),
+            apiRequest("/other-journals"),
+            apiRequest("/fixed-deposits"),
+            apiRequest("/debts"),
+            apiRequest("/savings"),
+            apiRequest("/livelihoods"),
+            apiRequest("/housings"),
+            apiRequest("/sb-account-statuses"),
+            apiRequest("/sb-account-approvals"),
+            apiRequest("/bank-details"),
+          ]);
 
-    console.log("Opening Balance source data loaded:", {
-      members: members.length,
-      vazhvathrams: vazhvathrams.length,
-      clusters: clusters.length,
-      groups: groups.length,
-      bankAccounts: bankAccounts.length,
-      memberReceipts: memberReceipts.length,
-      memberPayments: memberPayments.length,
-      memberJournals: memberJournals.length,
-      otherReceipts: otherReceipts.length,
-      otherPayments: otherPayments.length,
-      otherJournals: otherJournals.length,
-      fixedDeposits: fixedDeposits.length,
-      debts: debts.length,
-      savings: savings.length,
-      livelihoods: livelihoods.length,
-      housings: housings.length,
-      sbAccountStatuses: sbAccountStatuses.length,
-      sbAccountApprovals: sbAccountApprovals.length,
-      bankDetails: bankDetails.length,
-    });
+          const members = Array.isArray(membersData)
+            ? membersData
+            : [];
 
-    setOpeningBalanceStatus(
-      `${openingBalanceSelection} source data loaded successfully from PostgreSQL.`
-    );
-  } catch (error) {
-    console.error("Opening Balance report error:", error);
+          const vazhvathrams = Array.isArray(vazhvathramsData)
+            ? vazhvathramsData
+            : [];
 
-    setOpeningBalanceResults([]);
+          const clusters = Array.isArray(clustersData)
+            ? clustersData
+            : [];
 
-    setOpeningBalanceStatus(
-      `Unable to load Opening Balance data. ${
-        error?.message || error
-      }`
-    );
-  } finally {
-    setOpeningBalanceLoading(false);
-  }
-};
+          const groups = Array.isArray(groupsData)
+            ? groupsData
+            : [];
+
+          const bankAccounts = Array.isArray(bankAccountsData)
+            ? bankAccountsData
+            : [];
+
+          const memberReceipts = Array.isArray(memberReceiptsData)
+            ? memberReceiptsData
+            : [];
+
+          const memberPayments = Array.isArray(memberPaymentsData)
+            ? memberPaymentsData
+            : [];
+
+          const memberJournals = Array.isArray(memberJournalsData)
+            ? memberJournalsData
+            : [];
+
+          const otherReceipts = Array.isArray(otherReceiptsData)
+            ? otherReceiptsData
+            : [];
+
+          const otherPayments = Array.isArray(otherPaymentsData)
+            ? otherPaymentsData
+            : [];
+
+          const otherJournals = Array.isArray(otherJournalsData)
+            ? otherJournalsData
+            : [];
+
+          const fixedDeposits = Array.isArray(fixedDepositsData)
+            ? fixedDepositsData
+            : [];
+
+          const debts = Array.isArray(debtsData)
+            ? debtsData
+            : [];
+
+          const savings = Array.isArray(savingsData)
+            ? savingsData
+            : [];
+
+          const livelihoods = Array.isArray(livelihoodsData)
+            ? livelihoodsData
+            : [];
+
+          const housings = Array.isArray(housingsData)
+            ? housingsData
+            : [];
+
+          const sbAccountStatuses = Array.isArray(
+            sbAccountStatusesData
+          )
+            ? sbAccountStatusesData
+            : [];
+
+          const sbAccountApprovals = Array.isArray(
+            sbAccountApprovalsData
+          )
+            ? sbAccountApprovalsData
+            : [];
+
+          const bankDetails = Array.isArray(bankDetailsData)
+            ? bankDetailsData
+            : [];
+
+          /*
+           * =========================================================
+           * COMMON HELPERS
+           * =========================================================
+           */
+
+          const textValue = (value) =>
+            value === null || value === undefined
+              ? ""
+              : String(value).trim();
+
+          const numberValue = (value) => {
+            if (
+              value === null ||
+              value === undefined ||
+              value === ""
+            ) {
+              return 0;
+            }
+
+            const number = Number(
+              String(value).replace(/,/g, "")
+            );
+
+            return Number.isFinite(number) ? number : 0;
+          };
+
+          const firstValue = (record, fields) => {
+            for (const field of fields) {
+              if (
+                record &&
+                record[field] !== undefined &&
+                record[field] !== null &&
+                String(record[field]).trim() !== ""
+              ) {
+                return record[field];
+              }
+            }
+
+            return "";
+          };
+
+          const memberCode = (record) =>
+            textValue(
+              firstValue(record, [
+                "memberCode",
+                "code",
+                "memberNo",
+                "memberNumber",
+              ])
+            );
+
+          const memberName = (record) =>
+            textValue(
+              firstValue(record, [
+                "memberName",
+                "name",
+                "member",
+              ])
+            );
+
+          const groupName = (record) =>
+            textValue(
+              firstValue(record, [
+                "groupName",
+                "group",
+                "vazhvathramName",
+              ])
+            );
+
+          const vazhvathramName = (record) =>
+            textValue(
+              firstValue(record, [
+                "vazhvathramName",
+                "vazhvathram",
+                "clusterName",
+              ])
+            );
+
+          const clusterName = (record) =>
+            textValue(
+              firstValue(record, [
+                "clusterName",
+                "cluster",
+              ])
+            );
+
+          const recordDate = (record) =>
+            textValue(
+              firstValue(record, [
+                "date",
+                "transactionDate",
+                "receiptDate",
+                "paymentDate",
+                "journalDate",
+                "accountDate",
+                "createdDate",
+              ])
+            );
+
+          const debitAmount = (record) =>
+            numberValue(
+              firstValue(record, [
+                "debit",
+                "debitAmount",
+                "amountDebit",
+              ])
+            );
+
+          const creditAmount = (record) =>
+            numberValue(
+              firstValue(record, [
+                "credit",
+                "creditAmount",
+                "amountCredit",
+              ])
+            );
+
+          const amountValue = (record) =>
+            numberValue(
+              firstValue(record, [
+                "amount",
+                "balance",
+                "openingBalance",
+                "loanAmount",
+                "presentLoanOutstanding",
+              ])
+            );
+
+          /*
+           * =========================================================
+           * COMMON TRANSACTION COLLECTION
+           * =========================================================
+           */
+
+          const allMemberTransactions = [
+            ...memberReceipts.map((record) => ({
+              ...record,
+              transactionType: "Member Receipt",
+            })),
+
+            ...memberPayments.map((record) => ({
+              ...record,
+              transactionType: "Member Payment",
+            })),
+
+            ...memberJournals.map((record) => ({
+              ...record,
+              transactionType: "Member Journal",
+            })),
+          ];
+
+          const allOtherTransactions = [
+            ...otherReceipts.map((record) => ({
+              ...record,
+              transactionType: "Other Receipt",
+            })),
+
+            ...otherPayments.map((record) => ({
+              ...record,
+              transactionType: "Other Payment",
+            })),
+
+            ...otherJournals.map((record) => ({
+              ...record,
+              transactionType: "Other Journal",
+            })),
+          ];
+
+          const allTransactions = [
+            ...allMemberTransactions,
+            ...allOtherTransactions,
+          ];
+
+          /*
+           * =========================================================
+           * SOURCE SUMMARY
+           * =========================================================
+           */
+
+          console.log(
+            "Opening Balance PostgreSQL source data:",
+            {
+              members: members.length,
+              vazhvathrams: vazhvathrams.length,
+              clusters: clusters.length,
+              groups: groups.length,
+              bankAccounts: bankAccounts.length,
+              memberReceipts: memberReceipts.length,
+              memberPayments: memberPayments.length,
+              memberJournals: memberJournals.length,
+              otherReceipts: otherReceipts.length,
+              otherPayments: otherPayments.length,
+              otherJournals: otherJournals.length,
+              fixedDeposits: fixedDeposits.length,
+              debts: debts.length,
+              savings: savings.length,
+              livelihoods: livelihoods.length,
+              housings: housings.length,
+              sbAccountStatuses: sbAccountStatuses.length,
+              sbAccountApprovals: sbAccountApprovals.length,
+              bankDetails: bankDetails.length,
+              allTransactions: allTransactions.length,
+            }
+          );
+
+          /*
+           * =========================================================
+           * TEMPORARY COMMON RESULT
+           * =========================================================
+           * The individual OB-01 ... OB-16 report builders will be
+           * added in the next part.
+           */
+
+          let rows = [];
+
+          if (openingBalanceSelection === "OB 01 - Member Confirmation - vazhvathram") {
+            rows = members.map((record) => ({
+              "Member Code": memberCode(record),
+              "Member Name": memberName(record),
+              "Group": groupName(record),
+              "vazhvathram": vazhvathramName(record),
+            }));
+          } else {
+            rows = [];
+          }
+
+          setOpeningBalanceResults(rows);
+
+          setOpeningBalanceStatus(
+            `${openingBalanceSelection}: ${rows.length} record${
+              rows.length === 1 ? "" : "s"
+            } loaded from PostgreSQL.`
+          );
+        } catch (error) {
+          console.error(
+            "Opening Balance report error:",
+            error
+          );
+
+          setOpeningBalanceResults([]);
+
+          setOpeningBalanceStatus(
+            `Unable to load Opening Balance data. ${
+              error?.message || error
+            }`
+          );
+        } finally {
+          setOpeningBalanceLoading(false);
+        }
+      };
+            const renderOpeningBalanceResults = () => {
+        if (!openingBalanceResults.length) {
+          return null;
+        }
+
+        const keys = Array.from(
+          new Set(
+            openingBalanceResults.flatMap((record) =>
+              Object.keys(record || {})
+            )
+          )
+        ).filter((key) => key !== "id");
+
+        if (!keys.length) {
+          return null;
+        }
+
+        return (
+          <div
+            style={{
+              marginTop: "14px",
+              border: "1px solid #777",
+              background: "#fff",
+              overflowX: "auto",
+              padding: "10px",
+            }}
+          >
+            <div
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "18px",
+                marginBottom: "10px",
+              }}
+            >
+              {openingBalanceSelection}
+            </div>
+
+            <div
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                marginBottom: "14px",
+              }}
+            >
+              Subledger: {openingBalanceSubledger}
+            </div>
+
+            <table
+              className="legacy-table"
+              style={{
+                width: "100%",
+                minWidth: "900px",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  {keys.map((key) => (
+                    <th key={key}>
+                      {key
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (letter) =>
+                          letter.toUpperCase()
+                        )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {openingBalanceResults.map((record, index) => (
+                  <tr key={record.id ?? index}>
+                    {keys.map((key) => (
+                      <td key={key}>
+                        {String(record?.[key] ?? "")}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      };
+
+      
       body = legacyCard(
         <>
           <select
@@ -25222,6 +25559,7 @@ sourceLabel =
               {openingBalanceStatus}
             </div>
           )}
+                    {renderOpeningBalanceResults()}
         </>
       );
     } else if (item === "Financial") {
