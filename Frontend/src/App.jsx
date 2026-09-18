@@ -25508,6 +25508,587 @@ if (
       "vazhvathram": vazhvathram,
     };
   });
+} } else if (
+  openingBalanceSelection ===
+  "OB 02 - Balance Sheet - vazhvathram"
+) {
+  // =========================================================
+  // OB 02 - BALANCE SHEET - VAZHVATHRAM
+  // =========================================================
+
+  const normalizeOB = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const selectedVazCode =
+    normalizeOB(selectedVazhvathram);
+
+  const selectedVaz = vazhvathrams.find(
+    (record) => {
+      const code = normalizeOB(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazCode ||
+        name === selectedVazCode
+      );
+    }
+  );
+
+  const vazCode =
+    selectedVaz?.vazhvathramCode ||
+    selectedVaz?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVaz?.vazhvathramName ||
+    selectedVaz?.name ||
+    "";
+
+  const belongsToVaz = (record) => {
+    const json = JSON.stringify(
+      record || {}
+    ).toLowerCase();
+
+    const code = normalizeOB(vazCode);
+    const name = normalizeOB(vazName);
+
+    if (!code && !name) {
+      return true;
+    }
+
+    return (
+      (code && json.includes(code)) ||
+      (name && json.includes(name))
+    );
+  };
+
+  // ---------------------------------------------------------
+  // 2113 - FIXED DEPOSIT
+  // ---------------------------------------------------------
+
+  const fixedDepositAmount =
+    fixedDeposits
+      .filter(belongsToVaz)
+      .reduce(
+        (total, record) =>
+          total +
+          numberValue(
+            record?.fdAmount ||
+            record?.amount ||
+            record?.depositAmount
+          ),
+        0
+      );
+
+  // ---------------------------------------------------------
+  // 2112 - CASH AT BANK
+  // ---------------------------------------------------------
+
+  const cashAtBankAmount =
+    bankAccounts
+      .filter(belongsToVaz)
+      .reduce(
+        (total, record) =>
+          total +
+          numberValue(
+            record?.amount ||
+            record?.balance ||
+            record?.accountBalance
+          ),
+        0
+      );
+
+  // ---------------------------------------------------------
+  // 2111 - CASH IN HAND
+  // ---------------------------------------------------------
+
+  const cashReceipts =
+    [
+      ...memberReceipts,
+      ...otherReceipts,
+    ]
+      .filter(belongsToVaz)
+      .filter((record) => {
+        const text =
+          JSON.stringify(record || {})
+            .toLowerCase();
+
+        return (
+          text.includes("cash")
+        );
+      })
+      .reduce(
+        (total, record) =>
+          total +
+          numberValue(
+            record?.total ||
+            record?.amount ||
+            record?.receiptAmount
+          ),
+        0
+      );
+
+  const cashPayments =
+    [
+      ...memberPayments,
+      ...otherPayments,
+    ]
+      .filter(belongsToVaz)
+      .filter((record) => {
+        const text =
+          JSON.stringify(record || {})
+            .toLowerCase();
+
+        return (
+          text.includes("cash")
+        );
+      })
+      .reduce(
+        (total, record) =>
+          total +
+          numberValue(
+            record?.total ||
+            record?.amount ||
+            record?.paymentAmount
+          ),
+        0
+      );
+
+  const cashInHandAmount =
+    cashReceipts -
+    cashPayments;
+
+  // ---------------------------------------------------------
+  // 1242 - ROC - KDFS
+  // ---------------------------------------------------------
+
+  const findLedgerAmount = (
+    records,
+    accountCode
+  ) => {
+    let total = 0;
+
+    records
+      .filter(belongsToVaz)
+      .forEach((record) => {
+        const values =
+          Object.entries(record || {});
+
+        values.forEach(
+          ([key, value]) => {
+            const keyText =
+              normalizeOB(key);
+
+            const valueText =
+              normalizeOB(value);
+
+            if (
+              valueText ===
+                normalizeOB(accountCode) ||
+              keyText.includes(
+                normalizeOB(accountCode)
+              )
+            ) {
+              const numberKeys = [
+                "amount",
+                "amt",
+                "total",
+                "balance",
+                "value"
+              ];
+
+              numberKeys.forEach(
+                (amountKey) => {
+                  if (
+                    Object.prototype.hasOwnProperty.call(
+                      record,
+                      amountKey
+                    )
+                  ) {
+                    total +=
+                      numberValue(
+                        record[amountKey]
+                      );
+                  }
+                }
+              );
+            }
+          }
+        );
+      });
+
+    return total;
+  };
+
+  const rocKdfsAmount =
+    findLedgerAmount(
+      [
+        ...memberJournals,
+        ...otherJournals,
+        ...memberReceipts,
+        ...otherReceipts,
+        ...memberPayments,
+        ...otherPayments,
+      ],
+      "1242"
+    );
+
+  // ---------------------------------------------------------
+  // BALANCE SHEET TOTAL
+  // ---------------------------------------------------------
+
+  const assetTotal =
+    fixedDepositAmount +
+    cashInHandAmount +
+    cashAtBankAmount;
+
+  const generalFundAmount =
+    assetTotal -
+    rocKdfsAmount;
+
+  rows = [
+    {
+      report: "OB 02",
+      vazhvathramCode: vazCode,
+      vazhvathramName: vazName,
+
+      liability1Code: "1011",
+      liability1Name: "General Fund",
+      liability1Amount:
+        generalFundAmount,
+
+      liability2Code: "1242",
+      liability2Name: "ROC - KDFS",
+      liability2Amount:
+        rocKdfsAmount,
+
+      asset1Code: "2113",
+      asset1Name: "Fixed Deposit",
+      asset1Amount:
+        fixedDepositAmount,
+
+      asset2Code: "2111",
+      asset2Name: "Cash in Hand",
+      asset2Amount:
+        cashInHandAmount,
+
+      asset3Code: "2112",
+      asset3Name: "Cash at Bank",
+      asset3Amount:
+        cashAtBankAmount,
+
+      liabilityTotal:
+        generalFundAmount +
+        rocKdfsAmount,
+
+      assetTotal:
+        assetTotal,
+    },
+  ];
+
+} else if (
+  openingBalanceSelection ===
+  "OB 03 - Bank Loan - vazhvathram"
+) {
+  // =========================================================
+  // OB 03 - PROGRAMME SUPPORT FOR POVERTY REDUCTION
+  //       BANK DETAILS
+  // =========================================================
+
+  const normalizeOB = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const selectedVazCode =
+    normalizeOB(selectedVazhvathram);
+
+  const selectedVaz = vazhvathrams.find(
+    (record) => {
+      const code = normalizeOB(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazCode ||
+        name === selectedVazCode
+      );
+    }
+  );
+
+  const vazCode =
+    selectedVaz?.vazhvathramCode ||
+    selectedVaz?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVaz?.vazhvathramName ||
+    selectedVaz?.name ||
+    "";
+
+  const belongsToVaz = (record) => {
+    const text =
+      JSON.stringify(record || {})
+        .toLowerCase();
+
+    const code =
+      normalizeOB(vazCode);
+
+    const name =
+      normalizeOB(vazName);
+
+    return (
+      !code ||
+      text.includes(code) ||
+      (name && text.includes(name))
+    );
+  };
+
+  const loanRecords = [
+    ...debts,
+    ...livelihoods,
+  ].filter(belongsToVaz);
+
+  rows = loanRecords.map(
+    (record, index) => ({
+      slNo: index + 1,
+
+      clusterName:
+        firstValue(
+          record?.clusterName,
+          record?.cluster,
+          clusterName(record)
+        ),
+
+      vazhvathramCode:
+        vazCode,
+
+      vazhvathramName:
+        vazName,
+
+      bankName:
+        firstValue(
+          record?.bankName,
+          record?.bank
+        ),
+
+      branchName:
+        firstValue(
+          record?.branchName,
+          record?.branch
+        ),
+
+      loanNumber:
+        firstValue(
+          record?.loanNumber,
+          record?.loanNo,
+          record?.accountNumber
+        ),
+
+      disbursementDate:
+        firstValue(
+          record?.disbursementDate,
+          record?.loanDate,
+          record?.date
+        ),
+
+      disbursementAmount:
+        numberValue(
+          record?.disbursementAmount ||
+          record?.loanAmount ||
+          record?.amount
+        ),
+
+      subLedger:
+        firstValue(
+          record?.subLedger,
+          record?.subledger,
+          record?.subLedgerCode
+        ),
+
+      bankPeriod:
+        firstValue(
+          record?.bankPeriod,
+          record?.period
+        ),
+
+      branchCode:
+        firstValue(
+          record?.branchCode
+        ),
+
+      openingBalanceDate:
+        firstValue(
+          record?.openingBalanceDate,
+          record?.obDate
+        ),
+    })
+  );
+
+} else if (
+  openingBalanceSelection ===
+  "OB 04 - Income and Expenditure - vazhvathram"
+) {
+  // =========================================================
+  // OB 04 - INCOME & EXPENDITURE ACCOUNT
+  // =========================================================
+
+  const normalizeOB = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const selectedVazCode =
+    normalizeOB(selectedVazhvathram);
+
+  const selectedVaz = vazhvathrams.find(
+    (record) => {
+      const code = normalizeOB(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazCode ||
+        name === selectedVazCode
+      );
+    }
+  );
+
+  const vazCode =
+    selectedVaz?.vazhvathramCode ||
+    selectedVaz?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVaz?.vazhvathramName ||
+    selectedVaz?.name ||
+    "";
+
+  const belongsToVaz = (record) => {
+    const text =
+      JSON.stringify(record || {})
+        .toLowerCase();
+
+    const code =
+      normalizeOB(vazCode);
+
+    const name =
+      normalizeOB(vazName);
+
+    return (
+      !code ||
+      text.includes(code) ||
+      (name && text.includes(name))
+    );
+  };
+
+  const incomeRecords = [
+    ...memberReceipts,
+    ...otherReceipts,
+  ].filter(belongsToVaz);
+
+  const expenditureRecords = [
+    ...memberPayments,
+    ...otherPayments,
+  ].filter(belongsToVaz);
+
+  const incomeRows =
+    incomeRecords.map(
+      (record) => ({
+        expenditure: "",
+        expenditureAmount: "",
+        income:
+          firstValue(
+            record?.particulars,
+            record?.description,
+            record?.accountName,
+            record?.subLedger,
+            record?.subledger
+          ),
+        incomeAmount:
+          numberValue(
+            record?.total ||
+            record?.amount ||
+            record?.receiptAmount
+          ),
+      })
+    );
+
+  const expenditureRows =
+    expenditureRecords.map(
+      (record) => ({
+        expenditure:
+          firstValue(
+            record?.particulars,
+            record?.description,
+            record?.accountName,
+            record?.subLedger,
+            record?.subledger
+          ),
+        expenditureAmount:
+          numberValue(
+            record?.total ||
+            record?.amount ||
+            record?.paymentAmount
+          ),
+        income: "",
+        incomeAmount: "",
+      })
+    );
+
+  const maxRows = Math.max(
+    incomeRows.length,
+    expenditureRows.length
+  );
+
+  rows = Array.from(
+    { length: maxRows },
+    (_, index) => ({
+      expenditure:
+        expenditureRows[index]
+          ?.expenditure || "",
+
+      expenditureAmount:
+        expenditureRows[index]
+          ?.expenditureAmount || 0,
+
+      income:
+        incomeRows[index]
+          ?.income || "",
+
+      incomeAmount:
+        incomeRows[index]
+          ?.incomeAmount || 0,
+    })
+  );
+
 } else {
   rows = [];
 }
