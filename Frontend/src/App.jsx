@@ -26623,7 +26623,7 @@ if (
             marginBottom: "18px",
           }}
         >
-          Kalanjiam : {vazCode}-{vazName}
+          vazhvathram : {vazCode}-{vazName}
         </div>
 
 
