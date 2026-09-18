@@ -26548,92 +26548,448 @@ if (
           setOpeningBalanceLoading(false);
         }
       };
-            const renderOpeningBalanceResults = () => {
-        if (!openingBalanceResults.length) {
-          return null;
-        }
 
-        const keys = Array.from(
-          new Set(
-            openingBalanceResults.flatMap((record) =>
-              Object.keys(record || {})
+      const renderOpeningBalanceResults = () => {
+  if (!openingBalanceResults.length) {
+    return null;
+  }
+
+  const records = openingBalanceResults;
+
+  /*
+   * ============================================================
+   * OB 02 - BALANCE SHEET
+   * ============================================================
+   */
+
+  if (
+    openingBalanceSelection ===
+    "OB 02 - Balance Sheet - vazhvathram"
+  ) {
+    const record = records[0] || {};
+
+    const amount = (value) => {
+      const number = Number(value);
+
+      if (!Number.isFinite(number)) {
+        return "0";
+      }
+
+      return number.toFixed(0);
+    };
+
+    const financialYearEnd = "31-03-2026";
+
+    const vazCode =
+      record.vazhvathramCode ||
+      record.vazCode ||
+      "";
+
+    const vazName =
+      record.vazhvathramName ||
+      record.vazName ||
+      "";
+
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          background: "#fff",
+          padding: "18px",
+          overflowX: "auto",
+          fontFamily: "Times New Roman, serif",
+        }}
+      >
+
+        {/* REPORT TITLE */}
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "20px",
+            lineHeight: "1.25",
+            marginBottom: "2px",
+          }}
+        >
+          OB 02 - Balance Sheet as on {financialYearEnd}
+        </div>
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "20px",
+            marginBottom: "18px",
+          }}
+        >
+          Kalanjiam : {vazCode}-{vazName}
+        </div>
+
+
+        {/* BALANCE SHEET */}
+
+        <table
+          style={{
+            margin: "0 auto",
+            borderCollapse: "collapse",
+            fontSize: "16px",
+            minWidth: "390px",
+          }}
+        >
+          <thead>
+            <tr>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Liabilities
+              </th>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Rs.
+              </th>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Assets
+              </th>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Rs.
+              </th>
+
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {/* ROW 1 */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.liability1Code
+                  ? `${record.liability1Code} - ${record.liability1Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.liability1Amount)}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.asset1Code
+                  ? `${record.asset1Code} - ${record.asset1Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.asset1Amount)}
+              </td>
+
+            </tr>
+
+
+            {/* ROW 2 */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.liability2Code
+                  ? `${record.liability2Code} - ${record.liability2Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.liability2Amount)}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.asset2Code
+                  ? `${record.asset2Code} - ${record.asset2Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.asset2Amount)}
+              </td>
+
+            </tr>
+
+
+            {/* ROW 3 */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.asset3Code
+                  ? `${record.asset3Code} - ${record.asset3Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.asset3Amount)}
+              </td>
+
+            </tr>
+
+
+            {/* TOTAL */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  fontWeight: "bold",
+                }}
+              >
+                Total
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {amount(record.liabilityTotal)}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  fontWeight: "bold",
+                }}
+              >
+                Total
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {amount(record.assetTotal)}
+              </td>
+
+            </tr>
+
+          </tbody>
+        </table>
+
+      </div>
+    );
+  }
+
+
+  /*
+   * ============================================================
+   * OTHER OPENING BALANCE REPORTS
+   * ============================================================
+   */
+
+  const keys = Array.from(
+    new Set(
+      records.flatMap(
+        (record) => Object.keys(record || {})
+      )
+    )
+  ).filter((key) => key !== "id");
+
+  if (!keys.length) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        border: "1px solid #777",
+        background: "#fff",
+        overflowX: "auto",
+        padding: "10px",
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          fontSize: "18px",
+          marginBottom: "10px",
+        }}
+      >
+        {openingBalanceSelection}
+      </div>
+
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          marginBottom: "14px",
+        }}
+      >
+        Subledger: {openingBalanceSubledger}
+      </div>
+
+      <table
+        className="legacy-table"
+        style={{
+          width: "100%",
+          minWidth: "900px",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr>
+            {keys.map((key) => (
+              <th key={key}>
+                {key
+                  .replace(
+                    /([A-Z])/g,
+                    " $1"
+                  )
+                  .replace(
+                    /^./,
+                    (letter) =>
+                      letter.toUpperCase()
+                  )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {records.map(
+            (record, index) => (
+              <tr
+                key={
+                  record.id ??
+                  index
+                }
+              >
+                {keys.map(
+                  (key) => (
+                    <td key={key}>
+                      {String(
+                        record?.[key] ??
+                        ""
+                      )}
+                    </td>
+                  )
+                )}
+              </tr>
             )
-          )
-        ).filter((key) => key !== "id");
-
-        if (!keys.length) {
-          return null;
-        }
-
-        return (
-          <div
-            style={{
-              marginTop: "14px",
-              border: "1px solid #777",
-              background: "#fff",
-              overflowX: "auto",
-              padding: "10px",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: "18px",
-                marginBottom: "10px",
-              }}
-            >
-              {openingBalanceSelection}
-            </div>
-
-            <div
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                marginBottom: "14px",
-              }}
-            >
-              Subledger: {openingBalanceSubledger}
-            </div>
-
-            <table
-              className="legacy-table"
-              style={{
-                width: "100%",
-                minWidth: "900px",
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead>
-                <tr>
-                  {keys.map((key) => (
-                    <th key={key}>
-                      {key
-                        .replace(/([A-Z])/g, " $1")
-                        .replace(/^./, (letter) =>
-                          letter.toUpperCase()
-                        )}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {openingBalanceResults.map((record, index) => (
-                  <tr key={record.id ?? index}>
-                    {keys.map((key) => (
-                      <td key={key}>
-                        {String(record?.[key] ?? "")}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      };
-
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
       
       body = legacyCard(
         <>
