@@ -25383,20 +25383,135 @@ sourceLabel =
            * The individual OB-01 ... OB-16 report builders will be
            * added in the next part.
            */
+           let rows = [];
 
-          let rows = [];
+if (
+  openingBalanceSelection ===
+  "OB 01 - Member Confirmation - vazhvathram"
+) {
+  const normalize = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
 
-          if (openingBalanceSelection === "OB 01 - Member Confirmation - vazhvathram") {
-            rows = members.map((record) => ({
-              "Member Code": memberCode(record),
-              "Member Name": memberName(record),
-              "Group": groupName(record),
-              "vazhvathram": vazhvathramName(record),
-            }));
-          } else {
-            rows = [];
-          }
+  const findGroupForMember = (member) => {
+    const code = normalize(memberCode(member));
+    const name = normalize(memberName(member));
 
+    if (!code && !name) {
+      return null;
+    }
+
+    // First try direct fields in the member record.
+    const directGroup =
+      member?.groupName ||
+      member?.group ||
+      member?.groupCode ||
+      member?.groupId ||
+      "";
+
+    if (String(directGroup).trim()) {
+      const directText = normalize(directGroup);
+
+      const matched = groups.find((group) => {
+        const groupCode = normalize(
+          group?.groupCode ||
+          group?.code ||
+          group?.groupId ||
+          group?.id
+        );
+
+        const groupNameValue = normalize(
+          group?.groupName ||
+          group?.name
+        );
+
+        return (
+          directText === groupCode ||
+          directText === groupNameValue
+        );
+      });
+
+      if (matched) {
+        return matched;
+      }
+    }
+
+    // Try matching the member code/name against the complete
+    // PostgreSQL group record.
+    const matchedByRecord = groups.find((group) => {
+      const groupText = JSON.stringify(
+        group || {}
+      ).toLowerCase();
+
+      return (
+        (code && groupText.includes(code)) ||
+        (name && groupText.includes(name))
+      );
+    });
+
+    if (matchedByRecord) {
+      return matchedByRecord;
+    }
+
+    // The member codes in this project follow the pattern
+    // 0010101, 0010102, etc. Use the first 5 characters
+    // as the group reference when groupCode is available.
+    const possibleGroupCode =
+      code.length >= 5
+        ? code.substring(0, 5)
+        : "";
+
+    if (possibleGroupCode) {
+      const matchedByCode = groups.find((group) => {
+        const groupCode = normalize(
+          group?.groupCode ||
+          group?.code ||
+          group?.groupId
+        );
+
+        return groupCode === possibleGroupCode;
+      });
+
+      if (matchedByCode) {
+        return matchedByCode;
+      }
+    }
+
+    return null;
+  };
+
+  rows = members.map((record) => {
+    const matchedGroup =
+      findGroupForMember(record);
+
+    const group =
+      matchedGroup?.groupName ||
+      matchedGroup?.name ||
+      matchedGroup?.groupCode ||
+      "";
+
+    const vazhvathram =
+      record?.vazhvathramName ||
+      record?.vazhvathram ||
+      record?.vazhvathramCode ||
+      matchedGroup?.vazhvathramName ||
+      matchedGroup?.vazhvathram ||
+      matchedGroup?.vazhvathramCode ||
+      selectedVazhvathram ||
+      "";
+
+    return {
+      "Member Code": memberCode(record),
+      "Member Name": memberName(record),
+      "Group": group,
+      "vazhvathram": vazhvathram,
+    };
+  });
+} else {
+  rows = [];
+}
+          
           setOpeningBalanceResults(rows);
 
           setOpeningBalanceStatus(
