@@ -20516,6 +20516,8 @@ if (item === "Mark Dissolved Gps") {
       "Poverty Reduction Fund 1"
     );
     const [openingBalanceStatus, setOpeningBalanceStatus] = useState("");
+    const [openingBalanceResults, setOpeningBalanceResults] = useState([]);
+    const [openingBalanceLoading, setOpeningBalanceLoading] = useState(false);
 
     // FINANCIAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
     const [financialReportSelection, setFinancialReportSelection] = useState("Cash Book - FR01");
