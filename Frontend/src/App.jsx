@@ -25959,151 +25959,428 @@ if (
   setOpeningBalanceStatus(
     `OB 02 - Balance Sheet - vazhvathram generated successfully from PostgreSQL.`
   );
-} else if (
+
+  } else if (
   openingBalanceSelection ===
   "OB 03 - Bank Loan - vazhvathram"
 ) {
   // =========================================================
-  // OB 03 - PROGRAMME SUPPORT FOR POVERTY REDUCTION
-  //       BANK DETAILS
+  // OB 03 - BANK LOAN - VAZHVATHRAM
   // =========================================================
 
-  const normalizeOB = (value) =>
+  const normalizeOB03 = (value) =>
     String(value ?? "")
       .trim()
       .toLowerCase();
 
-  const selectedVazCode =
-    normalizeOB(selectedVazhvathram);
+  const numberOB03 = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
 
-  const selectedVaz = vazhvathrams.find(
-    (record) => {
-      const code = normalizeOB(
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number) ? number : 0;
+  };
+
+  const textOB03 = (record, fields) => {
+    if (!record || !Array.isArray(fields)) {
+      return "";
+    }
+
+    for (const field of fields) {
+      const value = record?.[field];
+
+      if (
+        value !== null &&
+        value !== undefined &&
+        String(value).trim() !== ""
+      ) {
+        return String(value).trim();
+      }
+    }
+
+    return "";
+  };
+
+  const amountOB03 = (record, fields) => {
+    if (!record || !Array.isArray(fields)) {
+      return 0;
+    }
+
+    for (const field of fields) {
+      const value = record?.[field];
+
+      if (
+        value !== null &&
+        value !== undefined &&
+        value !== ""
+      ) {
+        const amount = numberOB03(value);
+
+        if (amount !== 0) {
+          return amount;
+        }
+      }
+    }
+
+    return 0;
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * Find selected vazhvathram
+   * ---------------------------------------------------------
+   */
+
+  const selectedVazText = normalizeOB03(
+    selectedVazhvathram
+  );
+
+  const selectedVazRecord =
+    vazhvathrams.find((record) => {
+      const code = normalizeOB03(
         record?.vazhvathramCode ||
         record?.code ||
         record?.id
       );
 
-      const name = normalizeOB(
+      const name = normalizeOB03(
         record?.vazhvathramName ||
         record?.name
       );
 
       return (
-        code === selectedVazCode ||
-        name === selectedVazCode
+        code === selectedVazText ||
+        name === selectedVazText
       );
-    }
-  );
+    }) || null;
 
   const vazCode =
-    selectedVaz?.vazhvathramCode ||
-    selectedVaz?.code ||
+    selectedVazRecord?.vazhvathramCode ||
+    selectedVazRecord?.code ||
     selectedVazhvathram ||
     "";
 
   const vazName =
-    selectedVaz?.vazhvathramName ||
-    selectedVaz?.name ||
+    selectedVazRecord?.vazhvathramName ||
+    selectedVazRecord?.name ||
     "";
 
-  const belongsToVaz = (record) => {
-    const text =
-      JSON.stringify(record || {})
-        .toLowerCase();
+  /*
+   * ---------------------------------------------------------
+   * Check whether a database record belongs to the selected
+   * vazhvathram.
+   * ---------------------------------------------------------
+   */
 
-    const code =
-      normalizeOB(vazCode);
+  const belongsToSelectedVazOB03 = (record) => {
+    if (!record) {
+      return false;
+    }
 
-    const name =
-      normalizeOB(vazName);
+    const recordText = normalizeOB03(
+      JSON.stringify(record)
+    );
+
+    const code = normalizeOB03(vazCode);
+    const name = normalizeOB03(vazName);
+
+    /*
+     * If no vazhvathram is selected, show all available
+     * bank-loan records.
+     */
+    if (!code && !name) {
+      return true;
+    }
 
     return (
-      !code ||
-      text.includes(code) ||
-      (name && text.includes(name))
+      (code && recordText.includes(code)) ||
+      (name && recordText.includes(name))
     );
   };
 
-  const loanRecords = [
-    ...debts,
-    ...livelihoods,
-  ].filter(belongsToVaz);
+  /*
+   * ---------------------------------------------------------
+   * Bank loan source records
+   *
+   * The project already loads:
+   *   - debts
+   *   - livelihoods
+   *   - bankAccounts
+   *   - bankDetails
+   *
+   * We combine the loan-related records here.
+   * ---------------------------------------------------------
+   */
 
-  rows = loanRecords.map(
-    (record, index) => ({
-      slNo: index + 1,
+  const debtRecords = Array.isArray(debts)
+    ? debts.filter(belongsToSelectedVazOB03)
+    : [];
 
-      clusterName:
-        firstValue(
-          record?.clusterName,
-          record?.cluster,
-          clusterName(record)
-        ),
+  const livelihoodRecords = Array.isArray(livelihoods)
+    ? livelihoods.filter(belongsToSelectedVazOB03)
+    : [];
 
-      vazhvathramCode:
-        vazCode,
+  const combinedLoanRecords = [
+    ...debtRecords.map((record) => ({
+      ...record,
+      __source: "Debt",
+    })),
 
-      vazhvathramName:
-        vazName,
+    ...livelihoodRecords.map((record) => ({
+      ...record,
+      __source: "Livelihood",
+    })),
+  ];
 
-      bankName:
-        firstValue(
-          record?.bankName,
-          record?.bank
-        ),
+  /*
+   * ---------------------------------------------------------
+   * If there are no loan records in debts/livelihoods,
+   * check bank account records for Loan A/C.
+   * ---------------------------------------------------------
+   */
 
-      branchName:
-        firstValue(
-          record?.branchName,
-          record?.branch
-        ),
+  const bankLoanAccounts = Array.isArray(bankAccounts)
+    ? bankAccounts.filter((record) => {
+        const accountType = normalizeOB03(
+          textOB03(record, [
+            "accountType",
+            "acctType",
+            "type",
+          ])
+        );
 
-      loanNumber:
-        firstValue(
-          record?.loanNumber,
-          record?.loanNo,
-          record?.accountNumber
-        ),
+        const recordBelongs =
+          belongsToSelectedVazOB03(record);
 
-      disbursementDate:
-        firstValue(
-          record?.disbursementDate,
-          record?.loanDate,
-          record?.date
-        ),
+        return (
+          recordBelongs &&
+          (
+            accountType.includes("loan") ||
+            accountType.includes("bank loan")
+          )
+        );
+      })
+    : [];
 
-      disbursementAmount:
-        numberValue(
-          record?.disbursementAmount ||
-          record?.loanAmount ||
-          record?.amount
-        ),
+  /*
+   * ---------------------------------------------------------
+   * Create report rows
+   * ---------------------------------------------------------
+   */
 
-      subLedger:
-        firstValue(
-          record?.subLedger,
-          record?.subledger,
-          record?.subLedgerCode
-        ),
+  rows = combinedLoanRecords.map(
+    (record, index) => {
+      const loanAmount = amountOB03(record, [
+        "loanAmount",
+        "amount",
+        "disbursementAmount",
+        "principalAmount",
+        "sanctionedAmount",
+        "loanValue",
+      ]);
 
-      bankPeriod:
-        firstValue(
-          record?.bankPeriod,
-          record?.period
-        ),
+      const outstandingAmount = amountOB03(record, [
+        "presentLoanOutstanding",
+        "outstandingAmount",
+        "outstanding",
+        "balance",
+        "currentBalance",
+        "remainingAmount",
+      ]);
 
-      branchCode:
-        firstValue(
-          record?.branchCode
-        ),
+      return {
+        "S.No": index + 1,
 
-      openingBalanceDate:
-        firstValue(
-          record?.openingBalanceDate,
-          record?.obDate
-        ),
-    })
+        "vazhvathram Code":
+          textOB03(record, [
+            "vazhvathramCode",
+            "vazhvathram",
+            "vazhvathramId",
+          ]) ||
+          String(vazCode || ""),
+
+        "vazhvathram Name":
+          textOB03(record, [
+            "vazhvathramName",
+            "vazhvathram",
+          ]) ||
+          String(vazName || ""),
+
+        "Member Code":
+          textOB03(record, [
+            "memberCode",
+            "memberId",
+            "memberNo",
+          ]),
+
+        "Member Name":
+          textOB03(record, [
+            "memberName",
+            "name",
+          ]),
+
+        "Bank Name":
+          textOB03(record, [
+            "bankName",
+            "bank",
+          ]),
+
+        "Bank Branch":
+          textOB03(record, [
+            "branchName",
+            "bankBranch",
+            "branch",
+          ]),
+
+        "Account Number":
+          textOB03(record, [
+            "accountNumber",
+            "accountNo",
+            "loanAccountNumber",
+            "loanNo",
+            "loanNumber",
+          ]),
+
+        "Loan Type":
+          textOB03(record, [
+            "loanType",
+            "loanName",
+            "subLedger",
+            "subledger",
+            "scheme",
+          ]),
+
+        "Loan Date":
+          textOB03(record, [
+            "loanDate",
+            "disbursementDate",
+            "date",
+            "sanctionDate",
+          ]),
+
+        "Loan Amount":
+          loanAmount.toFixed(2),
+
+        "Outstanding Amount":
+          outstandingAmount.toFixed(2),
+
+        "Source":
+          record.__source || "Bank Loan",
+      };
+    }
+  );
+
+  /*
+   * ---------------------------------------------------------
+   * Add bank Loan A/C records if no debt/livelihood records
+   * were available.
+   * ---------------------------------------------------------
+   */
+
+  if (
+    rows.length === 0 &&
+    bankLoanAccounts.length > 0
+  ) {
+    rows = bankLoanAccounts.map(
+      (record, index) => ({
+        "S.No": index + 1,
+
+        "vazhvathram Code":
+          textOB03(record, [
+            "vazhvathramCode",
+            "vazhvathram",
+            "vazhvathramId",
+          ]) ||
+          String(vazCode || ""),
+
+        "vazhvathram Name":
+          textOB03(record, [
+            "vazhvathramName",
+            "vazhvathram",
+          ]) ||
+          String(vazName || ""),
+
+        "Member Code":
+          textOB03(record, [
+            "memberCode",
+            "memberId",
+          ]),
+
+        "Member Name":
+          textOB03(record, [
+            "memberName",
+            "name",
+          ]),
+
+        "Bank Name":
+          textOB03(record, [
+            "bankName",
+            "bank",
+          ]),
+
+        "Bank Branch":
+          textOB03(record, [
+            "branchName",
+            "bankBranch",
+            "branch",
+          ]),
+
+        "Account Number":
+          textOB03(record, [
+            "accountNumber",
+            "accountNo",
+          ]),
+
+        "Loan Type":
+          textOB03(record, [
+            "accountType",
+            "loanType",
+          ]),
+
+        "Loan Date":
+          textOB03(record, [
+            "accountDate",
+            "loanDate",
+            "date",
+          ]),
+
+        "Loan Amount":
+          amountOB03(record, [
+            "amount",
+            "balance",
+            "openingBalance",
+          ]).toFixed(2),
+
+        "Outstanding Amount":
+          amountOB03(record, [
+            "balance",
+            "currentBalance",
+            "amount",
+          ]).toFixed(2),
+
+        "Source":
+          "Bank Account",
+      })
+    );
+  }
+
+  setOpeningBalanceResults(rows);
+
+  setOpeningBalanceStatus(
+    `OB 03 - Bank Loan - vazhvathram: ${rows.length} record${
+      rows.length === 1 ? "" : "s"
+    } loaded from PostgreSQL.`
   );
 
 } else if (
