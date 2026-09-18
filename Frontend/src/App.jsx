@@ -25509,7 +25509,602 @@ if (
       "Group": group,
       "vazhvathram": vazhvathram,
     };
-  });
+  });} else if (
+  openingBalanceSelection ===
+  "OB 02 - Balance Sheet - vazhvathram"
+) {
+  // =========================================================
+  // OB 02 - BALANCE SHEET - VAZHVATHRAM
+  // =========================================================
+
+  const toNumberOB02 = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
+
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  };
+
+  const normalizeOB02 = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const parseDateOB02 = (value) => {
+    if (!value) return null;
+
+    const text = String(value).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      const date = new Date(`${text}T00:00:00`);
+
+      return Number.isNaN(date.getTime())
+        ? null
+        : date;
+    }
+
+    if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
+      const [day, month, year] =
+        text.split("-");
+
+      const date = new Date(
+        `${year}-${month}-${day}T00:00:00`
+      );
+
+      return Number.isNaN(date.getTime())
+        ? null
+        : date;
+    }
+
+    const date = new Date(text);
+
+    return Number.isNaN(date.getTime())
+      ? null
+      : date;
+  };
+
+  const openingDateOB02 =
+    new Date(
+      `${CURRENT_FINANCIAL_YEAR.apiStartDate}T00:00:00`
+    );
+
+  const isOpeningRecordOB02 = (value) => {
+    const date = parseDateOB02(value);
+
+    if (!date) {
+      return false;
+    }
+
+    return date < openingDateOB02;
+  };
+
+  // =========================================================
+  // 1. CASH AT BANK - GL 2112
+  //
+  // Bank account amount is treated as opening balance
+  // only when the account belongs to a previous financial
+  // year.
+  // =========================================================
+
+  const bankBalance = bankAccounts.reduce(
+    (total, record) => {
+      if (
+        !isOpeningRecordOB02(
+          record?.accountDate
+        )
+      ) {
+        return total;
+      }
+
+      return (
+        total +
+        toNumberOB02(record?.amount)
+      );
+    },
+    0
+  );
+
+  // =========================================================
+  // 2. FIXED DEPOSITS
+  //
+  // Include FD amounts opened before the current
+  // financial year.
+  //
+  // If an FD was already closed before the current
+  // financial year, do not include it.
+  // =========================================================
+
+  const fixedDepositBalance =
+    fixedDeposits.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.fdDate
+          )
+        ) {
+          return total;
+        }
+
+        const closedDate =
+          parseDateOB02(
+            record?.closedDate
+          );
+
+        if (
+          closedDate &&
+          closedDate < openingDateOB02
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.fdAmount
+          )
+        );
+      },
+      0
+    );
+
+  // =========================================================
+  // 3. REGULAR SAVINGS
+  //
+  // Regular savings is stored directly in the
+  // members table.
+  // =========================================================
+
+  const regularSavings =
+    members.reduce(
+      (total, record) =>
+        total +
+        toNumberOB02(
+          record?.regularSavings
+        ),
+      0
+    );
+
+  // =========================================================
+  // 4. SPECIAL SAVINGS
+  //
+  // Special savings is stored directly in the
+  // members table.
+  // =========================================================
+
+  const specialSavings =
+    members.reduce(
+      (total, record) =>
+        total +
+        toNumberOB02(
+          record?.specialSavings
+        ),
+      0
+    );
+
+  // =========================================================
+  // 5. BULLET SAVINGS
+  //
+  // Bullet Savings does not exist as a field in Member.
+  // Therefore calculate its opening balance from:
+  //
+  // Member Receipts - Member Payments
+  //
+  // using transactions before the current financial year.
+  // =========================================================
+
+  const bulletSavingsReceipts =
+    memberReceipts.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.receiptDate
+          )
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.bulletSavings
+          )
+        );
+      },
+      0
+    );
+
+  const bulletSavingsPayments =
+    memberPayments.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.voucherDate
+          )
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.bulletSavings
+          )
+        );
+      },
+      0
+    );
+
+  const bulletSavings =
+    Math.max(
+      0,
+      bulletSavingsReceipts -
+        bulletSavingsPayments
+    );
+
+  // =========================================================
+  // 6. LIVELIHOOD LOAN SUPPORT 1
+  //
+  // Payment to member = loan disbursement
+  // Receipt from member = repayment
+  //
+  // Outstanding = Disbursement - Repayment
+  // =========================================================
+
+  const livelihoodLoanSupport1Paid =
+    memberPayments.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.voucherDate
+          )
+        ) {
+          return total;
+        }
+
+        if (
+          normalizeOB02(
+            record?.loanType
+          ) !==
+          "livelihood loan support 1"
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.loanAmount
+          )
+        );
+      },
+      0
+    );
+
+  const livelihoodLoanSupport1Received =
+    memberReceipts.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.receiptDate
+          )
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.livelihoodLoanSupport1
+          )
+        );
+      },
+      0
+    );
+
+  const livelihoodLoanSupport1 =
+    Math.max(
+      0,
+      livelihoodLoanSupport1Paid -
+        livelihoodLoanSupport1Received
+    );
+
+  // =========================================================
+  // 7. LIVELIHOOD LOAN SUPPORT 2
+  // =========================================================
+
+  const livelihoodLoanSupport2Paid =
+    memberPayments.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.voucherDate
+          )
+        ) {
+          return total;
+        }
+
+        if (
+          normalizeOB02(
+            record?.loanType
+          ) !==
+          "livelihood loan support 2"
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.loanAmount
+          )
+        );
+      },
+      0
+    );
+
+  const livelihoodLoanSupport2Received =
+    memberReceipts.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.receiptDate
+          )
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.livelihoodLoanSupport2
+          )
+        );
+      },
+      0
+    );
+
+  const livelihoodLoanSupport2 =
+    Math.max(
+      0,
+      livelihoodLoanSupport2Paid -
+        livelihoodLoanSupport2Received
+    );
+
+  // =========================================================
+  // 8. HOUSING LOAN
+  // =========================================================
+
+  const housingLoanPaid =
+    memberPayments.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.voucherDate
+          )
+        ) {
+          return total;
+        }
+
+        if (
+          normalizeOB02(
+            record?.loanType
+          ) !==
+          "housing loan"
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.loanAmount
+          )
+        );
+      },
+      0
+    );
+
+  const housingLoanReceived =
+    memberReceipts.reduce(
+      (total, record) => {
+        if (
+          !isOpeningRecordOB02(
+            record?.receiptDate
+          )
+        ) {
+          return total;
+        }
+
+        return (
+          total +
+          toNumberOB02(
+            record?.housingLoan
+          )
+        );
+      },
+      0
+    );
+
+  const housingLoan =
+    Math.max(
+      0,
+      housingLoanPaid -
+        housingLoanReceived
+    );
+
+  // =========================================================
+  // 9. TOTAL ASSETS
+  // =========================================================
+
+  const totalAssets =
+    bankBalance +
+    fixedDepositBalance +
+    livelihoodLoanSupport1 +
+    livelihoodLoanSupport2 +
+    housingLoan;
+
+  // =========================================================
+  // 10. TOTAL LIABILITIES
+  // =========================================================
+
+  const totalLiabilities =
+    regularSavings +
+    bulletSavings +
+    specialSavings;
+
+  // =========================================================
+  // 11. GENERAL FUND
+  //
+  // General Fund is the balancing equity amount.
+  // =========================================================
+
+  const generalFund =
+    totalAssets -
+    totalLiabilities;
+
+  const totalLiabilitiesAndEquity =
+    totalLiabilities +
+    generalFund;
+
+  const balanceCheck =
+    totalAssets -
+    totalLiabilitiesAndEquity;
+
+  // =========================================================
+  // 12. REPORT ROWS
+  // =========================================================
+
+  rows = [
+    {
+      "Particulars": "ASSETS",
+      "Amount": "",
+      "Type": "Header",
+    },
+    {
+      "Particulars":
+        "Cash at Bank (2112)",
+      "Amount":
+        bankBalance.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars":
+        "Fixed Deposits",
+      "Amount":
+        fixedDepositBalance.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars":
+        "Livelihood Loan Support 1",
+      "Amount":
+        livelihoodLoanSupport1.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars":
+        "Livelihood Loan Support 2",
+      "Amount":
+        livelihoodLoanSupport2.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars":
+        "Housing Loan",
+      "Amount":
+        housingLoan.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars":
+        "TOTAL ASSETS",
+      "Amount":
+        totalAssets.toFixed(2),
+      "Type": "Total",
+    },
+
+    {
+      "Particulars": "LIABILITIES",
+      "Amount": "",
+      "Type": "Header",
+    },
+    {
+      "Particulars":
+        "Regular Savings",
+      "Amount":
+        regularSavings.toFixed(2),
+      "Type": "Liability",
+    },
+    {
+      "Particulars":
+        "Bullet Savings",
+      "Amount":
+        bulletSavings.toFixed(2),
+      "Type": "Liability",
+    },
+    {
+      "Particulars":
+        "Special Savings",
+      "Amount":
+        specialSavings.toFixed(2),
+      "Type": "Liability",
+    },
+    {
+      "Particulars":
+        "TOTAL LIABILITIES",
+      "Amount":
+        totalLiabilities.toFixed(2),
+      "Type": "Total",
+    },
+
+    {
+      "Particulars": "EQUITY",
+      "Amount": "",
+      "Type": "Header",
+    },
+    {
+      "Particulars":
+        "General Fund",
+      "Amount":
+        generalFund.toFixed(2),
+      "Type": "Equity",
+    },
+    {
+      "Particulars":
+        "TOTAL LIABILITIES + EQUITY",
+      "Amount":
+        totalLiabilitiesAndEquity.toFixed(2),
+      "Type": "Total",
+    },
+    {
+      "Particulars":
+        "BALANCE CHECK",
+      "Amount":
+        balanceCheck.toFixed(2),
+      "Type": "Check",
+    },
+  ];
+
+  setOpeningBalanceResults(
+    rows
+  );
+
+  setOpeningBalanceStatus(
+    `OB 02 - Balance Sheet - vazhvathram generated successfully from PostgreSQL.`
+  );
 
 
 
