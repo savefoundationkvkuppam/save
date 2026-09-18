@@ -25508,7 +25508,7 @@ if (
       "vazhvathram": vazhvathram,
     };
   });
-} } else if (
+ } else if (
   openingBalanceSelection ===
   "OB 02 - Balance Sheet - vazhvathram"
 ) {
