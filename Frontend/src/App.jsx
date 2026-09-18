@@ -25883,41 +25883,14 @@ if (
         livelihoodLoanSupport2Received
     );
 
-  // =========================================================
+    // =========================================================
   // 8. HOUSING LOAN
+  //
+  // Existing SAVE project logic stores Housing Loan
+  // amount in Member Receipts -> housingLoan.
   // =========================================================
 
-  const housingLoanPaid =
-    memberPayments.reduce(
-      (total, record) => {
-        if (
-          !isOpeningRecordOB02(
-            record?.voucherDate
-          )
-        ) {
-          return total;
-        }
-
-        if (
-          normalizeOB02(
-            record?.loanType
-          ) !==
-          "housing loan"
-        ) {
-          return total;
-        }
-
-        return (
-          total +
-          toNumberOB02(
-            record?.loanAmount
-          )
-        );
-      },
-      0
-    );
-
-  const housingLoanReceived =
+  const housingLoan =
     memberReceipts.reduce(
       (total, record) => {
         if (
@@ -25938,12 +25911,7 @@ if (
       0
     );
 
-  const housingLoan =
-    Math.max(
-      0,
-      housingLoanPaid -
-        housingLoanReceived
-    );
+  
 
   // =========================================================
   // 9. TOTAL ASSETS
