@@ -25508,295 +25508,458 @@ if (
       "vazhvathram": vazhvathram,
     };
   });
- } else if (
+} else if (
   openingBalanceSelection ===
   "OB 02 - Balance Sheet - vazhvathram"
 ) {
-  // =========================================================
-  // OB 02 - BALANCE SHEET - VAZHVATHRAM
-  // =========================================================
-
-  const normalizeOB = (value) =>
-    String(value ?? "")
-      .trim()
-      .toLowerCase();
-
-  const selectedVazCode =
-    normalizeOB(selectedVazhvathram);
-
-  const selectedVaz = vazhvathrams.find(
-    (record) => {
-      const code = normalizeOB(
-        record?.vazhvathramCode ||
-        record?.code ||
-        record?.id
-      );
-
-      const name = normalizeOB(
-        record?.vazhvathramName ||
-        record?.name
-      );
-
-      return (
-        code === selectedVazCode ||
-        name === selectedVazCode
-      );
+  const toNumber = (value) => {
+    if (value === null || value === undefined || value === "") {
+      return 0;
     }
+
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number) ? number : 0;
+  };
+
+  const getValue = (record, fields) => {
+    if (!record || !Array.isArray(fields)) {
+      return 0;
+    }
+
+    for (const field of fields) {
+      if (
+        record[field] !== undefined &&
+        record[field] !== null &&
+        record[field] !== ""
+      ) {
+        return toNumber(record[field]);
+      }
+    }
+
+    return 0;
+  };
+
+  const getText = (record, fields) => {
+    if (!record || !Array.isArray(fields)) {
+      return "";
+    }
+
+    for (const field of fields) {
+      if (
+        record[field] !== undefined &&
+        record[field] !== null &&
+        String(record[field]).trim() !== ""
+      ) {
+        return String(record[field]).trim();
+      }
+    }
+
+    return "";
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * OB 02 - BALANCE SHEET
+   * ---------------------------------------------------------
+   * Assets:
+   *   Cash at Bank
+   *   Fixed Deposits
+   *   Livelihood Loan Support 1
+   *   Livelihood Loan Support 2
+   *   Housing Loan
+   *
+   * Liabilities:
+   *   Regular Savings
+   *   Bullet Savings
+   *   Special Savings
+   *
+   * Equity:
+   *   General Fund
+   * ---------------------------------------------------------
+   */
+
+  const bankBalance = bankAccounts.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "amount",
+        "balance",
+        "openingBalance",
+        "currentBalance",
+      ]),
+    0
   );
 
-  const vazCode =
-    selectedVaz?.vazhvathramCode ||
-    selectedVaz?.code ||
-    selectedVazhvathram ||
-    "";
+  const fixedDepositBalance = fixedDeposits.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "amount",
+        "balance",
+        "depositAmount",
+        "principalAmount",
+        "openingBalance",
+      ]),
+    0
+  );
 
-  const vazName =
-    selectedVaz?.vazhvathramName ||
-    selectedVaz?.name ||
-    "";
+  /*
+   * Member savings are treated as liabilities because
+   * these balances belong to members.
+   */
+  const regularSavings = members.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "regularSavings",
+        "regularSavingsAmount",
+        "regularSavingsBalance",
+      ]),
+    0
+  );
 
-  const belongsToVaz = (record) => {
-    const json = JSON.stringify(
-      record || {}
-    ).toLowerCase();
+  const bulletSavings = members.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "bulletSavings",
+        "bulletSavingsAmount",
+        "bulletSavingsBalance",
+      ]),
+    0
+  );
 
-    const code = normalizeOB(vazCode);
-    const name = normalizeOB(vazName);
+  const specialSavings = members.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "specialSavings",
+        "specialSavingsAmount",
+        "specialSavingsBalance",
+      ]),
+    0
+  );
 
-    if (!code && !name) {
-      return true;
-    }
-
-    return (
-      (code && json.includes(code)) ||
-      (name && json.includes(name))
-    );
-  };
-
-  // ---------------------------------------------------------
-  // 2113 - FIXED DEPOSIT
-  // ---------------------------------------------------------
-
-  const fixedDepositAmount =
-    fixedDeposits
-      .filter(belongsToVaz)
-      .reduce(
-        (total, record) =>
-          total +
-          numberValue(
-            record?.fdAmount ||
-            record?.amount ||
-            record?.depositAmount
-          ),
-        0
-      );
-
-  // ---------------------------------------------------------
-  // 2112 - CASH AT BANK
-  // ---------------------------------------------------------
-
-  const cashAtBankAmount =
-    bankAccounts
-      .filter(belongsToVaz)
-      .reduce(
-        (total, record) =>
-          total +
-          numberValue(
-            record?.amount ||
-            record?.balance ||
-            record?.accountBalance
-          ),
-        0
-      );
-
-  // ---------------------------------------------------------
-  // 2111 - CASH IN HAND
-  // ---------------------------------------------------------
-
-  const cashReceipts =
-    [
-      ...memberReceipts,
-      ...otherReceipts,
-    ]
-      .filter(belongsToVaz)
-      .filter((record) => {
-        const text =
-          JSON.stringify(record || {})
-            .toLowerCase();
-
-        return (
-          text.includes("cash")
-        );
-      })
-      .reduce(
-        (total, record) =>
-          total +
-          numberValue(
-            record?.total ||
-            record?.amount ||
-            record?.receiptAmount
-          ),
-        0
-      );
-
-  const cashPayments =
-    [
-      ...memberPayments,
-      ...otherPayments,
-    ]
-      .filter(belongsToVaz)
-      .filter((record) => {
-        const text =
-          JSON.stringify(record || {})
-            .toLowerCase();
-
-        return (
-          text.includes("cash")
-        );
-      })
-      .reduce(
-        (total, record) =>
-          total +
-          numberValue(
-            record?.total ||
-            record?.amount ||
-            record?.paymentAmount
-          ),
-        0
-      );
-
-  const cashInHandAmount =
-    cashReceipts -
-    cashPayments;
-
-  // ---------------------------------------------------------
-  // 1242 - ROC - KDFS
-  // ---------------------------------------------------------
-
-  const findLedgerAmount = (
-    records,
-    accountCode
-  ) => {
-    let total = 0;
-
-    records
-      .filter(belongsToVaz)
-      .forEach((record) => {
-        const values =
-          Object.entries(record || {});
-
-        values.forEach(
-          ([key, value]) => {
-            const keyText =
-              normalizeOB(key);
-
-            const valueText =
-              normalizeOB(value);
-
-            if (
-              valueText ===
-                normalizeOB(accountCode) ||
-              keyText.includes(
-                normalizeOB(accountCode)
-              )
-            ) {
-              const numberKeys = [
-                "amount",
-                "amt",
-                "total",
-                "balance",
-                "value"
-              ];
-
-              numberKeys.forEach(
-                (amountKey) => {
-                  if (
-                    Object.prototype.hasOwnProperty.call(
-                      record,
-                      amountKey
-                    )
-                  ) {
-                    total +=
-                      numberValue(
-                        record[amountKey]
-                      );
-                  }
-                }
-              );
-            }
-          }
-        );
-      });
-
-    return total;
-  };
-
-  const rocKdfsAmount =
-    findLedgerAmount(
-      [
-        ...memberJournals,
-        ...otherJournals,
-        ...memberReceipts,
-        ...otherReceipts,
-        ...memberPayments,
-        ...otherPayments,
-      ],
-      "1242"
+  /*
+   * Livelihood Loan Support 1
+   */
+  const livelihoodLoanSupport1Receipts =
+    memberReceipts.reduce(
+      (total, record) =>
+        total +
+        getValue(record, [
+          "livelihoodLoanSupport1",
+          "livelihoodLoanSupport1Amount",
+        ]),
+      0
     );
 
-  // ---------------------------------------------------------
-  // BALANCE SHEET TOTAL
-  // ---------------------------------------------------------
+  const livelihoodLoanSupport1Payments =
+    memberPayments.reduce(
+      (total, record) =>
+        total +
+        getValue(record, [
+          "loanAmount",
+          "livelihoodLoanSupport1",
+          "livelihoodLoanSupport1Amount",
+        ]),
+      0
+    );
 
-  const assetTotal =
-    fixedDepositAmount +
-    cashInHandAmount +
-    cashAtBankAmount;
+  const livelihoodLoanSupport1 =
+    Math.max(
+      0,
+      livelihoodLoanSupport1Receipts -
+        livelihoodLoanSupport1Payments
+    );
 
-  const generalFundAmount =
-    assetTotal -
-    rocKdfsAmount;
+  /*
+   * Livelihood Loan Support 2
+   */
+  const livelihoodLoanSupport2Receipts =
+    memberReceipts.reduce(
+      (total, record) =>
+        total +
+        getValue(record, [
+          "livelihoodLoanSupport2",
+          "livelihoodLoanSupport2Amount",
+        ]),
+      0
+    );
+
+  const livelihoodLoanSupport2Payments =
+    memberPayments.reduce(
+      (total, record) => {
+        const loanType = getText(record, [
+          "loanType",
+          "subLedger",
+          "accountType",
+        ]).toLowerCase();
+
+        if (
+          loanType.includes("livelihood") &&
+          loanType.includes("2")
+        ) {
+          return (
+            total +
+            getValue(record, [
+              "loanAmount",
+              "livelihoodLoanSupport2",
+              "livelihoodLoanSupport2Amount",
+            ])
+          );
+        }
+
+        return total;
+      },
+      0
+    );
+
+  const livelihoodLoanSupport2 =
+    Math.max(
+      0,
+      livelihoodLoanSupport2Receipts -
+        livelihoodLoanSupport2Payments
+    );
+
+  /*
+   * Housing Loan
+   */
+  const housingLoanReceipts = memberReceipts.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "housingLoan",
+        "housingLoanAmount",
+      ]),
+    0
+  );
+
+  const housingLoanPayments = memberPayments.reduce(
+    (total, record) => {
+      const loanType = getText(record, [
+        "loanType",
+        "subLedger",
+        "accountType",
+      ]).toLowerCase();
+
+      if (loanType.includes("housing")) {
+        return (
+          total +
+          getValue(record, [
+            "loanAmount",
+            "housingLoan",
+            "housingLoanAmount",
+          ])
+        );
+      }
+
+      return total;
+    },
+    0
+  );
+
+  const housingLoan = Math.max(
+    0,
+    housingLoanReceipts - housingLoanPayments
+  );
+
+  /*
+   * Other receipts/payments/journals.
+   *
+   * Journals are calculated as a net movement instead of
+   * blindly adding both sides.
+   */
+  const otherReceiptTotal = otherReceipts.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "total",
+        "amount",
+        "cash",
+      ]),
+    0
+  );
+
+  const otherPaymentTotal = otherPayments.reduce(
+    (total, record) =>
+      total +
+      getValue(record, [
+        "total",
+        "amount",
+        "cash",
+      ]),
+    0
+  );
+
+  const otherJournalTotal = otherJournals.reduce(
+    (total, record) => {
+      const debit = getValue(record, [
+        "debit",
+        "debitAmount",
+        "dr",
+      ]);
+
+      const credit = getValue(record, [
+        "credit",
+        "creditAmount",
+        "cr",
+      ]);
+
+      return total + credit - debit;
+    },
+    0
+  );
+
+  /*
+   * Member receipts/payments are used only for loan
+   * calculations above. Do not add their complete total
+   * again here, otherwise the same transaction would be
+   * counted twice.
+   */
+
+  const totalAssets =
+    bankBalance +
+    fixedDepositBalance +
+    livelihoodLoanSupport1 +
+    livelihoodLoanSupport2 +
+    housingLoan +
+    Math.max(
+      0,
+      otherReceiptTotal -
+        otherPaymentTotal +
+        otherJournalTotal
+    );
+
+  const totalLiabilities =
+    regularSavings +
+    bulletSavings +
+    specialSavings;
+
+  /*
+   * General Fund is the balancing equity amount.
+   *
+   * This keeps the balance sheet mathematically balanced:
+   *
+   * Assets = Liabilities + General Fund
+   */
+  const generalFund =
+    totalAssets - totalLiabilities;
+
+  const totalLiabilitiesAndEquity =
+    totalLiabilities + generalFund;
 
   rows = [
     {
-      report: "OB 02",
-      vazhvathramCode: vazCode,
-      vazhvathramName: vazName,
+      "Particulars": "ASSETS",
+      "Amount": "",
+      "Type": "Header",
+    },
+    {
+      "Particulars": "Cash at Bank (2112)",
+      "Amount": bankBalance.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars": "Fixed Deposits",
+      "Amount": fixedDepositBalance.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars": "Livelihood Loan Support 1",
+      "Amount": livelihoodLoanSupport1.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars": "Livelihood Loan Support 2",
+      "Amount": livelihoodLoanSupport2.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars": "Housing Loan",
+      "Amount": housingLoan.toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars": "Other Receivable / Adjustment",
+      "Amount": Math.max(
+        0,
+        otherReceiptTotal -
+          otherPaymentTotal +
+          otherJournalTotal
+      ).toFixed(2),
+      "Type": "Asset",
+    },
+    {
+      "Particulars": "TOTAL ASSETS",
+      "Amount": totalAssets.toFixed(2),
+      "Type": "Total",
+    },
 
-      liability1Code: "1011",
-      liability1Name: "General Fund",
-      liability1Amount:
-        generalFundAmount,
+    {
+      "Particulars": "LIABILITIES",
+      "Amount": "",
+      "Type": "Header",
+    },
+    {
+      "Particulars": "Regular Savings",
+      "Amount": regularSavings.toFixed(2),
+      "Type": "Liability",
+    },
+    {
+      "Particulars": "Bullet Savings",
+      "Amount": bulletSavings.toFixed(2),
+      "Type": "Liability",
+    },
+    {
+      "Particulars": "Special Savings",
+      "Amount": specialSavings.toFixed(2),
+      "Type": "Liability",
+    },
+    {
+      "Particulars": "TOTAL LIABILITIES",
+      "Amount": totalLiabilities.toFixed(2),
+      "Type": "Total",
+    },
 
-      liability2Code: "1242",
-      liability2Name: "ROC - KDFS",
-      liability2Amount:
-        rocKdfsAmount,
+    {
+      "Particulars": "EQUITY",
+      "Amount": "",
+      "Type": "Header",
+    },
+    {
+      "Particulars": "General Fund",
+      "Amount": generalFund.toFixed(2),
+      "Type": "Equity",
+    },
+    {
+      "Particulars": "TOTAL LIABILITIES + EQUITY",
+      "Amount": totalLiabilitiesAndEquity.toFixed(2),
+      "Type": "Total",
+    },
 
-      asset1Code: "2113",
-      asset1Name: "Fixed Deposit",
-      asset1Amount:
-        fixedDepositAmount,
-
-      asset2Code: "2111",
-      asset2Name: "Cash in Hand",
-      asset2Amount:
-        cashInHandAmount,
-
-      asset3Code: "2112",
-      asset3Name: "Cash at Bank",
-      asset3Amount:
-        cashAtBankAmount,
-
-      liabilityTotal:
-        generalFundAmount +
-        rocKdfsAmount,
-
-      assetTotal:
-        assetTotal,
+    {
+      "Particulars": "BALANCE CHECK",
+      "Amount": (
+        totalAssets -
+        totalLiabilitiesAndEquity
+      ).toFixed(2),
+      "Type": "Check",
     },
   ];
 
+  setOpeningBalanceResults(rows);
+
+  setOpeningBalanceStatus(
+    `OB 02 - Balance Sheet - vazhvathram generated successfully from PostgreSQL.`
+  );
+}
 } else if (
   openingBalanceSelection ===
   "OB 03 - Bank Loan - vazhvathram"
