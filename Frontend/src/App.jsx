@@ -25034,12 +25034,143 @@ sourceLabel =
         "Other Activity",
       ];
 
-      const runOpeningBalanceReport = () => {
-        setOpeningBalanceStatus(
-          `Selected ${openingBalanceSelection} with Subledger: ${openingBalanceSubledger}.`
-        );
-      };
+      const runOpeningBalanceReport = async () => {
+  setOpeningBalanceLoading(true);
+  setOpeningBalanceStatus("");
+  setOpeningBalanceResults([]);
 
+  try {
+    const [
+      membersData,
+      vazhvathramsData,
+      clustersData,
+      groupsData,
+      bankAccountsData,
+      memberReceiptsData,
+      memberPaymentsData,
+      memberJournalsData,
+      otherReceiptsData,
+      otherPaymentsData,
+      otherJournalsData,
+      fixedDepositsData,
+      debtsData,
+      savingsData,
+      livelihoodsData,
+      housingsData,
+      sbAccountStatusesData,
+      sbAccountApprovalsData,
+      bankDetailsData,
+    ] = await Promise.all([
+      apiRequest("/members"),
+      apiRequest("/vazhvathrams"),
+      apiRequest("/clusters"),
+      apiRequest("/groups"),
+      apiRequest("/bank-accounts"),
+      apiRequest("/member-receipts"),
+      apiRequest("/member-payments"),
+      apiRequest("/member-journals"),
+      apiRequest("/other-receipts"),
+      apiRequest("/other-payments"),
+      apiRequest("/other-journals"),
+      apiRequest("/fixed-deposits"),
+      apiRequest("/debts"),
+      apiRequest("/savings"),
+      apiRequest("/livelihoods"),
+      apiRequest("/housings"),
+      apiRequest("/sb-account-statuses"),
+      apiRequest("/sb-account-approvals"),
+      apiRequest("/bank-details"),
+    ]);
+
+    const members = Array.isArray(membersData) ? membersData : [];
+    const vazhvathrams = Array.isArray(vazhvathramsData)
+      ? vazhvathramsData
+      : [];
+    const clusters = Array.isArray(clustersData)
+      ? clustersData
+      : [];
+    const groups = Array.isArray(groupsData) ? groupsData : [];
+    const bankAccounts = Array.isArray(bankAccountsData)
+      ? bankAccountsData
+      : [];
+    const memberReceipts = Array.isArray(memberReceiptsData)
+      ? memberReceiptsData
+      : [];
+    const memberPayments = Array.isArray(memberPaymentsData)
+      ? memberPaymentsData
+      : [];
+    const memberJournals = Array.isArray(memberJournalsData)
+      ? memberJournalsData
+      : [];
+    const otherReceipts = Array.isArray(otherReceiptsData)
+      ? otherReceiptsData
+      : [];
+    const otherPayments = Array.isArray(otherPaymentsData)
+      ? otherPaymentsData
+      : [];
+    const otherJournals = Array.isArray(otherJournalsData)
+      ? otherJournalsData
+      : [];
+    const fixedDeposits = Array.isArray(fixedDepositsData)
+      ? fixedDepositsData
+      : [];
+    const debts = Array.isArray(debtsData) ? debtsData : [];
+    const savings = Array.isArray(savingsData) ? savingsData : [];
+    const livelihoods = Array.isArray(livelihoodsData)
+      ? livelihoodsData
+      : [];
+    const housings = Array.isArray(housingsData)
+      ? housingsData
+      : [];
+    const sbAccountStatuses = Array.isArray(sbAccountStatusesData)
+      ? sbAccountStatusesData
+      : [];
+    const sbAccountApprovals = Array.isArray(sbAccountApprovalsData)
+      ? sbAccountApprovalsData
+      : [];
+    const bankDetails = Array.isArray(bankDetailsData)
+      ? bankDetailsData
+      : [];
+
+    console.log("Opening Balance source data loaded:", {
+      members: members.length,
+      vazhvathrams: vazhvathrams.length,
+      clusters: clusters.length,
+      groups: groups.length,
+      bankAccounts: bankAccounts.length,
+      memberReceipts: memberReceipts.length,
+      memberPayments: memberPayments.length,
+      memberJournals: memberJournals.length,
+      otherReceipts: otherReceipts.length,
+      otherPayments: otherPayments.length,
+      otherJournals: otherJournals.length,
+      fixedDeposits: fixedDeposits.length,
+      debts: debts.length,
+      savings: savings.length,
+      livelihoods: livelihoods.length,
+      housings: housings.length,
+      sbAccountStatuses: sbAccountStatuses.length,
+      sbAccountApprovals: sbAccountApprovals.length,
+      bankDetails: bankDetails.length,
+    });
+
+    setOpeningBalanceStatus(
+      `${openingBalanceSelection} source data loaded successfully from PostgreSQL.`
+    );
+  } catch (error) {
+    console.error("Opening Balance report error:", error);
+
+    setOpeningBalanceResults([]);
+
+    setOpeningBalanceStatus(
+      `Unable to load Opening Balance data. ${
+        error?.message || error
+      }`
+    );
+  } finally {
+    setOpeningBalanceLoading(false);
+  }
+};
       body = legacyCard(
         <>
           <select
