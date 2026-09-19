@@ -2101,7 +2101,8 @@ useEffect(() => {
   // =========================================================
   // VAZHVATHRAM
   // =========================================================
-
+  
+  const [vazhvathramCluster, setVazhvathramCluster] = useState("");
   const [vazhvathramCode, setVazhvathramCode] = useState("001");
   const [vazhvathramCodeSecond, setVazhvathramCodeSecond] = useState("");
   const [vazhvathramName, setVazhvathramName] = useState("");
@@ -7561,6 +7562,7 @@ const handleAuditorAdd = () => {
 
   const handleVazhvathramSave = async () => {
     if (
+      !vazhvathramCluster.trim() ||
       !vazhvathramCode.trim() ||
       !vazhvathramName.trim() ||
       !regionalVazhvathramName.trim() ||
@@ -7572,6 +7574,7 @@ const handleAuditorAdd = () => {
     }
 
     const data = {
+       clusterName: vazhvathramCluster.trim(),
       vazhvathramCode: vazhvathramCode.trim(),
       vazhvathramCodeSecond: vazhvathramCodeSecond.trim(),
       vazhvathramName: vazhvathramName.trim(),
@@ -30692,42 +30695,72 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <h1>Vazhvathram Details</h1>
 
             <div className="vazhvathram-form">
+             <div className="vazhvathram-row">
 
-              <div className="vazhvathram-row">
+  <label>Cluster</label>
 
-                <label>Vazhvathram Code</label>
+  <select
+    value={vazhvathramCluster}
+    onChange={(e) =>
+      setVazhvathramCluster(e.target.value)
+    }
+    disabled={
+      vazhvathramMode === "view"
+    }
+  >
+    <option value="">
+      Select Cluster
+    </option>
 
-                <div className="vazhvathram-code-area">
+    {clusters.map((cluster, index) => (
+      <option
+        key={index}
+        value={cluster}
+      >
+        {cluster}
+      </option>
+    ))}
+  </select>
 
-                  <input
-                    type="text"
-                    value={vazhvathramCode}
-                    onChange={(e) =>
-                      setVazhvathramCode(
-                        e.target.value
-                      )
-                    }
-                    disabled={
-                      vazhvathramMode === "view"
-                    }
-                  />
+</div>
 
-                  <input
-                    type="text"
-                    value={vazhvathramCodeSecond}
-                    onChange={(e) =>
-                      setVazhvathramCodeSecond(
-                        e.target.value
-                      )
-                    }
-                    disabled={
-                      vazhvathramMode === "view"
-                    }
-                  />
+<div className="vazhvathram-row">
 
-                </div>
+  <label>Vazhvathram Code</label>
 
-              </div>
+  <div className="vazhvathram-code-area">
+
+    <input
+      type="text"
+      value={vazhvathramCode}
+      onChange={(e) =>
+        setVazhvathramCode(
+          e.target.value
+        )
+      }
+      disabled={
+        vazhvathramMode === "view"
+      }
+    />
+
+    <input
+      type="text"
+      value={vazhvathramCodeSecond}
+      onChange={(e) =>
+        setVazhvathramCodeSecond(
+          e.target.value
+        )
+      }
+      disabled={
+        vazhvathramMode === "view"
+      }
+    />
+
+  </div>
+
+</div>
+
+              
 
               <div className="vazhvathram-row">
 
