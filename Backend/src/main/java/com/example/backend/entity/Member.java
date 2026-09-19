@@ -12,6 +12,7 @@ public class Member {
 
     private String memberCode;
     private String memberName;
+    private String vazhvathramCode;
     private String regionalMemberName;
     private String designation;
     private String date;
@@ -63,6 +64,14 @@ public class Member {
     public void setMemberCode(String memberCode) {
         this.memberCode = memberCode;
     }
+    public String getVazhvathramCode() {
+         return vazhvathramCode;
+    }
+
+    public void setVazhvathramCode(String vazhvathramCode) {
+         this.vazhvathramCode = vazhvathramCode;
+    }
+    
 
     public String getMemberName() {
         return memberName;
