@@ -2490,6 +2490,104 @@ const getMemberDisplayName = (memberIdOrCode, memberName = "") => {
   const [selectedMemberReceiptId, setSelectedMemberReceiptId] = useState(null);
   const [memberReceiptMode, setMemberReceiptMode] = useState("view");
 
+  // =========================================================
+// MEMBER RECEIPT - LOAN ELIGIBILITY
+// A loan repayment field is enabled only when the selected
+// member has an outstanding loan of that type.
+// =========================================================
+
+const getMemberLoanOutstanding = (
+  memberCode,
+  loanType,
+  excludeReceiptId = null
+) => {
+  const code = String(memberCode || "").trim().toLowerCase();
+
+  if (!code) {
+    return 0;
+  }
+
+  // Total loan amount given to this member
+  const totalLoanGiven = memberPaymentRecords.reduce(
+    (total, record) => {
+      const recordMemberCode = String(
+        record?.memberCode || ""
+      ).trim().toLowerCase();
+
+      if (recordMemberCode !== code) {
+        return total;
+      }
+
+      if (
+        String(record?.loanType || "").trim() !==
+        loanType
+      ) {
+        return total;
+      }
+
+      return total + (Number(record?.loanAmount) || 0);
+    },
+    0
+  );
+
+  // Total amount already repaid by this member
+  // Ignore the receipt currently being edited.
+  const totalLoanRepaid = memberReceiptRecords.reduce(
+    (total, record) => {
+      if (
+        excludeReceiptId &&
+        Number(record?.id) === Number(excludeReceiptId)
+      ) {
+        return total;
+      }
+
+      const recordMemberCode = String(
+        record?.memberCode || ""
+      ).trim().toLowerCase();
+
+      if (recordMemberCode !== code) {
+        return total;
+      }
+
+      let repaymentAmount = 0;
+
+      if (loanType === "Livelihood Loan Support 1") {
+        repaymentAmount =
+          Number(record?.livelihoodLoanSupport1) || 0;
+      } else if (
+        loanType === "Livelihood Loan Support 2"
+      ) {
+        repaymentAmount =
+          Number(record?.livelihoodLoanSupport2) || 0;
+      } else if (loanType === "Housing Loan") {
+        repaymentAmount =
+          Number(record?.housingLoan) || 0;
+      }
+
+      return total + repaymentAmount;
+    },
+    0
+  );
+
+  return Math.max(
+    totalLoanGiven - totalLoanRepaid,
+    0
+  );
+};
+
+const hasMemberOutstandingLoan = (
+  memberCode,
+  loanType
+) => {
+  return (
+    getMemberLoanOutstanding(
+      memberCode,
+      loanType,
+      selectedMemberReceiptId
+    ) > 0
+  );
+};
+
   const updateMemberReceiptField = (field, value) => {
     setMemberReceiptForm((previous) => ({ ...previous, [field]: value }));
   };
@@ -27970,14 +28068,76 @@ if (
         <div className="legacy-grid-row compact">
           <label>Member</label>
           <select
-            value={memberReceiptForm.memberCode}
-            onChange={(e) => {
-              const code = e.target.value;
-              const record = memberOptions.find((item) => String(item.memberCode) === String(code));
-              updateMemberReceiptField("memberCode", code);
-              updateMemberReceiptField("memberName", record?.memberName || "");
-            }}
-          >
+  value={memberReceiptForm.memberCode}
+  onChange={(e) => {
+    const code = e.target.value;
+
+    const record = memberOptions.find(
+      (item) =>
+        String(item.memberCode) === String(code)
+    );
+
+    const loan1Outstanding =
+      getMemberLoanOutstanding(
+        code,
+        "Livelihood Loan Support 1",
+        selectedMemberReceiptId
+      );
+
+    const loan2Outstanding =
+      getMemberLoanOutstanding(
+        code,
+        "Livelihood Loan Support 2",
+        selectedMemberReceiptId
+      );
+
+    const housingOutstanding =
+      getMemberLoanOutstanding(
+        code,
+        "Housing Loan",
+        selectedMemberReceiptId
+      );
+
+    setMemberReceiptForm((previous) => ({
+      ...previous,
+
+      memberCode: code,
+      memberName: record?.memberName || "",
+
+      // Clear fields when the member does not have
+      // an outstanding loan of that type.
+      livelihoodLoanSupport1:
+        loan1Outstanding > 0
+          ? previous.livelihoodLoanSupport1
+          : "",
+
+      serviceCost1:
+        loan1Outstanding > 0
+          ? previous.serviceCost1
+          : "",
+
+      livelihoodLoanSupport2:
+        loan2Outstanding > 0
+          ? previous.livelihoodLoanSupport2
+          : "",
+
+      serviceCost2:
+        loan2Outstanding > 0
+          ? previous.serviceCost2
+          : "",
+
+      housingLoan:
+        housingOutstanding > 0
+          ? previous.housingLoan
+          : "",
+
+      housingServiceCost:
+        housingOutstanding > 0
+          ? previous.housingServiceCost
+          : "",
+    }));
+  }}
+>
             <option value="">Select Member</option>
             {memberOptions.map((member) => (
               <option key={member.id ?? member.memberCode} value={member.memberCode}>
@@ -28004,10 +28164,118 @@ if (
           <input className="tiny" value={memberReceiptForm.specialSavingsMoreAmount} onChange={(e) => updateMemberReceiptField("specialSavingsMoreAmount", e.target.value)} />
         </div>
 
-        <div className="legacy-section-row"><strong>Livelihood Loan Support 1</strong><input value={memberReceiptForm.livelihoodLoanSupport1} onChange={(e) => updateMemberReceiptField("livelihoodLoanSupport1", e.target.value)} /><strong>Service Cost</strong><input value={memberReceiptForm.serviceCost1} onChange={(e) => updateMemberReceiptField("serviceCost1", e.target.value)} /></div>
-        <div className="legacy-section-row"><strong>Livelihood Loan Support 2</strong><input value={memberReceiptForm.livelihoodLoanSupport2} onChange={(e) => updateMemberReceiptField("livelihoodLoanSupport2", e.target.value)} /><strong>Service Cost</strong><input value={memberReceiptForm.serviceCost2} onChange={(e) => updateMemberReceiptField("serviceCost2", e.target.value)} /></div>
-        <div className="legacy-section-row"><strong>Housing Loan</strong><input value={memberReceiptForm.housingLoan} onChange={(e) => updateMemberReceiptField("housingLoan", e.target.value)} /><strong>Service Cost</strong><input value={memberReceiptForm.housingServiceCost} onChange={(e) => updateMemberReceiptField("housingServiceCost", e.target.value)} /></div>
+       <div className="legacy-section-row">
+  <strong>Livelihood Loan Support 1</strong>
 
+  <input
+    value={memberReceiptForm.livelihoodLoanSupport1}
+    disabled={
+      !hasMemberOutstandingLoan(
+        memberReceiptForm.memberCode,
+        "Livelihood Loan Support 1"
+      )
+    }
+    onChange={(e) =>
+      updateMemberReceiptField(
+        "livelihoodLoanSupport1",
+        e.target.value
+      )
+    }
+  />
+
+  <strong>Service Cost</strong>
+
+  <input
+    value={memberReceiptForm.serviceCost1}
+    disabled={
+      !hasMemberOutstandingLoan(
+        memberReceiptForm.memberCode,
+        "Livelihood Loan Support 1"
+      )
+    }
+    onChange={(e) =>
+      updateMemberReceiptField(
+        "serviceCost1",
+        e.target.value
+      )
+    }
+  />
+</div>
+
+        <div className="legacy-section-row">
+  <strong>Livelihood Loan Support 2</strong>
+
+  <input
+    value={memberReceiptForm.livelihoodLoanSupport2}
+    disabled={
+      !hasMemberOutstandingLoan(
+        memberReceiptForm.memberCode,
+        "Livelihood Loan Support 2"
+      )
+    }
+    onChange={(e) =>
+      updateMemberReceiptField(
+        "livelihoodLoanSupport2",
+        e.target.value
+      )
+    }
+  />
+
+  <strong>Service Cost</strong>
+
+  <input
+    value={memberReceiptForm.serviceCost2}
+    disabled={
+      !hasMemberOutstandingLoan(
+        memberReceiptForm.memberCode,
+        "Livelihood Loan Support 2"
+      )
+    }
+    onChange={(e) =>
+      updateMemberReceiptField(
+        "serviceCost2",
+        e.target.value
+      )
+    }
+  />
+</div>
+        <div className="legacy-section-row">
+  <strong>Housing Loan</strong>
+
+  <input
+    value={memberReceiptForm.housingLoan}
+    disabled={
+      !hasMemberOutstandingLoan(
+        memberReceiptForm.memberCode,
+        "Housing Loan"
+      )
+    }
+    onChange={(e) =>
+      updateMemberReceiptField(
+        "housingLoan",
+        e.target.value
+      )
+    }
+  />
+
+  <strong>Service Cost</strong>
+
+  <input
+    value={memberReceiptForm.housingServiceCost}
+    disabled={
+      !hasMemberOutstandingLoan(
+        memberReceiptForm.memberCode,
+        "Housing Loan"
+      )
+    }
+    onChange={(e) =>
+      updateMemberReceiptField(
+        "housingServiceCost",
+        e.target.value
+      )
+    }
+  />
+</div>
         <div className="legacy-actions">
           <button type="button" onClick={() => { resetMemberReceiptForm(); setMemberReceiptMode("add"); }}>Add</button>
           <button type="button" disabled={!selectedMemberReceiptId} onClick={() => setMemberReceiptMode("edit")}>Edit</button>
