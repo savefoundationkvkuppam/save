@@ -2846,7 +2846,28 @@ const getMemberDisplayName = (memberIdOrCode, memberName = "") => {
 
     try {
       setMemberPaymentLoading(true);
-      const payload = { ...memberPaymentForm };
+
+  const calculatedTotal = [
+    memberPaymentForm.savings,
+    memberPaymentForm.savingsIncentive,
+    memberPaymentForm.bulletSavings,
+    memberPaymentForm.socialSecurityAmount,
+    memberPaymentForm.specialSavingsAmount,
+    memberPaymentForm.specialSavingsMoreAmount,
+    memberPaymentForm.specialSavingsIncentive,
+    memberPaymentForm.loanAmount,
+    memberPaymentForm.instalmentAmount,
+  ].reduce(
+    (sum, value) => sum + (parseFloat(value) || 0),
+    0
+  );
+
+  const payload = {
+    ...memberPaymentForm,
+    total:
+      String(memberPaymentForm.total || "").trim() ||
+      String(calculatedTotal),
+  };
       let saved;
 
       if (selectedMemberPaymentId) {
