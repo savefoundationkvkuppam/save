@@ -14,6 +14,8 @@ public class Member {
     private String memberName;
     private String vazhvathramCode;
     private String regionalMemberName;
+    private String clusterName;
+    private String vazhvathramName;
     private String designation;
     private String date;
     private String dateOfJoining;
