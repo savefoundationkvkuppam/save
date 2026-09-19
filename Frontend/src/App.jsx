@@ -31681,14 +31681,15 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
       Select Vazhvathram
     </option>
 
-    {vazhvathramRecords
-      .filter(
-        (record) =>
-          !memberCluster ||
-          String(record.clusterName || "").trim() ===
-            String(memberCluster || "").trim()
-      )
-      .map((record, index) => (
+   {vazhvathramRecords
+  .filter(
+    (record) =>
+      String(record.clusterName || "").trim() ===
+      String(
+        memberCluster || selectedCluster || ""
+      ).trim()
+  )
+  .map((record, index) => (
         <option
           key={record.id || index}
           value={
