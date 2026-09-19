@@ -24623,11 +24623,26 @@ sourceLabel =
         ])
       );
 
-    const totalAmount = (rows) =>
-      rows.reduce((sum, r) => {
-        const value = Number(getAmount(r));
-        return sum + (Number.isFinite(value) ? value : 0);
-      }, 0);
+   const totalAmount = (rows) =>
+  rows.reduce((sum, r) => {
+    const value = Number(getAmount(r));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+const savingsTotal = totalAmount(receipts);
+
+const donationTotal = receipts.reduce((sum, r) => {
+  const value = Number(
+    getValue(r, [
+      "donation",
+    ])
+  );
+
+  return sum + (Number.isFinite(value) ? value : 0);
+}, 0);
+
+const overallReceiptTotal =
+  savingsTotal + donationTotal;
 
     return (
       <div
@@ -24678,6 +24693,7 @@ sourceLabel =
               <th>Special Savings</th>
               <th>Livelihood 1</th>
               <th>Livelihood 2</th>
+              <th>Donation</th>
               <th>Total</th>
             </tr>
           </thead>
@@ -24716,18 +24732,41 @@ sourceLabel =
                     "loanSupport2",
                   ])}
                 </td>
+                <td>
+                   {getValue(r, [
+                      "donation",
+                   ])}
+                </td>
                 <td>{getAmount(r)}</td>
               </tr>
             ))}
 
             <tr>
-              <td colSpan="7" style={{ fontWeight: "bold" }}>
-                Total
-              </td>
-              <td style={{ fontWeight: "bold" }}>
-                {totalAmount(receipts)}
-              </td>
-            </tr>
+  <td colSpan="8" style={{ fontWeight: "bold", textAlign: "right" }}>
+    Savings Total
+  </td>
+  <td style={{ fontWeight: "bold" }}>
+    {savingsTotal}
+  </td>
+</tr>
+
+<tr>
+  <td colSpan="8" style={{ fontWeight: "bold", textAlign: "right" }}>
+    Donation Total
+  </td>
+  <td style={{ fontWeight: "bold" }}>
+    {donationTotal}
+  </td>
+</tr>
+
+<tr>
+  <td colSpan="8" style={{ fontWeight: "bold", textAlign: "right" }}>
+    Overall Total
+  </td>
+  <td style={{ fontWeight: "bold" }}>
+    {overallReceiptTotal}
+  </td>
+</tr>
           </tbody>
         </table>
 
