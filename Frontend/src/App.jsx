@@ -7829,7 +7829,7 @@ setMemberVazhvathram(
     if (
       !memberCode.trim() ||
       !memberName.trim() ||
-      !regionalMemberName.trim()
+      !regionalMemberName.trim()||
       !memberCluster.trim() ||
       !memberVazhvathram.trim()
     ) {
