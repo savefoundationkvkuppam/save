@@ -2288,6 +2288,8 @@ useEffect(() => {
   const [memberCode, setMemberCode] = useState("");
   const [memberName, setMemberName] = useState("");
   const [regionalMemberName, setRegionalMemberName] = useState("");
+  const [memberCluster, setMemberCluster] = useState("");
+  const [memberVazhvathram, setMemberVazhvathram] = useState("");
   const [memberDesignation, setMemberDesignation] =
     useState("Member");
   const [memberDate, setMemberDate] = useState("");
@@ -7731,6 +7733,13 @@ const handleAuditorAdd = () => {
     setRegionalMemberName(
       record.regionalMemberName || ""
     );
+    setMemberCluster(
+  record.clusterName || ""
+);
+
+setMemberVazhvathram(
+  record.vazhvathramName || ""
+);
 
     setMemberDesignation(
       record.designation || "Member"
@@ -7830,6 +7839,8 @@ const handleAuditorAdd = () => {
       memberCode: memberCode.trim(),
       memberName: memberName.trim(),
       regionalMemberName: regionalMemberName.trim(),
+      clusterName: memberCluster.trim(),
+      vazhvathramName: memberVazhvathram.trim(),
       designation: memberDesignation,
       date: memberDate,
       dateOfJoining: memberDateOfJoining,
@@ -31615,6 +31626,76 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                 />
 
               </div>
+              <div className="member-row">
+
+  <label>Cluster</label>
+
+  <select
+    value={memberCluster}
+    onChange={(e) => {
+      setMemberCluster(e.target.value);
+      setMemberVazhvathram("");
+    }}
+    disabled={
+      memberMode === "view"
+    }
+  >
+    <option value="">
+      Select Cluster
+    </option>
+
+    {clusters.map((cluster, index) => (
+      <option
+        key={index}
+        value={cluster}
+      >
+        {cluster}
+      </option>
+    ))}
+  </select>
+
+</div>
+
+<div className="member-row">
+
+  <label>Vazhvathram</label>
+
+  <select
+    value={memberVazhvathram}
+    onChange={(e) =>
+      setMemberVazhvathram(
+        e.target.value
+      )
+    }
+    disabled={
+      memberMode === "view" ||
+      !memberCluster
+    }
+  >
+    <option value="">
+      Select Vazhvathram
+    </option>
+
+    {vazhvathramRecords
+      .filter(
+        (record) =>
+          !memberCluster ||
+          String(record.clusterName || "").trim() ===
+            String(memberCluster || "").trim()
+      )
+      .map((record, index) => (
+        <option
+          key={record.id || index}
+          value={
+            record.vazhvathramName || ""
+          }
+        >
+          {record.vazhvathramName || ""}
+        </option>
+      ))}
+  </select>
+
+</div>
 
               <div className="member-row">
 
