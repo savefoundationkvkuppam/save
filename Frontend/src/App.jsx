@@ -24568,20 +24568,30 @@ sourceLabel =
         "particulars",
       ]);
 
-    const getPaymentParticular = (r) => {
+const getPaymentParticular = (r) => {
   if (
     r.transactionType === "Member Payment" ||
     r.transactionType === "Payment"
   ) {
-    return getValue(r, [
-      "purpose",
-      "loanType",
-      "subPurpose",
-      "particulars",
-      "memberName",
-      "member",
-      "memberCode",
-    ]);
+    const values = [
+      r.purpose,
+      r.loanType,
+      r.subPurpose,
+      r.particulars,
+      r.memberName,
+      r.member,
+      r.memberCode,
+    ];
+
+    return (
+      values.find(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          String(value).trim() !== "" &&
+          String(value).trim().toLowerCase() !== "select"
+      ) || ""
+    );
   }
 
   return getValue(r, [
@@ -24592,6 +24602,8 @@ sourceLabel =
     "memberCode",
   ]);
 };
+
+    
 
     const getReceiptNo = (r) =>
       getValue(r, [
