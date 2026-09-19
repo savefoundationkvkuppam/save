@@ -13432,4 +13432,12 @@ cursor: pointer;
   min-width: 150px;
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+  color: #0066ff;
+  border-color: #0066ff;
+  outline: none;
+}
+
 
