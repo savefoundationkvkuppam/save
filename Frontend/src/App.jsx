@@ -31674,8 +31674,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
       )
     }
     disabled={
-      memberMode === "view" ||
-      !memberCluster
+      memberMode === "view"
     }
   >
     <option value="">
