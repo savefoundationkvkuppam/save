@@ -24852,7 +24852,10 @@ const closingCash =
   ])}
 </td>
 
-<td>{getAmount(r)}</td>
+<td>
+  {Number(getAmount(r) || 0) +
+    Number(getValue(r, ["donation"]) || 0)}
+</td>
  
 </tr>
             ))}
