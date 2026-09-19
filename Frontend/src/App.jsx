@@ -24360,7 +24360,23 @@ const paymentRows = [
         "Member Payment",
       transactionDate: r.voucherDate || "",
       receiptAmount: 0,
-      paymentAmount: Number(r.total || 0),
+      paymentAmount: Number(
+  r.total ||
+  [
+    r.savings,
+    r.savingsIncentive,
+    r.bulletSavings,
+    r.socialSecurityAmount,
+    r.specialSavingsAmount,
+    r.specialSavingsMoreAmount,
+    r.specialSavingsIncentive,
+    r.loanAmount,
+    r.instalmentAmount,
+  ].reduce(
+    (sum, value) => sum + (parseFloat(value) || 0),
+    0
+  )
+),
     };
   }),
 
