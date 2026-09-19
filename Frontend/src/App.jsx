@@ -24479,16 +24479,42 @@ sourceLabel =
         "voucherNo",
       ]);
 
-    const getAmount = (r) =>
-      getValue(r, [
-        "amount",
-        "total",
-        "receiptAmount",
-        "paymentAmount",
-        "regularSavings",
-        "regularSaving",
-      ]);
+      const getAmount = (r) => {
+  const directAmount = getValue(r, [
+    "amount",
+    "total",
+    "receiptAmount",
+    "paymentAmount",
+    "regularSavings",
+    "regularSaving",
+  ]);
 
+  if (directAmount !== "") {
+    return directAmount;
+  }
+
+  if (
+    r.transactionType === "Member Payment" ||
+    r.transactionType === "Payment"
+  ) {
+    return [
+      r.savings,
+      r.savingsIncentive,
+      r.bulletSavings,
+      r.socialSecurityAmount,
+      r.specialSavingsAmount,
+      r.specialSavingsMoreAmount,
+      r.specialSavingsIncentive,
+      r.loanAmount,
+      r.instalmentAmount,
+    ].reduce(
+      (sum, value) => sum + (parseFloat(value) || 0),
+      0
+    );
+  }
+
+  return "";
+};
     const getDate = (r) =>
       formatDate(
         getValue(r, [
