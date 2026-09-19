@@ -7707,6 +7707,8 @@ const handleAuditorAdd = () => {
     setMemberCode("");
     setMemberName("");
     setRegionalMemberName("");
+    setMemberCluster("");
+    setMemberVazhvathram("");
     setMemberDesignation("Member");
     setMemberDate("");
     setMemberDateOfJoining("");
@@ -7828,9 +7830,11 @@ setMemberVazhvathram(
       !memberCode.trim() ||
       !memberName.trim() ||
       !regionalMemberName.trim()
+      !memberCluster.trim() ||
+      !memberVazhvathram.trim()
     ) {
       alert(
-        "Please fill Member Code, Member Name and Regional Member Name."
+        "Please select Cluster and Vazhvathram and fill Member Code, Member Name and Regional Member Name."
       );
       return;
     }
@@ -32171,7 +32175,15 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
 
                   <h2>Member List</h2>
 
-                  {memberRecords.length === 0 ? (
+                  {memberRecords.filter(
+                  (record) =>
+                    (!selectedCluster ||
+                     String(record.clusterName || "").trim() ===
+                     String(selectedCluster || "").trim()) &&
+                   (!selectedVazhvathram ||
+                     String(record.vazhvathramName || "").trim() ===
+                        String(selectedVazhvathram || "").trim())
+                 ).length === 0 ? (
                     <p>
                       No member records found.
                       Click Add to create one.
@@ -32199,8 +32211,18 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
 
                       <tbody>
 
-                        {memberRecords.map(
-                          (record) => (
+                        {memberRecords
+                          .filter(
+                             (record) =>
+                                (!selectedCluster ||
+                                   String(record.clusterName || "").trim() ===
+                                     String(selectedCluster || "").trim()) &&
+                                 (!selectedVazhvathram ||
+                                    String(record.vazhvathramName || "").trim() ===
+                                      String(selectedVazhvathram || "").trim())
+                                 )
+                                 .map(
+                                    (record) => (
                             <tr
                               key={record.id}
                             >
