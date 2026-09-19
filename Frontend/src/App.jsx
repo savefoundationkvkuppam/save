@@ -24685,86 +24685,111 @@ const overallReceiptTotal =
           }}
         >
           <thead>
-            <tr>
-              <th>Member / Particulars</th>
-              <th>Rec. No.</th>
-              <th>Date</th>
-              <th>Regular Savings</th>
-              <th>Special Savings</th>
-              <th>Livelihood 1</th>
-              <th>Livelihood 2</th>
-              <th>Donation</th>
-              <th>Total</th>
-            </tr>
-          </thead>
+  <tr>
+    <th rowSpan="2">Member / Particulars</th>
+    <th rowSpan="2">Rec. No.</th>
+    <th rowSpan="2">Date</th>
+
+    <th colSpan="3">Savings</th>
+
+    <th colSpan="2">Livelihood Loan Support 1</th>
+
+    <th colSpan="2">Livelihood Loan Support 2</th>
+
+    <th rowSpan="2">Total</th>
+  </tr>
+
+  <tr>
+    <th>Regular</th>
+    <th>Special</th>
+    <th>Prepaid / More</th>
+
+    <th>Principal</th>
+    <th>Service Cost</th>
+
+    <th>Principal</th>
+    <th>Service Cost</th>
+  </tr>
+</thead>
 
           <tbody>
             {receipts.map((r, index) => (
               <tr key={r.id ?? `receipt-${index}`}>
-                <td>{getMemberName(r)}</td>
-                <td>{getReceiptNo(r)}</td>
-                <td>{getDate(r)}</td>
-                <td>
-                  {getValue(r, [
-                    "regularSavings",
-                    "regularSaving",
-                    "regSavings",
-                  ])}
-                </td>
-                <td>
-                  {getValue(r, [
-                    "specialSavings",
-                    "specialSaving",
-                    "specSavings",
-                  ])}
-                </td>
-                <td>
-                  {getValue(r, [
-                    "livelihoodSupport1",
-                    "livelihood1",
-                    "loanSupport1",
-                  ])}
-                </td>
-                <td>
-                  {getValue(r, [
-                    "livelihoodSupport2",
-                    "livelihood2",
-                    "loanSupport2",
-                  ])}
-                </td>
-                <td>
-                   {getValue(r, [
-                      "donation",
-                   ])}
-                </td>
-                <td>{getAmount(r)}</td>
-              </tr>
+  <td>{getMemberName(r)}</td>
+
+  <td>{getReceiptNo(r)}</td>
+
+  <td>{getDate(r)}</td>
+
+  {/* Savings */}
+  <td>
+    {getValue(r, [
+      "regularSavings",
+      "regularSaving",
+      "regSavings",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "specialSavingsAmount",
+      "specialSavings",
+      "specialSaving",
+      "specSavings",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "specialSavingsMoreAmount",
+      "bulletSavings",
+      "bulletSaving",
+    ])}
+  </td>
+
+  {/* Livelihood Loan Support 1 */}
+  <td>
+    {getValue(r, [
+      "livelihoodLoanSupport1",
+      "livelihoodSupport1",
+      "livelihood1",
+      "loanSupport1",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "serviceCost1",
+    ])}
+  </td>
+
+  {/* Livelihood Loan Support 2 */}
+  <td>
+    {getValue(r, [
+      "livelihoodLoanSupport2",
+      "livelihoodSupport2",
+      "livelihood2",
+      "loanSupport2",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "serviceCost2",
+    ])}
+  </td>
+
+  {/* Overall row amount */}
+  <td>{getAmount(r)}</td>
+</tr>
             ))}
 
             <tr>
-  <td colSpan="8" style={{ fontWeight: "bold", textAlign: "right" }}>
-    Savings Total
+  <td colSpan="10" style={{ fontWeight: "bold" }}>
+     Total
   </td>
   <td style={{ fontWeight: "bold" }}>
-    {savingsTotal}
-  </td>
-</tr>
-
-<tr>
-  <td colSpan="8" style={{ fontWeight: "bold", textAlign: "right" }}>
-    Donation Total
-  </td>
-  <td style={{ fontWeight: "bold" }}>
-    {donationTotal}
-  </td>
-</tr>
-
-<tr>
-  <td colSpan="8" style={{ fontWeight: "bold", textAlign: "right" }}>
-    Overall Total
-  </td>
-  <td style={{ fontWeight: "bold" }}>
-    {overallReceiptTotal}
+    {totalAmount(receipts)}
   </td>
 </tr>
           </tbody>
