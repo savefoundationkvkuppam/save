@@ -24758,7 +24758,7 @@ const closingCash =
     <th colSpan="2">Livelihood Loan Support 1</th>
 
     <th colSpan="2">Livelihood Loan Support 2</th>
-    <th colSpan="2">A/C</th>
+    <th colSpan="4">A/C</th>
     <th rowSpan="2">Total</th>
   </tr>
 
@@ -24773,8 +24773,10 @@ const closingCash =
     <th>Principal</th>
     <th>Service Cost</th>
 
-    <th>A/C No.</th>
-    <th>Amount</th>
+    <th>A/C No. 1</th>
+    <th>Amount 1</th>
+    <th>A/C No. 2</th>
+    <th>Amount 2</th>
   </tr>
 </thead>
 
@@ -24851,6 +24853,11 @@ const closingCash =
     "accountAmount",
   ])}
 </td>
+     <td>
+     </td>
+
+     <td>
+     </td>
 
 <td>
   {Number(getAmount(r) || 0) +
@@ -24921,15 +24928,21 @@ const closingCash =
                 <td>{getAmount(r)}</td>
               </tr>
             ))}
+           <tr>
+  <td
+    colSpan="14"
+    style={{
+      fontWeight: "bold",
+      textAlign: "right",
+    }}
+  >
+    Total
+  </td>
 
-            <tr>
-              <td colSpan="4" style={{ fontWeight: "bold" }}>
-                Total
-              </td>
-              <td style={{ fontWeight: "bold" }}>
-                {totalAmount(payments)}
-              </td>
-            </tr>
+  <td style={{ fontWeight: "bold" }}>
+    {overallReceiptTotal}
+  </td>
+</tr>
           </tbody>
         </table>
 
