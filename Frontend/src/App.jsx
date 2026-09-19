@@ -24613,25 +24613,41 @@ const getPaymentParticular = (r) => {
         "recNumber",
         "voucherNo",
       ]);
-
       const getAmount = (r) => {
-  const directAmount = getValue(r, [
-    "amount",
-    "total",
-    "receiptAmount",
-    "paymentAmount",
-    "regularSavings",
-    "regularSaving",
-  ]);
-
-  if (directAmount !== "") {
-    return directAmount;
+  if (
+    r.transactionType === "Member Receipt"
+  ) {
+    return [
+      r.regularSavings,
+      r.bulletSavings,
+      r.specialSavingsAmount,
+      r.specialSavingsMoreAmount,
+      r.livelihoodLoanSupport1,
+      r.serviceCost1,
+      r.livelihoodLoanSupport2,
+      r.serviceCost2,
+      r.housingLoan,
+      r.housingServiceCost,
+    ].reduce(
+      (sum, value) => sum + (parseFloat(value) || 0),
+      0
+    );
   }
 
   if (
     r.transactionType === "Member Payment" ||
     r.transactionType === "Payment"
   ) {
+    const directAmount = getValue(r, [
+      "amount",
+      "total",
+      "paymentAmount",
+    ]);
+
+    if (directAmount !== "") {
+      return directAmount;
+    }
+
     return [
       r.savings,
       r.savingsIncentive,
@@ -24648,8 +24664,14 @@ const getPaymentParticular = (r) => {
     );
   }
 
-  return "";
+  return getValue(r, [
+    "amount",
+    "total",
+    "receiptAmount",
+    "paymentAmount",
+  ]);
 };
+     
     const getDate = (r) =>
       formatDate(
         getValue(r, [
@@ -24824,7 +24846,10 @@ const closingCash =
 </td>
 
 <td>
-  {getAmount(r)}
+  {getValue(r, [
+    "amount",
+    "accountAmount",
+  ])}
 </td>
 
 <td>{getAmount(r)}</td>
