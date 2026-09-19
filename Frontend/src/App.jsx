@@ -2133,8 +2133,35 @@ useEffect(() => {
   });
 
   const vazhvathrams = vazhvathramRecords
-     .map((record) => String(record.vazhvathramName || "").trim())
-     .filter(Boolean);
+  .filter(
+    (record) =>
+      !selectedCluster ||
+      String(record.clusterName || "").trim() ===
+        String(selectedCluster || "").trim()
+  )
+  .map((record) =>
+    String(record.vazhvathramName || "").trim()
+  )
+  .filter(Boolean);
+  useEffect(() => {
+  if (!selectedCluster) {
+    setSelectedVazhvathram("");
+    return;
+  }
+
+  if (vazhvathrams.length === 0) {
+    setSelectedVazhvathram("");
+    return;
+  }
+
+  if (!vazhvathrams.includes(selectedVazhvathram)) {
+    setSelectedVazhvathram(vazhvathrams[0]);
+  }
+}, [
+  selectedCluster,
+  vazhvathramRecords,
+  selectedVazhvathram,
+]);
 
   const [selectedVazhvathramRecordId, setSelectedVazhvathramRecordId] =
     useState(null);
@@ -7478,6 +7505,7 @@ const handleAuditorAdd = () => {
   // =========================================================
 
   const resetVazhvathram = () => {
+    setVazhvathramCluster("");
     setVazhvathramCode("001");
     setVazhvathramCodeSecond("");
     setVazhvathramName("");
@@ -7494,11 +7522,15 @@ const handleAuditorAdd = () => {
   };
 
   const loadVazhvathramRecord = (record) => {
-    setSelectedVazhvathramRecordId(record.id);
+  setSelectedVazhvathramRecordId(record.id);
 
-    setVazhvathramCode(
-      record.vazhvathramCode || ""
-    );
+  setVazhvathramCluster(
+    record.clusterName || ""
+  );
+
+  setVazhvathramCode(
+    record.vazhvathramCode || ""
+  );
 
     setVazhvathramCodeSecond(
       record.vazhvathramCodeSecond || ""
@@ -8328,7 +8360,7 @@ const handleAuditorAdd = () => {
       <div className="context-area">
         <div className="top-item">
           <label>Cluster</label>
-          <select value={selectedCluster} onChange={(e) => setSelectedCluster(e.target.value)}>
+          <select value={selectedCluster} onChange={(e) => {setSelectedCluster(e.target.value);setSelectedVazhvathram("");}}>
             {clusters.map((item, index) => <option key={index} value={item}>{item}</option>)}
           </select>
         </div>
