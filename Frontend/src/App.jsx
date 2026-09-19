@@ -24568,6 +24568,31 @@ sourceLabel =
         "particulars",
       ]);
 
+    const getPaymentParticular = (r) => {
+  if (
+    r.transactionType === "Member Payment" ||
+    r.transactionType === "Payment"
+  ) {
+    return getValue(r, [
+      "purpose",
+      "loanType",
+      "subPurpose",
+      "particulars",
+      "memberName",
+      "member",
+      "memberCode",
+    ]);
+  }
+
+  return getValue(r, [
+    "particulars",
+    "name",
+    "memberName",
+    "member",
+    "memberCode",
+  ]);
+};
+
     const getReceiptNo = (r) =>
       getValue(r, [
         "receiptNo",
@@ -24628,8 +24653,7 @@ sourceLabel =
     const value = Number(getAmount(r));
     return sum + (Number.isFinite(value) ? value : 0);
   }, 0);
-
-const savingsTotal = totalAmount(receipts);
+    const savingsTotal = totalAmount(receipts);
 
 const donationTotal = receipts.reduce((sum, r) => {
   const value = Number(
@@ -24643,6 +24667,10 @@ const donationTotal = receipts.reduce((sum, r) => {
 
 const overallReceiptTotal =
   savingsTotal + donationTotal;
+    const openingCash = 0;
+
+const closingCash =
+  openingCash + overallReceiptTotal - totalAmount(payments);
 
     return (
       <div
@@ -24695,7 +24723,7 @@ const overallReceiptTotal =
     <th colSpan="2">Livelihood Loan Support 1</th>
 
     <th colSpan="2">Livelihood Loan Support 2</th>
-
+    <th colSpan="2">A/C</th>
     <th rowSpan="2">Total</th>
   </tr>
 
@@ -24709,6 +24737,9 @@ const overallReceiptTotal =
 
     <th>Principal</th>
     <th>Service Cost</th>
+
+    <th>A/C No.</th>
+    <th>Amount</th>
   </tr>
 </thead>
 
@@ -24772,26 +24803,41 @@ const overallReceiptTotal =
       "loanSupport2",
     ])}
   </td>
+   <td>
+  {getValue(r, [
+    "serviceCost2",
+  ])}
+</td>
 
-  <td>
-    {getValue(r, [
-      "serviceCost2",
-    ])}
-  </td>
+<td>
+  {getValue(r, [
+    "accountNo",
+  ])}
+</td>
 
-  {/* Overall row amount */}
-  <td>{getAmount(r)}</td>
+<td>
+  {getAmount(r)}
+</td>
+
+<td>{getAmount(r)}</td>
+ 
 </tr>
             ))}
-
             <tr>
-  <td colSpan="10" style={{ fontWeight: "bold" }}>
-     Total
-  </td>
+              <td colSpan="12" style={{
+                fontWeight: "bold",
+                 textAlign: "right",
+              }}
+           >
+            Total
+        </td>
+
   <td style={{ fontWeight: "bold" }}>
-    {totalAmount(receipts)}
+    {overallReceiptTotal}
   </td>
 </tr>
+
+            
           </tbody>
         </table>
 
@@ -24826,7 +24872,7 @@ const overallReceiptTotal =
           <tbody>
             {payments.map((r, index) => (
               <tr key={r.id ?? `payment-${index}`}>
-                <td>{getMemberName(r) || "Cash"}</td>
+                <td>{getPaymentParticular(r) || "Cash"}</td>
                 <td>{getReceiptNo(r)}</td>
                 <td>
                   {getValue(r, [
@@ -24899,19 +24945,26 @@ const overallReceiptTotal =
             </table>
           </>
         )}
-
         <div
           style={{
-            marginTop: "18px",
-            borderTop: "1px solid #777",
-            paddingTop: "10px",
-            fontWeight: "bold",
+          marginTop: "18px",
+          borderTop: "1px solid #777",
+          paddingTop: "10px",
+          fontWeight: "bold",
           }}
-        >
-          Cash in Hand
-          <span style={{ float: "right" }}>
-            {totalAmount(receipts) - totalAmount(payments)}
-          </span>
+          >
+          <div>
+            Opening Cash
+            <span style={{ float: "right" }}>
+              {openingCash}
+            </span>
+          </div>
+          <div style={{ marginTop: "8px" }}>
+            Cash in Hand
+            <span style={{ float: "right" }}>
+              {closingCash}
+            </span>
+          </div>
         </div>
       </div>
     );
