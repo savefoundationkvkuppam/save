@@ -10,6 +10,7 @@ public class Vazhvathram {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String clusterName;
     private String vazhvathramCode;
     private String vazhvathramCodeSecond;
     private String vazhvathramName;
@@ -29,6 +30,13 @@ public class Vazhvathram {
 
     public Long getId() {
         return id;
+    }
+    public String getClusterName() {
+    return clusterName;
+    }
+
+    public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
     }
 
     public String getVazhvathramCode() {
