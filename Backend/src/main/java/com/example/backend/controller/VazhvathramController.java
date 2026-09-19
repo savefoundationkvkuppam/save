@@ -47,6 +47,8 @@ public class VazhvathramController {
 
         return repository.findById(id)
                 .map(existing -> {
+                    existing.setClusterName(
+                        updated.getClusterName());
 
                     existing.setVazhvathramCode(
                             updated.getVazhvathramCode());
