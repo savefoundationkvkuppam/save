@@ -91,6 +91,22 @@ public class Member {
         this.regionalMemberName = regionalMemberName;
     }
 
+    public String getClusterName() {
+         return clusterName;
+    }
+
+    public void setClusterName(String clusterName) {
+         this.clusterName = clusterName;
+    }
+
+    public String getVazhvathramName() {
+         return vazhvathramName;
+    }
+
+    public void setVazhvathramName(String vazhvathramName) {
+         this.vazhvathramName = vazhvathramName;
+    }
+
     public String getDesignation() {
         return designation;
     }
