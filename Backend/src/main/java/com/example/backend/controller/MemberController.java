@@ -47,6 +47,10 @@ public class MemberController {
 
                     existing.setRegionalMemberName(
                             updated.getRegionalMemberName());
+                    existing.setClusterName(
+                        updated.getClusterName());
+                    existing.setVazhvathramName(
+                        updated.getVazhvathramName());
 
                     existing.setDesignation(updated.getDesignation());
 
