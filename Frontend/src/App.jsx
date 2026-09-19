@@ -7810,6 +7810,8 @@ setMemberVazhvathram(
     setMemberMode("add");
     setSelectedMemberRecordId(null);
     resetMemberForm();
+    setMemberCluster(selectedCluster);
+    setMemberVazhvathram(selectedVazhvathram);
     setShowMemberList(false);
   };
 
