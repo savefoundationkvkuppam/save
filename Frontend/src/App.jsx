@@ -24765,17 +24765,12 @@ const closingCash =
   <td>
     {getValue(r, [
       "specialSavingsAmount",
-      "specialSavings",
-      "specialSaving",
-      "specSavings",
     ])}
   </td>
 
   <td>
     {getValue(r, [
       "specialSavingsMoreAmount",
-      "bulletSavings",
-      "bulletSaving",
     ])}
   </td>
 
