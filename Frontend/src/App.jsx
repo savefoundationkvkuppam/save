@@ -27753,7 +27753,7 @@ if (
     normalizeOB02(selectedVazhvathram);
 
   const selectedVazRecord =
-    vazhvathrams.find((record) => {
+      vazhvathramRecords.find((record) => {
       const code = normalizeOB02(
         record?.vazhvathramCode ||
         record?.code ||
