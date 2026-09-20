@@ -28601,7 +28601,7 @@ const expenditureRecords = [
     expenditureRows.length
   );
 
-  rows = Array.from(
+    rows = Array.from(
     { length: maxRows },
     (_, index) => ({
       expenditure:
@@ -28621,6 +28621,470 @@ const expenditureRecords = [
           ?.incomeAmount || 0,
     })
   );
+
+} else if (
+  openingBalanceSelection ===
+  "OB 05 - Balance Sheet Consolidation - vazhvathram"
+) {
+  // =========================================================
+  // OB 05 - BALANCE SHEET CONSOLIDATION - VAZHVATHRAM
+  // =========================================================
+
+  const normalizeOB05 = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const numberOB05 = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
+
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  };
+
+  // ---------------------------------------------------------
+  // SELECTED VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const selectedVazText =
+    normalizeOB05(selectedVazhvathram);
+
+  const selectedVazRecord =
+    vazhvathrams.find((record) => {
+      const code = normalizeOB05(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB05(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazText ||
+        name === selectedVazText
+      );
+    }) || null;
+
+  const vazCode =
+    selectedVazRecord?.vazhvathramCode ||
+    selectedVazRecord?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVazRecord?.vazhvathramName ||
+    selectedVazRecord?.name ||
+    "";
+
+  // ---------------------------------------------------------
+  // MEMBER → SELECTED CLUSTER / VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const memberBelongsToSelectedVazOB05 = (record) => {
+    const memberCode = normalizeOB05(
+      record?.memberCode ||
+      record?.member
+    );
+
+    if (!memberCode) {
+      return false;
+    }
+
+    const member = members.find(
+      (item) =>
+        normalizeOB05(
+          item?.memberCode
+        ) === memberCode
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      normalizeOB05(
+        member?.clusterName
+      ) ===
+        normalizeOB05(
+          selectedCluster
+        );
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      normalizeOB05(
+        member?.vazhvathramName
+      ) ===
+        normalizeOB05(
+          selectedVazhvathram
+        );
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  // ---------------------------------------------------------
+  // OTHER TRANSACTIONS → SELECTED VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const otherBelongsToSelectedVazOB05 = (record) => {
+    const text = normalizeOB05(
+      JSON.stringify(record || {})
+    );
+
+    if (!selectedVazText) {
+      return true;
+    }
+
+    return (
+      text.includes(selectedVazText) ||
+      (
+        vazCode &&
+        text.includes(
+          normalizeOB05(vazCode)
+        )
+      ) ||
+      (
+        vazName &&
+        text.includes(
+          normalizeOB05(vazName)
+        )
+      )
+    );
+  };
+
+  // ---------------------------------------------------------
+  // CONSOLIDATED FINANCIAL RECORDS
+  // ---------------------------------------------------------
+
+  const financialRecordsOB05 = [
+    ...(Array.isArray(memberReceipts)
+      ? memberReceipts.filter(
+          memberBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(memberPayments)
+      ? memberPayments.filter(
+          memberBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(memberJournals)
+      ? memberJournals.filter(
+          memberBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(otherReceipts)
+      ? otherReceipts.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(otherPayments)
+      ? otherPayments.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(otherJournals)
+      ? otherJournals.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(bankAccounts)
+      ? bankAccounts.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(fixedDeposits)
+      ? fixedDeposits.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+  ];
+
+  // ---------------------------------------------------------
+  // ACCOUNT NAME
+  // ---------------------------------------------------------
+
+  const accountNameOB05 = (record) => {
+    const values = [
+      record?.generalLedger,
+      record?.genLedger,
+      record?.generalLedgerName,
+      record?.accountName,
+      record?.ledgerName,
+      record?.subLedger,
+      record?.subledger,
+      record?.subLedgerMain,
+      record?.subLed1,
+      record?.subLed2,
+      record?.subLed3,
+      record?.subLed4,
+      record?.subLed5,
+      record?.subLed6,
+      record?.particulars,
+      record?.description,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  // ---------------------------------------------------------
+  // ACCOUNT CODE
+  // ---------------------------------------------------------
+
+  const accountCodeOB05 = (record) => {
+    const values = [
+      record?.generalLedgerCode,
+      record?.genLedgerCode,
+      record?.accountCode,
+      record?.ledgerCode,
+      record?.subLedgerCode,
+      record?.subledgerCode,
+      record?.code,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  // ---------------------------------------------------------
+  // AMOUNT
+  // ---------------------------------------------------------
+
+  const amountOB05 = (record) => {
+    const values = [
+      record?.amount,
+      record?.total,
+      record?.amountMain,
+      record?.amount1,
+      record?.amount2,
+      record?.amount3,
+      record?.amount4,
+      record?.amount5,
+      record?.amount6,
+      record?.receiptAmount,
+      record?.paymentAmount,
+      record?.fdAmount,
+      record?.balance,
+      record?.openingBalance,
+      record?.currentBalance,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        item !== ""
+    );
+
+    return numberOB05(value);
+  };
+
+  // ---------------------------------------------------------
+  // DEBIT / CREDIT
+  // ---------------------------------------------------------
+
+  const typeOB05 = (record) =>
+    normalizeOB05(
+      record?.debitCredit ||
+      record?.type ||
+      record?.type1 ||
+      record?.transactionType ||
+      ""
+    );
+
+  // ---------------------------------------------------------
+  // CONSOLIDATE SAME LEDGERS
+  // ---------------------------------------------------------
+
+  const ledgerMapOB05 = new Map();
+
+  financialRecordsOB05.forEach((record) => {
+    const name =
+      accountNameOB05(record);
+
+    if (!name) {
+      return;
+    }
+
+    const code =
+      accountCodeOB05(record);
+
+    const key =
+      `${code}|${name}`.toLowerCase();
+
+    const existing =
+      ledgerMapOB05.get(key) || {
+        code,
+        name,
+        debit: 0,
+        credit: 0,
+        balance: 0,
+      };
+
+    const amount =
+      amountOB05(record);
+
+    const type =
+      typeOB05(record);
+
+    if (
+      type.includes("credit") ||
+      type === "cr"
+    ) {
+      existing.credit += amount;
+    } else {
+      existing.debit += amount;
+    }
+
+    existing.balance =
+      existing.debit -
+      existing.credit;
+
+    ledgerMapOB05.set(
+      key,
+      existing
+    );
+  });
+
+  const ledgerRowsOB05 =
+    Array.from(
+      ledgerMapOB05.values()
+    );
+
+  // ---------------------------------------------------------
+  // LIABILITIES / ASSETS
+  // ---------------------------------------------------------
+
+  const liabilityRowsOB05 =
+    ledgerRowsOB05.filter(
+      (row) => row.balance < 0
+    );
+
+  const assetRowsOB05 =
+    ledgerRowsOB05.filter(
+      (row) => row.balance >= 0
+    );
+
+  const maxRowsOB05 =
+    Math.max(
+      liabilityRowsOB05.length,
+      assetRowsOB05.length
+    );
+
+  rows = Array.from(
+    { length: maxRowsOB05 },
+    (_, index) => {
+      const liability =
+        liabilityRowsOB05[index];
+
+      const asset =
+        assetRowsOB05[index];
+
+      return {
+        vazhvathramCode:
+          vazCode,
+
+        vazhvathramName:
+          vazName,
+
+        liabilityCode:
+          liability?.code || "",
+
+        liabilityName:
+          liability?.name || "",
+
+        liabilityAmount:
+          liability
+            ? Math.abs(
+                liability.balance
+              )
+            : 0,
+
+        assetCode:
+          asset?.code || "",
+
+        assetName:
+          asset?.name || "",
+
+        assetAmount:
+          asset
+            ? asset.balance
+            : 0,
+      };
+    }
+  );
+
+  const liabilityTotalOB05 =
+    liabilityRowsOB05.reduce(
+      (total, row) =>
+        total +
+        Math.abs(row.balance),
+      0
+    );
+
+  const assetTotalOB05 =
+    assetRowsOB05.reduce(
+      (total, row) =>
+        total + row.balance,
+      0
+    );
+
+  rows.push({
+    vazhvathramCode:
+      vazCode,
+
+    vazhvathramName:
+      vazName,
+
+    liabilityCode: "",
+    liabilityName: "Total",
+    liabilityAmount:
+      liabilityTotalOB05,
+
+    assetCode: "",
+    assetName: "Total",
+    assetAmount:
+      assetTotalOB05,
+  });
 
 } else {
   rows = [];
@@ -28665,9 +29129,11 @@ const expenditureRecords = [
    */
 
   if (
-    openingBalanceSelection ===
-    "OB 02 - Balance Sheet - vazhvathram"
-  ) {
+  openingBalanceSelection ===
+    "OB 02 - Balance Sheet - vazhvathram" ||
+  openingBalanceSelection ===
+    "OB 05 - Balance Sheet Consolidation - vazhvathram"
+) {
     const record = records[0] || {};
 
     const amount = (value) => {
@@ -28680,7 +29146,8 @@ const expenditureRecords = [
       return number.toFixed(0);
     };
 
-    const financialYearEnd = "31-03-2026";
+    const financialYearEnd =
+        CURRENT_FINANCIAL_YEAR.priorYearEndDate;
 
     const vazCode =
       record.vazhvathramCode ||
@@ -28714,7 +29181,11 @@ const expenditureRecords = [
             marginBottom: "2px",
           }}
         >
-          OB 02 - Balance Sheet as on {financialYearEnd}
+          {openingBalanceSelection ===
+             "OB 05 - Balance Sheet Consolidation - vazhvathram"
+              ? "OB 05 - Balance Sheet Consolidation as on"
+              : "OB 02 - Balance Sheet as on"}{" "}
+              {financialYearEnd}
         </div>
 
         <div
