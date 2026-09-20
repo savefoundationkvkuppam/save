@@ -2241,7 +2241,6 @@ useEffect(() => {
 }, [
   selectedCluster,
   selectedVazhvathram,
-  memberPaymentForm.memberCode,
 ]);
   const [selectedVazhvathramRecordId, setSelectedVazhvathramRecordId] =
     useState(null);
