@@ -22842,8 +22842,15 @@ const monthlyPayments =
       );
     }).length;
 
-      const rows = clusters.map(
-        (cluster) => ({
+      const rows = clusters
+  .filter(
+    (cluster) =>
+      !selectedCluster ||
+      String(cluster?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim()
+  )
+  .map(
+    (cluster) => ({
           "Cluster Code":
             cluster?.clusterCode || "",
           "Cluster Name":
