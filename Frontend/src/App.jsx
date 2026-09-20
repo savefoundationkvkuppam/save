@@ -22755,8 +22755,12 @@ if (item === "Mark Dissolved Gps") {
      */
 
     if (
-      selectedReport.startsWith("CL ")
-    ) {
+  selectedReport.startsWith("CL ")
+) {
+  const isFederationReport =
+    selectedReport
+      .toLowerCase()
+      .includes("federation");
       const monthlyReceipts =
   memberReceipts
     .filter(isInSelectedMonth)
@@ -22766,9 +22770,10 @@ if (item === "Mark Dissolved Gps") {
 
       return (
         member &&
-        (!selectedCluster ||
+        isFederationReport ||
+        !selectedCluster ||
           String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim())
+            String(selectedCluster || "").trim()
       );
     });
 
@@ -22781,9 +22786,10 @@ const monthlyPayments =
 
       return (
         member &&
-        (!selectedCluster ||
+        isFederationReport ||
+        !selectedCluster ||
           String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim())
+            String(selectedCluster || "").trim()
       );
     });
 
@@ -22834,15 +22840,17 @@ const monthlyPayments =
 
       return (
         member &&
-        (!selectedCluster ||
+        isFederationReport ||
+        !selectedCluster ||
           String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim())
+            String(selectedCluster || "").trim()
       );
     }).length;
 
       const rows = clusters
   .filter(
     (cluster) =>
+      isFederationReport ||
       !selectedCluster ||
       String(cluster?.clusterName || "").trim() ===
         String(selectedCluster || "").trim()
