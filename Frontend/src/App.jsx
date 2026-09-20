@@ -3060,8 +3060,6 @@ return () => {
     memberPaymentForm.specialSavingsAmount,
     memberPaymentForm.specialSavingsMoreAmount,
     memberPaymentForm.specialSavingsIncentive,
-    memberPaymentForm.loanAmount,
-    memberPaymentForm.instalmentAmount,
   ].reduce(
     (sum, value) => sum + (parseFloat(value) || 0),
     0
@@ -30360,8 +30358,6 @@ if (
       memberPaymentForm.specialSavingsAmount,
       memberPaymentForm.specialSavingsMoreAmount,
       memberPaymentForm.specialSavingsIncentive,
-      memberPaymentForm.loanAmount,
-      memberPaymentForm.instalmentAmount,
     ];
     const calculatedMemberPaymentTotal = totalValues.reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
 
