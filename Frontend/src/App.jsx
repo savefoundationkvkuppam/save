@@ -3936,6 +3936,17 @@ useEffect(() => {
       alert("Please enter Journal Date.");
       return;
     }
+    if (!String(memberJournalForm.member || "").trim()) {
+  alert("Please select a Member.");
+  return;
+}
+
+if (!isMemberInCurrentContext(memberJournalForm.member)) {
+  alert(
+    "Please select a Member from the currently selected Cluster / Vazhvathram."
+  );
+  return;
+}
 
     try {
       setMemberJournalLoading(true);
@@ -3986,10 +3997,18 @@ useEffect(() => {
   };
 
   const selectMemberJournal = (record) => {
-    setMemberJournalForm({ ...emptyMemberJournal, ...record });
-    setSelectedMemberJournalId(record.id);
-    setMemberJournalMode("view");
-  };
+  // Make sure the journal belongs to the currently selected context
+  if (!isMemberInCurrentContext(record.member)) {
+    alert(
+      "This Member Journal does not belong to the selected Cluster / Vazhvathram."
+    );
+    return;
+  }
+
+  setMemberJournalForm({ ...emptyMemberJournal, ...record });
+  setSelectedMemberJournalId(record.id);
+  setMemberJournalMode("view");
+};
 
   const deleteMemberJournal = async (record) => {
     if (!record?.id) return;
