@@ -27778,9 +27778,10 @@ if (
     "";
 
   const vazName =
-    selectedVazRecord?.vazhvathramName ||
-    selectedVazRecord?.name ||
-    "";
+  selectedVazRecord?.vazhvathramName ||
+  selectedVazRecord?.name ||
+  selectedVazhvathram ||
+  "";
 
   const belongsToVazOB02 = (record) => {
     const text = normalizeOB02(
