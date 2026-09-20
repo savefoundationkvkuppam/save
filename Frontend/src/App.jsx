@@ -29146,8 +29146,7 @@ const expenditureRecords = [
       return number.toFixed(0);
     };
 
-    const financialYearEnd =
-        CURRENT_FINANCIAL_YEAR.priorYearEndDate;
+    const financialYearEnd = "31-03-2026";
 
     const vazCode =
       record.vazhvathramCode ||
