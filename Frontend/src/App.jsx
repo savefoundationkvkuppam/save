@@ -28101,7 +28101,7 @@ if (
     normalizeOB03(selectedVazhvathram);
 
   const selectedVazRecord =
-    vazhvathrams.find((record) => {
+  vazhvathramRecords.find((record) => {
       const code = normalizeOB03(
         record?.vazhvathramCode ||
         record?.code ||
