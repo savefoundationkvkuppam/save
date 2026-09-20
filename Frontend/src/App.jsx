@@ -28688,9 +28688,10 @@ const expenditureRecords = [
     "";
 
   const vazName =
-    selectedVazRecord?.vazhvathramName ||
-    selectedVazRecord?.name ||
-    "";
+  selectedVazRecord?.vazhvathramName ||
+  selectedVazRecord?.name ||
+  selectedVazhvathram ||
+  "";
 
   // ---------------------------------------------------------
   // MEMBER → SELECTED CLUSTER / VAZHVATHRAM
@@ -29155,7 +29156,8 @@ const expenditureRecords = [
     const vazName =
       record.vazhvathramName ||
       record.vazName ||
-      "";
+      selectedVazhvathram ||
+     "";
 
     return (
       <div
