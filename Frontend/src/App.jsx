@@ -23507,23 +23507,67 @@ const renderConfirmationReportResults = () => {
      * =========================================================
      */
 
-    const [memberJournalsData, otherJournalsData] =
-      await Promise.all([
-        apiRequest("/member-journals"),
-        apiRequest("/other-journals"),
-      ]);
+   const [
+  memberJournalsData,
+  otherJournalsData,
+  memberData,
+] = await Promise.all([
+  apiRequest("/member-journals"),
+  apiRequest("/other-journals"),
+  apiRequest("/members"),
+]);
 
-    const memberJournals = Array.isArray(
-      memberJournalsData
-    )
-      ? memberJournalsData
-      : [];
+const memberJournals = Array.isArray(
+  memberJournalsData
+)
+  ? memberJournalsData
+  : [];
 
-    const otherJournals = Array.isArray(
-      otherJournalsData
-    )
-      ? otherJournalsData
-      : [];
+const otherJournals = Array.isArray(
+  otherJournalsData
+)
+  ? otherJournalsData
+  : [];
+
+const members = Array.isArray(memberData)
+  ? memberData
+  : [];
+    const memberBelongsToSelectedContext = (record) => {
+  const memberCode =
+    record?.memberCode ||
+    record?.member?.memberCode ||
+    record?.member ||
+    "";
+
+  const member = members.find(
+    (item) =>
+      String(item?.memberCode || "")
+        .trim()
+        .toLowerCase() ===
+      String(memberCode)
+        .trim()
+        .toLowerCase()
+  );
+
+  if (!member) {
+    return false;
+  }
+
+  const clusterMatches =
+    !selectedCluster ||
+    String(member?.clusterName || "").trim() ===
+      String(selectedCluster || "").trim();
+
+  const vazhvathramMatches =
+    !selectedVazhvathram ||
+    String(member?.vazhvathramName || "").trim() ===
+      String(selectedVazhvathram || "").trim();
+
+  return (
+    clusterMatches &&
+    vazhvathramMatches
+  );
+};
 
     /*
      * =========================================================
@@ -23672,11 +23716,14 @@ const renderConfirmationReportResults = () => {
      * DATE FILTER
      * =========================================================
      */
+const filteredMemberRows = memberRows.filter(
+  memberBelongsToSelectedContext
+);
 
-    const allRows = [
-      ...memberRows,
-      ...otherRows,
-    ].filter(isInDateRange);
+const allRows = [
+  ...filteredMemberRows,
+  ...otherRows,
+].filter(isInDateRange);
 
     /*
      * Sort oldest -> newest.
