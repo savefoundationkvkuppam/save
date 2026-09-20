@@ -2633,10 +2633,46 @@ const hasMemberOutstandingLoan = (
 
     const loadMemberReceipts = async () => {
       try {
-        const data = await apiRequest("/member-receipts");
-        if (!cancelled) {
-          setMemberReceiptRecords(Array.isArray(data) ? data : []);
-        }
+        const [receiptData, memberData] = await Promise.all([
+  apiRequest("/member-receipts"),
+  apiRequest("/members"),
+]);
+
+if (!cancelled) {
+  const receipts = Array.isArray(receiptData)
+    ? receiptData
+    : [];
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const filteredReceipts = receipts.filter((receipt) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "").trim().toLowerCase() ===
+        String(receipt?.memberCode || "").trim().toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return clusterMatches && vazhvathramMatches;
+  });
+
+  setMemberReceiptRecords(filteredReceipts);
+}
       } catch (error) {
         console.error("Could not load Member Receipt data:", error);
       }
@@ -2647,7 +2683,7 @@ const hasMemberOutstandingLoan = (
     return () => {
       cancelled = true;
     };
-  }, []);
+    }, [selectedCluster, selectedVazhvathram]);
 
   const saveMemberReceipt = async () => {
     if (!memberReceiptForm.receiptDate.trim()) {
