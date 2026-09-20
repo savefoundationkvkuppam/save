@@ -2987,16 +2987,57 @@ if (!cancelled) {
   useEffect(() => {
     let cancelled = false;
     const loadMemberPayments = async () => {
-      try {
-        const data = await apiRequest("/member-payments");
-        if (!cancelled) setMemberPaymentRecords(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Could not load Member Payment data:", error);
-      }
-    };
-    loadMemberPayments();
-    return () => { cancelled = true; };
-  }, []);
+  try {
+    const [paymentData, memberData] = await Promise.all([
+      apiRequest("/member-payments"),
+      apiRequest("/members"),
+    ]);
+
+    if (!cancelled) {
+      const payments = Array.isArray(paymentData)
+        ? paymentData
+        : [];
+
+      const members = Array.isArray(memberData)
+        ? memberData
+        : [];
+
+      const filteredPayments = payments.filter((payment) => {
+        const member = members.find(
+          (item) =>
+            String(item?.memberCode || "").trim().toLowerCase() ===
+            String(payment?.memberCode || "").trim().toLowerCase()
+        );
+
+        if (!member) {
+          return false;
+        }
+
+        const clusterMatches =
+          !selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim();
+
+        const vazhvathramMatches =
+          !selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim();
+
+        return clusterMatches && vazhvathramMatches;
+      });
+
+      setMemberPaymentRecords(filteredPayments);
+    }
+  } catch (error) {
+    console.error("Could not load Member Payment data:", error);
+  }
+};
+   loadMemberPayments();
+
+return () => {
+  cancelled = true;
+};
+}, [selectedCluster, selectedVazhvathram]);
 
   const saveMemberPayment = async () => {
     if (!memberPaymentForm.voucherDate.trim()) {
@@ -3612,25 +3653,62 @@ if (!cancelled) {
     let cancelled = false;
 
     const loadMemberJournals = async () => {
-      try {
-        setMemberJournalLoading(true);
-        const data = await apiRequest("/member-journals");
-        if (!cancelled) {
-          setMemberJournalRecords(Array.isArray(data) ? data : []);
+  try {
+    setMemberJournalLoading(true);
+
+    const [journalData, memberData] = await Promise.all([
+      apiRequest("/member-journals"),
+      apiRequest("/members"),
+    ]);
+
+    if (!cancelled) {
+      const journals = Array.isArray(journalData)
+        ? journalData
+        : [];
+
+      const members = Array.isArray(memberData)
+        ? memberData
+        : [];
+
+      const filteredJournals = journals.filter((journal) => {
+        const member = members.find(
+          (item) =>
+            String(item?.memberCode || "").trim().toLowerCase() ===
+            String(journal?.member || "").trim().toLowerCase()
+        );
+
+        if (!member) {
+          return false;
         }
-      } catch (error) {
-        console.error("Could not load Member Journal data:", error);
-      } finally {
-        if (!cancelled) setMemberJournalLoading(false);
-      }
-    };
+
+        const clusterMatches =
+          !selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim();
+
+        const vazhvathramMatches =
+          !selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim();
+
+        return clusterMatches && vazhvathramMatches;
+      });
+
+      setMemberJournalRecords(filteredJournals);
+    }
+  } catch (error) {
+    console.error("Could not load Member Journal data:", error);
+  } finally {
+    if (!cancelled) setMemberJournalLoading(false);
+  }
+};
 
     loadMemberJournals();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedCluster, selectedVazhvathram]);
 
   const saveMemberJournal = async () => {
     if (!String(memberJournalForm.date || "").trim()) {
@@ -24443,10 +24521,158 @@ const renderConfirmationReportResults = () => {
       setFinancialReportLoading(true); setFinancialReportStatus(""); setFinancialReportResults([]);
       try {
         let rows=[]; let sourceLabel="";
-        if (financialReportSelection === "Cash Book - FR01") {
-          const [mr,or,mp,op,mj,oj]=await Promise.all([loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts"),loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/other-payments"),loadFinancialEndpoint("/member-journals"),loadFinancialEndpoint("/other-journals")]);
-          rows=[...mr.map(r=>({...r,transactionType:"Member Receipt"})),...or.map(r=>({...r,transactionType:"Other Receipt"})),...mp.map(r=>({...r,transactionType:"Member Payment"})),...op.map(r=>({...r,transactionType:"Other Payment"})),...mj.map(r=>({...r,transactionType:"Member Journal"})),...oj.map(r=>({...r,transactionType:"Other Journal"}))]; sourceLabel="existing receipt, payment and journal tables";
-          } else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
+       if (financialReportSelection === "Cash Book - FR01") {
+  const [
+    mr,
+    or,
+    mp,
+    op,
+    mj,
+    oj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/other-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const memberBelongsToSelectedContext = (record) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode || ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberReceipts =
+    mr.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberPayments =
+    mp.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberJournals =
+    mj.filter((record) => {
+      const member = members.find(
+        (item) =>
+          String(item?.memberCode || "")
+            .trim()
+            .toLowerCase() ===
+          String(record?.member || "")
+            .trim()
+            .toLowerCase()
+      );
+
+      if (!member) {
+        return false;
+      }
+
+      const clusterMatches =
+        !selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim();
+
+      const vazhvathramMatches =
+        !selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim();
+
+      return (
+        clusterMatches &&
+        vazhvathramMatches
+      );
+    });
+
+  rows = [
+    ...filteredMemberReceipts.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Receipt",
+      })
+    ),
+
+    ...or.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Receipt",
+      })
+    ),
+
+    ...filteredMemberPayments.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Payment",
+      })
+    ),
+
+    ...op.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Payment",
+      })
+    ),
+
+    ...filteredMemberJournals.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Journal",
+      })
+    ),
+
+    ...oj.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Journal",
+      })
+    ),
+  ];
+
+  sourceLabel =
+    "existing receipt, payment and journal tables";
+}
+        else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
          const [mr, or, mp, op, bankAccounts] = await Promise.all([
   loadFinancialEndpoint("/member-receipts"),
   loadFinancialEndpoint("/other-receipts"),
