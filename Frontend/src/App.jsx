@@ -2241,7 +2241,6 @@ useEffect(() => {
 }, [
   selectedCluster,
   selectedVazhvathram,
-  memberRecords,
   memberPaymentForm.memberCode,
 ]);
   const [selectedVazhvathramRecordId, setSelectedVazhvathramRecordId] =
