@@ -4144,7 +4144,7 @@ if (!isMemberInCurrentContext(memberJournalForm.member)) {
         case "LI02 - Payment List":
         case "LI09 - Payment Edit List - Before Locking":
           records = [
-            ...memberPaymentRecords.map((record) => ({
+            ...filterTransactionsByContext(memberPaymentRecords).map((record) => ({
               ...record,
               _type: "Member Payment",
               _number: record.voucherNo,
@@ -4167,7 +4167,11 @@ if (!isMemberInCurrentContext(memberJournalForm.member)) {
         case "LI04 - Manual Journal List":
         case "LI10 - Journal Edit List - Before Locking":
           records = [
-            ...memberJournalRecords.map((record) => ({
+            ...memberJournalRecords
+                .filter((record) =>
+                  isMemberInCurrentContext(record.member)
+                  )
+                 .map((record) => ({
               ...record,
               _type: "Member Journal",
               _number: record.jrNo,
@@ -28477,32 +28481,76 @@ if (
     "";
 
   const belongsToVaz = (record) => {
-    const text =
-      JSON.stringify(record || {})
-        .toLowerCase();
+  const text =
+    JSON.stringify(record || {})
+      .toLowerCase();
 
-    const code =
-      normalizeOB(vazCode);
+  const code =
+    normalizeOB(vazCode);
 
-    const name =
-      normalizeOB(vazName);
+  const name =
+    normalizeOB(vazName);
 
-    return (
-      !code ||
-      text.includes(code) ||
-      (name && text.includes(name))
-    );
-  };
+  return (
+    !code ||
+    text.includes(code) ||
+    (name && text.includes(name))
+  );
+};
+
+// ---------------------------------------------------------
+// MEMBER TRANSACTIONS — use Member → Cluster/Vazhvathram
+// relationship instead of searching the whole JSON text.
+// ---------------------------------------------------------
+const memberBelongsToVaz = (record) => {
+  const memberCode = String(
+    record?.memberCode ||
+    record?.member ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!memberCode) {
+    return false;
+  }
+
+  const member = members.find(
+    (item) =>
+      String(item?.memberCode || "")
+        .trim()
+        .toLowerCase() === memberCode
+  );
+
+  if (!member) {
+    return false;
+  }
+
+  const clusterMatches =
+    !selectedCluster ||
+    String(member?.clusterName || "").trim() ===
+      String(selectedCluster || "").trim();
+
+  const vazhvathramMatches =
+    !selectedVazhvathram ||
+    String(member?.vazhvathramName || "").trim() ===
+      String(selectedVazhvathram || "").trim();
+
+  return (
+    clusterMatches &&
+    vazhvathramMatches
+  );
+};
 
   const incomeRecords = [
-    ...memberReceipts,
-    ...otherReceipts,
-  ].filter(belongsToVaz);
+  ...memberReceipts.filter(memberBelongsToVaz),
+  ...otherReceipts.filter(belongsToVaz),
+];
 
-  const expenditureRecords = [
-    ...memberPayments,
-    ...otherPayments,
-  ].filter(belongsToVaz);
+const expenditureRecords = [
+  ...memberPayments.filter(memberBelongsToVaz),
+  ...otherPayments.filter(belongsToVaz),
+];
 
   const incomeRows =
     incomeRecords.map(
