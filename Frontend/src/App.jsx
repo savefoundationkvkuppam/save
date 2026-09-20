@@ -21706,15 +21706,23 @@ if (item === "Mark Dissolved Gps") {
       );
 
       setMisReportResults(
-        selectedVazhvathramRecord
-          ? rows.filter(
-              (row) =>
-                row["Vazhvathram Code"] ===
-                selectedVazhvathramRecord.vazhvathramCode
-            )
-          : rows
-      );
+  rows.filter((row) => {
+    const clusterMatches =
+      !selectedCluster ||
+      String(row["Cluster Name"] || "").trim() ===
+        String(selectedCluster || "").trim();
 
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(row["Vazhvathram Name"] || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  })
+);
       setMisReportStatus(
         `KL 01 generated successfully. ${rows.length} Vazhvathram record${rows.length === 1 ? "" : "s"} loaded.`
       );
@@ -21733,7 +21741,17 @@ if (item === "Mark Dissolved Gps") {
       selectedReport ===
       "KL 02 - Member Details"
     ) {
-      const rows = members.map(
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
         (member) => ({
           "Member Code":
             getMemberCode(member),
@@ -21787,7 +21805,17 @@ if (item === "Mark Dissolved Gps") {
       selectedReport ===
       "KL 03A - Member details-Designation"
     ) {
-      const rows = members.map(
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
         (member) => ({
           "Member Code":
             getMemberCode(member),
@@ -21826,7 +21854,17 @@ if (item === "Mark Dissolved Gps") {
       selectedReport ===
       "KL 03B - Member details-Social economic Categorization"
     ) {
-      const rows = members.map(
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
         (member) => ({
           "Member Code":
             getMemberCode(member),
@@ -21865,7 +21903,17 @@ if (item === "Mark Dissolved Gps") {
       selectedReport ===
       "KL 03C - Member details-Family Categorization"
     ) {
-      const rows = members.map(
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
         (member) => ({
           "Member Code":
             getMemberCode(member),
@@ -21902,7 +21950,17 @@ if (item === "Mark Dissolved Gps") {
       selectedReport ===
       "KL 04 - vazhvathram Management Information Report"
     ) {
-      const rows = vazhvathrams.map(
+      const rows = vazhvathrams
+  .filter(
+    (record) =>
+      (!selectedCluster ||
+        String(record?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(record?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
         (record) => ({
           "Vazhvathram Code":
             record?.vazhvathramCode || "",
@@ -21957,9 +22015,22 @@ if (item === "Mark Dissolved Gps") {
       /^KL 05/.test(selectedReport)
     ) {
       const monthlyPayments =
-        memberPayments.filter(
-          isInSelectedMonth
-        );
+  memberPayments
+    .filter(isInSelectedMonth)
+    .filter((payment) => {
+      const member =
+        getRecordMember(payment);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
       let rows = monthlyPayments.map(
         (payment) => {
@@ -22020,7 +22091,16 @@ if (item === "Mark Dissolved Gps") {
         "KL 05B - Member without Livelihood Loan Support"
       ) {
         rows = members
-          .filter((member) => {
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .filter((member) => {
             const code =
               String(
                 getMemberCode(member)
@@ -22059,7 +22139,17 @@ if (item === "Mark Dissolved Gps") {
         selectedReport ===
         "KL 05C - Member Total Loan O/S"
       ) {
-        rows = members.map(
+        rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
           (member) => {
             const code = String(
               getMemberCode(member)
@@ -22121,7 +22211,17 @@ if (item === "Mark Dissolved Gps") {
         selectedReport ===
         "KL 05D - Member Total Loan O/S OD"
       ) {
-        rows = members.map(
+        rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
           (member) => {
             const code = String(
               getMemberCode(member)
@@ -22204,9 +22304,22 @@ if (item === "Mark Dissolved Gps") {
       "KL 06 - Regular Savings - Demand Vs. Collection"
     ) {
       const receipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
       const grouped = {};
 
@@ -22274,9 +22387,22 @@ if (item === "Mark Dissolved Gps") {
       "KL 07 - Special Savings Report"
     ) {
       const receipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
       const rows = receipts.map(
         (receipt) => ({
@@ -22331,8 +22457,22 @@ if (item === "Mark Dissolved Gps") {
       const grouped = {};
 
       memberReceipts
-        .filter(isInSelectedMonth)
-        .forEach((receipt) => {
+  .filter(isInSelectedMonth)
+  .filter((receipt) => {
+    const member =
+      getRecordMember(receipt);
+
+    return (
+      member &&
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+    );
+  })
+  .forEach((receipt) => {
           const code =
             receipt?.memberCode ||
             receipt?.memberName ||
@@ -22390,8 +22530,22 @@ if (item === "Mark Dissolved Gps") {
       const grouped = {};
 
       memberReceipts
-        .filter(isInSelectedMonth)
-        .forEach((receipt) => {
+  .filter(isInSelectedMonth)
+  .filter((receipt) => {
+    const member =
+      getRecordMember(receipt);
+
+    return (
+      member &&
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+    );
+  })
+  .forEach((receipt) => {
           const code =
             receipt?.memberCode ||
             receipt?.memberName ||
@@ -22472,9 +22626,22 @@ if (item === "Mark Dissolved Gps") {
       "KL 10 - Member wise Savings and Interest - Monthwise"
     ) {
       const receipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
       const grouped = {};
 
@@ -22538,9 +22705,22 @@ if (item === "Mark Dissolved Gps") {
       "KL 10A - Member wise Special Savings and Interest - Monthwise"
     ) {
       const receipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
       const rows = receipts.map(
         (receipt) => ({
@@ -22580,14 +22760,34 @@ if (item === "Mark Dissolved Gps") {
       selectedReport.startsWith("CL ")
     ) {
       const monthlyReceipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
 
-      const monthlyPayments =
-        memberPayments.filter(
-          isInSelectedMonth
-        );
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim())
+      );
+    });
+
+const monthlyPayments =
+  memberPayments
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim())
+      );
+    });
 
       const totalSavings =
         monthlyReceipts.reduce(
@@ -22628,9 +22828,19 @@ if (item === "Mark Dissolved Gps") {
         );
 
       const attended =
-        attendances.filter(
-          isInSelectedMonth
-        ).length;
+  attendances
+    .filter(isInSelectedMonth)
+    .filter((attendance) => {
+      const member =
+        getRecordMember(attendance);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim())
+      );
+    }).length;
 
       const rows = clusters.map(
         (cluster) => ({
@@ -23796,7 +24006,15 @@ const allRows = [
       journalReportSelection ===
       "JR02 - Manual Journal Report - vazhvathram"
     ) {
-      const rows = allRows.map(
+      const rows = allRows
+          .filter(
+            (record) =>
+              record["Journal Source"] ===
+                 "Member Journal" ||
+              record["Journal Source"] ===
+                  "Other Journal"
+         )
+         .map(
         (record) => ({
           "Journal Source":
             record["Journal Source"],
@@ -23838,7 +24056,15 @@ const allRows = [
       journalReportSelection ===
       "JR03 - Auto Journal Report - vazhvathram"
     ) {
-      const rows = allRows.map(
+      const rows = allRows
+  .filter(
+    (record) =>
+      record["Journal Source"] ===
+        "Member Journal" ||
+      record["Journal Source"] ===
+        "Other Journal"
+  )
+  .map(
         (record) => ({
           "Journal Source":
             record["Journal Source"],
@@ -23880,7 +24106,19 @@ const allRows = [
       journalReportSelection ===
       "JR04 - Complete Journal Report - Cluster"
     ) {
-      const rows = allRows.map(
+      const rows = allRows
+  .filter((record) => {
+    if (
+      record["Journal Source"] ===
+      "Member Journal"
+    ) {
+      return record["Member Code"] &&
+        memberBelongsToSelectedContext(record);
+    }
+
+    return true;
+  })
+  .map(
         (record) => ({
           "Report Level":
             "Cluster",
@@ -23924,7 +24162,21 @@ const allRows = [
       journalReportSelection ===
       "JR05 - Manual Journal Report - Cluster"
     ) {
-      const rows = allRows.map(
+      const rows = allRows
+  .filter((record) => {
+    if (
+      record["Journal Source"] ===
+      "Member Journal"
+    ) {
+      return (
+        record["Member Code"] &&
+        memberBelongsToSelectedContext(record)
+      );
+    }
+
+    return true;
+  })
+  .map(
         (record) => ({
           "Report Level":
             "Cluster",
@@ -23968,7 +24220,21 @@ const allRows = [
       journalReportSelection ===
       "JR06 - Auto Journal Report - Cluster"
     ) {
-      const rows = allRows.map(
+      const rows = allRows
+  .filter((record) => {
+    if (
+      record["Journal Source"] ===
+      "Member Journal"
+    ) {
+      return (
+        record["Member Code"] &&
+        memberBelongsToSelectedContext(record)
+      );
+    }
+
+    return true;
+  })
+  .map(
         (record) => ({
           "Report Level":
             "Cluster",
