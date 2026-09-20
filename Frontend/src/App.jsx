@@ -2055,6 +2055,64 @@ useEffect(() => {
   const [selectedVazhvathram, setSelectedVazhvathram] = useState("");
 
   // =========================================================
+// GLOBAL CONTEXT FILTER
+// Cluster → Vazhvathram → Member → Transactions
+// =========================================================
+
+const getContextMembers = () => {
+  return memberRecords.filter((member) => {
+    const memberCluster = String(
+      member.clusterName || ""
+    ).trim();
+
+    const memberVazhvathram = String(
+      member.vazhvathramName || ""
+    ).trim();
+
+    const clusterMatches =
+      !selectedCluster ||
+      memberCluster === String(selectedCluster).trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      memberVazhvathram ===
+        String(selectedVazhvathram).trim();
+
+    return clusterMatches && vazhvathramMatches;
+  });
+};
+
+const getContextMemberCodes = () => {
+  return getContextMembers()
+    .map((member) =>
+      String(member.memberCode || "").trim()
+    )
+    .filter(Boolean);
+};
+
+const isMemberInCurrentContext = (memberCode) => {
+  const code = String(memberCode || "").trim();
+
+  if (!code) {
+    return false;
+  }
+
+  return getContextMemberCodes().includes(code);
+};
+
+const filterTransactionsByContext = (records) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  return records.filter((record) =>
+    isMemberInCurrentContext(
+      record.memberCode
+    )
+  );
+};
+
+  // =========================================================
   // CLUSTER
   // =========================================================
 
