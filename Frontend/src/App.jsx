@@ -22906,24 +22906,76 @@ const monthlyPayments =
       selectedReport.startsWith("BL ")
     ) {
       const uptoReceipts =
-        memberReceipts.filter(
-          isUptoSelectedMonth
-        );
+  memberReceipts
+    .filter(isUptoSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
 
-      const uptoPayments =
-        memberPayments.filter(
-          isUptoSelectedMonth
-        );
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
-      const monthlyReceipts =
-        memberReceipts.filter(
-          isInSelectedMonth
-        );
+const uptoPayments =
+  memberPayments
+    .filter(isUptoSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
 
-      const monthlyPayments =
-        memberPayments.filter(
-          isInSelectedMonth
-        );
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+const monthlyReceipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+const monthlyPayments =
+  memberPayments
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
 
       const totalRegularSavings =
         uptoReceipts.reduce(
@@ -22987,13 +23039,37 @@ const monthlyPayments =
         "Month":
           selectedMonth,
         "Vazhvathrams":
-          vazhvathrams.length,
-        "Clusters":
-          clusters.length,
-        "Members":
-          members.length,
-        "Bank Accounts":
-          bankAccounts.length,
+  vazhvathrams.filter(
+    (record) =>
+      (!selectedCluster ||
+        String(record?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(record?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  ).length,
+
+"Clusters":
+  clusters.filter(
+    (record) =>
+      !selectedCluster ||
+      String(record?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim()
+  ).length,
+
+"Members":
+  members.filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  ).length,
+
+"Bank Accounts":
+  bankAccounts.length,
         "Regular Savings":
           totalRegularSavings,
         "Special Savings":
