@@ -2220,7 +2220,30 @@ const filterTransactionsByContext = (records) => {
   vazhvathramRecords,
   selectedVazhvathram,
 ]);
+useEffect(() => {
+  if (!memberPaymentForm.memberCode) {
+    return;
+  }
 
+  const memberStillExists = getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(memberPaymentForm.memberCode || "").trim()
+  );
+
+  if (!memberStillExists) {
+    setMemberPaymentForm((previous) => ({
+      ...previous,
+      memberCode: "",
+      memberName: "",
+    }));
+  }
+}, [
+  selectedCluster,
+  selectedVazhvathram,
+  memberRecords,
+  memberPaymentForm.memberCode,
+]);
   const [selectedVazhvathramRecordId, setSelectedVazhvathramRecordId] =
     useState(null);
 
@@ -2579,6 +2602,35 @@ const getMemberDisplayName = (memberIdOrCode, memberName = "") => {
   const [memberReceiptMode, setMemberReceiptMode] = useState("view");
 
   // =========================================================
+// CLEAR INVALID MEMBER RECEIPT MEMBER
+// =========================================================
+
+useEffect(() => {
+  if (!memberReceiptForm.memberCode) {
+    return;
+  }
+
+  const memberStillExists = getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(memberReceiptForm.memberCode || "").trim()
+  );
+
+  if (!memberStillExists) {
+    setMemberReceiptForm((previous) => ({
+      ...previous,
+      memberCode: "",
+      memberName: "",
+    }));
+  }
+}, [
+  selectedCluster,
+  selectedVazhvathram,
+  memberRecords,
+  memberReceiptForm.memberCode,
+]);
+
+  // =========================================================
 // MEMBER RECEIPT - LOAN ELIGIBILITY
 // A loan repayment field is enabled only when the selected
 // member has an outstanding loan of that type.
@@ -2752,6 +2804,12 @@ if (!cancelled) {
       alert("Please select a Member.");
       return;
     }
+    if (!isMemberInCurrentContext(memberReceiptForm.memberCode)) {
+  alert(
+    "Please select a Member from the currently selected Cluster / Vazhvathram."
+  );
+  return;
+}
 
     try {
       setMemberReceiptLoading(true);
@@ -2795,10 +2853,18 @@ if (!cancelled) {
   };
 
   const selectMemberReceipt = (record) => {
-    setSelectedMemberReceiptId(record.id);
-    setMemberReceiptForm({ ...emptyMemberReceipt, ...record });
-    setMemberReceiptMode("view");
-  };
+  // Make sure the receipt belongs to the currently selected context
+  if (!isMemberInCurrentContext(record.memberCode)) {
+    alert(
+      "This Member Receipt does not belong to the selected Cluster / Vazhvathram."
+    );
+    return;
+  }
+
+  setSelectedMemberReceiptId(record.id);
+  setMemberReceiptForm({ ...emptyMemberReceipt, ...record });
+  setMemberReceiptMode("view");
+};
 
   const deleteMemberReceipt = async (record) => {
     if (!record?.id) return;
@@ -2863,10 +2929,39 @@ if (!cancelled) {
   };
 
   const [memberPaymentForm, setMemberPaymentForm] = useState(emptyMemberPayment);
+  const [memberPaymentMode, setMemberPaymentMode] = useState("view");
   const [memberPaymentRecords, setMemberPaymentRecords] = useState([]);
   const [memberPaymentLoading, setMemberPaymentLoading] = useState(false);
   const [selectedMemberPaymentId, setSelectedMemberPaymentId] = useState(null);
-  const [memberPaymentMode, setMemberPaymentMode] = useState("view");
+
+  // =========================================================
+// CLEAR INVALID MEMBER PAYMENT MEMBER
+// =========================================================
+
+useEffect(() => {
+  if (!memberPaymentForm.memberCode) {
+    return;
+  }
+
+  const memberStillExists = getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(memberPaymentForm.memberCode || "").trim()
+  );
+
+  if (!memberStillExists) {
+    setMemberPaymentForm((previous) => ({
+      ...previous,
+      memberCode: "",
+      memberName: "",
+    }));
+  }
+}, [
+  selectedCluster,
+  selectedVazhvathram,
+  memberRecords,
+  memberPaymentForm.memberCode,
+]);
 
   // =========================================================
   // OTHER PAYMENT
@@ -3106,6 +3201,12 @@ return () => {
       alert("Please select a Member.");
       return;
     }
+    if (!isMemberInCurrentContext(memberPaymentForm.memberCode)) {
+  alert(
+    "Please select a Member from the currently selected Cluster / Vazhvathram."
+  );
+  return;
+}
 
     try {
       setMemberPaymentLoading(true);
@@ -3162,10 +3263,18 @@ return () => {
   };
 
   const selectMemberPayment = (record) => {
-    setSelectedMemberPaymentId(record.id);
-    setMemberPaymentForm({ ...emptyMemberPayment, ...record });
-    setMemberPaymentMode("view");
-  };
+  // Make sure the payment belongs to the currently selected context
+  if (!isMemberInCurrentContext(record.memberCode)) {
+    alert(
+      "This Member Payment does not belong to the selected Cluster / Vazhvathram."
+    );
+    return;
+  }
+
+  setSelectedMemberPaymentId(record.id);
+  setMemberPaymentForm({ ...emptyMemberPayment, ...record });
+  setMemberPaymentMode("view");
+};
 
   const deleteMemberPayment = async (record) => {
     if (!record?.id) return;
@@ -3691,6 +3800,34 @@ return () => {
   const [memberJournalLoading, setMemberJournalLoading] = useState(false);
   const [selectedMemberJournalId, setSelectedMemberJournalId] = useState(null);
   const [memberJournalMode, setMemberJournalMode] = useState("view");
+  // =========================================================
+// CLEAR INVALID MEMBER JOURNAL MEMBER
+// =========================================================
+
+useEffect(() => {
+  if (!memberJournalForm.memberCode) {
+    return;
+  }
+
+  const memberStillExists = getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(memberJournalForm.memberCode || "").trim()
+  );
+
+  if (!memberStillExists) {
+    setMemberJournalForm((previous) => ({
+      ...previous,
+      memberCode: "",
+      memberName: "",
+    }));
+  }
+}, [
+  selectedCluster,
+  selectedVazhvathram,
+  memberRecords,
+  memberJournalForm.memberCode,
+]);
 
   const updateMemberJournalField = (field, value) => {
     setMemberJournalForm((previous) => ({
@@ -3937,23 +4074,24 @@ return () => {
         case "LI01 - Receipt List":
         case "LI08 - Receipt Edit List - Before Locking":
           records = [
-            ...memberReceiptRecords.map((record) => ({
-              ...record,
-              _type: "Member Receipt",
-              _number: record.receiptNo,
-              _date: record.receiptDate,
-              _amount: record.total,
-              _name: record.memberName || record.memberCode,
-            })),
-            ...otherReceiptRecords.map((record) => ({
-              ...record,
-              _type: "Other Receipt",
-              _number: record.receiptNo,
-              _date: record.receiptDate,
-              _amount: record.total,
-              _name: record.subLedger,
-            })),
-          ];
+  ...filterTransactionsByContext(memberReceiptRecords).map((record) => ({
+    ...record,
+    _type: "Member Receipt",
+    _number: record.receiptNo,
+    _date: record.receiptDate,
+    _amount: record.total,
+    _name: record.memberName || record.memberCode,
+  })),
+
+  ...otherReceiptRecords.map((record) => ({
+    ...record,
+    _type: "Other Receipt",
+    _number: record.receiptNo,
+    _date: record.receiptDate,
+    _amount: record.total,
+    _name: record.subLedger,
+  })),
+];
           break;
 
         case "LI02 - Payment List":
@@ -29995,11 +30133,35 @@ if (
   }}
 >
             <option value="">Select Member</option>
-            {memberOptions.map((member) => (
-              <option key={member.id ?? member.memberCode} value={member.memberCode}>
-                {member.memberCode} - {member.memberName}
-              </option>
-            ))}
+            {memberOptions
+  .filter((member) => {
+    const memberCluster = String(
+      member.clusterName || ""
+    ).trim();
+
+    const memberVazhvathram = String(
+      member.vazhvathramName || ""
+    ).trim();
+
+    const clusterMatches =
+      !selectedCluster ||
+      memberCluster === String(selectedCluster).trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      memberVazhvathram ===
+        String(selectedVazhvathram).trim();
+
+    return clusterMatches && vazhvathramMatches;
+  })
+  .map((member) => (
+    <option
+      key={member.id ?? member.memberCode}
+      value={member.memberCode}
+    >
+      {member.memberCode} - {member.memberName}
+    </option>
+  ))}
           </select>
           <label>Regular Savings</label>
           <input value={memberReceiptForm.regularSavings} onChange={(e) => updateMemberReceiptField("regularSavings", e.target.value)} />
@@ -30514,12 +30676,12 @@ if (
           <input placeholder="dd-mm-yyyy" value={memberPaymentForm.voucherDate} onChange={(e) => updateMemberPaymentField("voucherDate", e.target.value)} />
           <label>Member</label>
           <select value={memberPaymentForm.memberCode} onChange={(e) => {
-            const member = memberRecords.find((item) => String(item.memberCode || "") === e.target.value);
+            const member = getContextMembers().find((item) => String(item.memberCode || "") === e.target.value);
             if (member) selectMemberForPayment(member);
             else updateMemberPaymentField("memberCode", e.target.value);
           }}>
             <option value="">Select Member</option>
-            {memberRecords.map((member) => (
+            {getContextMembers().map((member) => (
               <option key={member.id ?? member.memberCode} value={member.memberCode || ""}>
                 {member.memberCode || ""}{member.memberName ? `-${member.memberName}` : ""}
               </option>
@@ -30604,9 +30766,9 @@ if (
             <table className="legacy-table">
               <thead><tr><th>Voucher No.</th><th>Date</th><th>Member</th><th>Voucher Type</th><th>Total</th><th>Action</th></tr></thead>
               <tbody>
-                {memberPaymentRecords.length === 0 ? (
+                {filterTransactionsByContext(memberPaymentRecords).length === 0 ? (
                   <tr><td colSpan="6" style={{ textAlign: "center", padding: "12px" }}>No Member Payments found.</td></tr>
-                ) : memberPaymentRecords.map((record) => (
+                 ) : filterTransactionsByContext(memberPaymentRecords).map((record) => (
                   <tr key={record.id}>
                     <td>{record.voucherNo}</td><td>{record.voucherDate}</td><td>{getMemberDisplayName(record.memberCode, record.memberName)}</td><td>{record.voucherType}</td><td>{record.total}</td>
                     <td><button type="button" onClick={() => selectMemberPayment(record)}>Select</button><button type="button" onClick={() => deleteMemberPayment(record)}>Delete</button></td>
