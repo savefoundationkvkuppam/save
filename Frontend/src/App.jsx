@@ -25098,11 +25098,646 @@ const filteredMemberPayments =
     })
   ),
 ];       sourceLabel="existing journal, receipt and payment tables";
-        } else if (["Member Ledger - FR07","Member Ledger (All Heads) - Previous Year - FR08","Member Ledger (All Heads) - FR09"].includes(financialReportSelection)) {
-          const [mr,mp,mj]=await Promise.all([loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/member-journals")]); const q=financialMember.trim().toLowerCase();
-          rows=[...mr.map(r=>({...r,transactionType:"Receipt"})),...mp.map(r=>({...r,transactionType:"Payment"})),...mj.map(r=>({...r,transactionType:"Journal"}))].filter(r=>!q || [r.memberCode,r.memberName,r.member].some(v=>String(v||"").toLowerCase().includes(q))); sourceLabel="existing member receipt, payment and journal tables";
-        } else if (financialReportSelection === "Bank Loan Ledger - FR10 - New") {
-          const [mp,op,mr,or]=await Promise.all([loadFinancialEndpoint("/member-payments"),loadFinancialEndpoint("/other-payments"),loadFinancialEndpoint("/member-receipts"),loadFinancialEndpoint("/other-receipts")]); const q=financialBankLoanLedger.toLowerCase(); rows=[...mp,...op,...mr,...or].filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q)); sourceLabel="existing receipt and payment tables";
+                 } else if (
+          financialReportSelection ===
+          "Balance Sheet - FR05"
+        ) {
+          const [
+            mj,
+            oj,
+            mr,
+            or,
+            mp,
+            op,
+            memberData,
+          ] = await Promise.all([
+            loadFinancialEndpoint("/member-journals"),
+            loadFinancialEndpoint("/other-journals"),
+            loadFinancialEndpoint("/member-receipts"),
+            loadFinancialEndpoint("/other-receipts"),
+            loadFinancialEndpoint("/member-payments"),
+            loadFinancialEndpoint("/other-payments"),
+            loadFinancialEndpoint("/members"),
+          ]);
+
+          const members = Array.isArray(memberData)
+            ? memberData
+            : [];
+
+          const memberBelongsToSelectedContext = (
+            record
+          ) => {
+            const member = members.find(
+              (item) =>
+                String(item?.memberCode || "")
+                  .trim()
+                  .toLowerCase() ===
+                String(
+                  record?.memberCode ||
+                  record?.member ||
+                  ""
+                )
+                  .trim()
+                  .toLowerCase()
+            );
+
+            if (!member) {
+              return false;
+            }
+
+            const clusterMatches =
+              !selectedCluster ||
+              String(member?.clusterName || "").trim() ===
+                String(selectedCluster || "").trim();
+
+            const vazhvathramMatches =
+              !selectedVazhvathram ||
+              String(member?.vazhvathramName || "").trim() ===
+                String(selectedVazhvathram || "").trim();
+
+            return (
+              clusterMatches &&
+              vazhvathramMatches
+            );
+          };
+
+          const filteredMemberJournals =
+            mj.filter(memberBelongsToSelectedContext);
+
+          const filteredMemberReceipts =
+            mr.filter(memberBelongsToSelectedContext);
+
+          const filteredMemberPayments =
+            mp.filter(memberBelongsToSelectedContext);
+
+          rows = [
+            ...filteredMemberJournals.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Member Journal",
+              })
+            ),
+
+            ...oj.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Other Journal",
+              })
+            ),
+
+            ...filteredMemberReceipts.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Member Receipt",
+              })
+            ),
+
+            ...or.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Other Receipt",
+              })
+            ),
+
+            ...filteredMemberPayments.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Member Payment",
+              })
+            ),
+
+            ...op.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Other Payment",
+              })
+            ),
+          ];
+
+          sourceLabel =
+            "existing journal, receipt and payment tables";
+          } else if (
+  financialReportSelection ===
+  "Trial Balance - FR06"
+) {
+  const [
+    mj,
+    oj,
+    mr,
+    or,
+    mp,
+    op,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/other-journals"),
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberJournals =
+    mj.filter(memberBelongsToSelectedContext);
+
+  const filteredMemberReceipts =
+    mr.filter(memberBelongsToSelectedContext);
+
+  const filteredMemberPayments =
+    mp.filter(memberBelongsToSelectedContext);
+
+  rows = [
+    ...filteredMemberJournals.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Journal",
+      })
+    ),
+
+    ...oj.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Journal",
+      })
+    ),
+
+    ...filteredMemberReceipts.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Receipt",
+      })
+    ),
+
+    ...or.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Receipt",
+      })
+    ),
+
+    ...filteredMemberPayments.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Payment",
+      })
+    ),
+
+    ...op.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Payment",
+      })
+    ),
+  ];
+
+  sourceLabel =
+    "existing journal, receipt and payment tables";
+        } else if (
+  financialReportSelection ===
+  "Member Ledger - FR07"
+) {
+  const [
+    mr,
+    mp,
+    mj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q = financialMember
+    .trim()
+    .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  rows = [
+    ...mr.map(
+      (r) => ({
+        ...r,
+        transactionType: "Receipt",
+      })
+    ),
+
+    ...mp.map(
+      (r) => ({
+        ...r,
+        transactionType: "Payment",
+      })
+    ),
+
+    ...mj.map(
+      (r) => ({
+        ...r,
+        transactionType: "Journal",
+      })
+    ),
+  ]
+    .filter(memberBelongsToSelectedContext)
+    .filter(
+      (r) =>
+        !q ||
+        [
+          r.memberCode,
+          r.memberName,
+          r.member,
+        ].some(
+          (v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(q)
+        )
+    );
+
+  sourceLabel =
+    "existing member receipt, payment and journal tables";
+        } else if (
+  financialReportSelection ===
+  "Member Ledger (All Heads) - Previous Year - FR08"
+) {
+  const [
+    mr,
+    mp,
+    mj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q = financialMember
+    .trim()
+    .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  rows = [
+    ...mr.map(
+      (r) => ({
+        ...r,
+        transactionType: "Receipt",
+      })
+    ),
+
+    ...mp.map(
+      (r) => ({
+        ...r,
+        transactionType: "Payment",
+      })
+    ),
+
+    ...mj.map(
+      (r) => ({
+        ...r,
+        transactionType: "Journal",
+      })
+    ),
+  ]
+    .filter(memberBelongsToSelectedContext)
+    .filter(
+      (r) =>
+        !q ||
+        [
+          r.memberCode,
+          r.memberName,
+          r.member,
+        ].some(
+          (v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(q)
+        )
+    );
+
+  sourceLabel =
+    "existing member receipt, payment and journal tables";
+          } else if (
+  financialReportSelection ===
+  "Member Ledger (All Heads) - FR09"
+) {
+  const [
+    mr,
+    mp,
+    mj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q = financialMember
+    .trim()
+    .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  rows = [
+    ...mr.map(
+      (r) => ({
+        ...r,
+        transactionType: "Receipt",
+      })
+    ),
+
+    ...mp.map(
+      (r) => ({
+        ...r,
+        transactionType: "Payment",
+      })
+    ),
+
+    ...mj.map(
+      (r) => ({
+        ...r,
+        transactionType: "Journal",
+      })
+    ),
+  ]
+    .filter(memberBelongsToSelectedContext)
+    .filter(
+      (r) =>
+        !q ||
+        [
+          r.memberCode,
+          r.memberName,
+          r.member,
+        ].some(
+          (v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(q)
+        )
+    );
+  sourceLabel =
+    "existing member receipt, payment and journal tables";
+        } else if (
+  financialReportSelection ===
+  "Bank Loan Ledger - FR10 - New"
+) {
+  const [
+    mp,
+    op,
+    mr,
+    or,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q =
+    financialBankLoanLedger
+      .trim()
+      .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberPayments =
+    mp.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberReceipts =
+    mr.filter(
+      memberBelongsToSelectedContext
+    );
+
+  rows = [
+    ...filteredMemberPayments,
+    ...op,
+    ...filteredMemberReceipts,
+    ...or,
+  ].filter(
+    (r) =>
+      !q ||
+      JSON.stringify(r)
+        .toLowerCase()
+        .includes(q)
+  );
+
+  sourceLabel =
+    "existing receipt and payment tables";
+          
         } else if (financialReportSelection === "Audit Front Page - FR11") { rows=await loadFinancialEndpoint("/auditors"); sourceLabel="existing auditor details table"; }
         else if (financialReportSelection === "Homeless Entries") { setFinancialReportStatus("Homeless Entries: no dedicated database table exists in the current project, so no data was invented."); return; }
         rows=filterFinancialDateRange(rows); setFinancialReportResults(rows); setFinancialReportStatus(`${financialReportSelection}: ${rows.length} record${rows.length===1?"":"s"} loaded from ${sourceLabel}.`);
