@@ -28888,35 +28888,65 @@ const expenditureRecords = [
   // ---------------------------------------------------------
   // AMOUNT
   // ---------------------------------------------------------
+      const amountOB05 = (record) => {
+  // Member Journal can contain multiple debit/credit amounts.
+  const journalAmounts = [
+    record?.amt1,
+    record?.amt2,
+    record?.amt3,
+    record?.amt4,
+    record?.amt5,
+    record?.amt6,
+  ];
 
-  const amountOB05 = (record) => {
-    const values = [
-      record?.amount,
-      record?.total,
-      record?.amountMain,
-      record?.amount1,
-      record?.amount2,
-      record?.amount3,
-      record?.amount4,
-      record?.amount5,
-      record?.amount6,
-      record?.receiptAmount,
-      record?.paymentAmount,
-      record?.fdAmount,
-      record?.balance,
-      record?.openingBalance,
-      record?.currentBalance,
-    ];
+  const hasJournalAmount = journalAmounts.some(
+    (value) =>
+      value !== null &&
+      value !== undefined &&
+      String(value).trim() !== ""
+  );
 
-    const value = values.find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        item !== ""
+  if (hasJournalAmount) {
+    return journalAmounts.reduce(
+      (total, value) =>
+        total + numberOB05(value),
+      0
     );
+  }
 
-    return numberOB05(value);
-  };
+  // Prefer the transaction's total when it exists.
+  const totalValue =
+    record?.total !== null &&
+    record?.total !== undefined &&
+    String(record?.total).trim() !== ""
+      ? record.total
+      : null;
+
+  if (totalValue !== null) {
+    return numberOB05(totalValue);
+  }
+
+  // Other possible amount fields.
+  const values = [
+    record?.amount,
+    record?.amountMain,
+    record?.receiptAmount,
+    record?.paymentAmount,
+    record?.fdAmount,
+    record?.balance,
+    record?.openingBalance,
+    record?.currentBalance,
+  ];
+
+  const value = values.find(
+    (item) =>
+      item !== null &&
+      item !== undefined &&
+      String(item).trim() !== ""
+  );
+
+  return numberOB05(value);
+};
 
   // ---------------------------------------------------------
   // DEBIT / CREDIT
