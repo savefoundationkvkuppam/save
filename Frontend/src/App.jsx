@@ -3800,6 +3800,34 @@ return () => {
   const [memberJournalLoading, setMemberJournalLoading] = useState(false);
   const [selectedMemberJournalId, setSelectedMemberJournalId] = useState(null);
   const [memberJournalMode, setMemberJournalMode] = useState("view");
+
+  // =========================================================
+// CLEAR INVALID MEMBER JOURNAL MEMBER
+// =========================================================
+
+useEffect(() => {
+  if (!memberJournalForm.member) {
+    return;
+  }
+
+  const memberStillExists = getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(memberJournalForm.member || "").trim()
+  );
+
+  if (!memberStillExists) {
+    setMemberJournalForm((previous) => ({
+      ...previous,
+      member: "",
+    }));
+  }
+}, [
+  selectedCluster,
+  selectedVazhvathram,
+  memberRecords,
+  memberJournalForm.member,
+]);
   // =========================================================
 // CLEAR INVALID MEMBER JOURNAL MEMBER
 // =========================================================
@@ -31183,7 +31211,7 @@ if (
             onChange={(e) => updateMemberJournalField("member", e.target.value)}
           >
             <option value="">Select Member</option>
-            {memberRecords.map((member) => (
+            {getContextMembers().map((member) => (
               <option key={member.id} value={member.memberCode || ""}>
                 {member.memberCode || ""}-{member.memberName || ""}
               </option>
