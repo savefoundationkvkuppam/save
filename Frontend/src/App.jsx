@@ -2584,8 +2584,6 @@ const getMemberDisplayName = (memberIdOrCode, memberName = "") => {
     subLedgerLines: [
       { subLedger: "", amount: "" },
       { subLedger: "", amount: "" },
-      { subLedger: "", amount: "" },
-      { subLedger: "", amount: "" },
     ],
     narration: "",
     total: "",
