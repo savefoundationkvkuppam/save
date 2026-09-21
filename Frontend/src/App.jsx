@@ -31691,26 +31691,40 @@ const expenditureRecords = [
           <div className="legacy-grid-row double" key={row}>
             <label>Sub Led.</label>
             <select
-              ref={left === 1 ? firstOtherPaymentSubLedgerRef : undefined}
-              value={otherPaymentForm[`subLed${left}`]}
-              onChange={(e) => updateOtherPaymentField(`subLed${left}`, e.target.value)}
-            >
-              <option value="">Select</option>
-              {otherPaymentSubLedgers.map((option) => (<option key={option} value={getSubLedgerCode(option)}>{getSubLedgerCode(option)}</option>))}
-            </select>
+  ref={left === 1 ? firstOtherPaymentSubLedgerRef : undefined}
+  value={otherPaymentForm[`subLed${left}`]}
+  onChange={(e) =>
+    updateOtherPaymentField(`subLed${left}`, e.target.value)
+  }
+>
+  <option value="">Select</option>
+
+  {otherPaymentForm[`subLed${left}`] && (
+    <option value={otherPaymentForm[`subLed${left}`]}>
+      {otherPaymentForm[`subLed${left}`]}
+    </option>
+  )}
+</select>
             <label>Amt.</label>
             <input
               value={otherPaymentForm[`amt${left}`]}
               onChange={(e) => updateOtherPaymentField(`amt${left}`, e.target.value)}
             />
             <label>Sub Led.</label>
-            <select
-              value={otherPaymentForm[`subLed${right}`]}
-              onChange={(e) => updateOtherPaymentField(`subLed${right}`, e.target.value)}
-            >
-              <option value="">Select</option>
-              {otherPaymentSubLedgers.map((option) => (<option key={option} value={getSubLedgerCode(option)}>{getSubLedgerCode(option)}</option>))}
-            </select>
+           <select
+  value={otherPaymentForm[`subLed${right}`]}
+  onChange={(e) =>
+    updateOtherPaymentField(`subLed${right}`, e.target.value)
+  }
+>
+  <option value="">Select</option>
+
+  {otherPaymentForm[`subLed${right}`] && (
+    <option value={otherPaymentForm[`subLed${right}`]}>
+      {otherPaymentForm[`subLed${right}`]}
+    </option>
+  )}
+</select>
             <label>Amt.</label>
             <input
               value={otherPaymentForm[`amt${right}`]}
