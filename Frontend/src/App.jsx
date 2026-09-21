@@ -416,7 +416,61 @@ function App() {
     requestAnimationFrame(focusFirstPageField);
   });
 }, [page]);
+useEffect(() => {
+  const handleSelectChange = (event) => {
+    const target = event.target;
 
+    // Only handle dropdown/select fields
+    if (!(target instanceof HTMLSelectElement)) {
+      return;
+    }
+
+    // Only work inside the main page content
+    const pageContent = target.closest(".main-container .content");
+
+    if (!pageContent) {
+      return;
+    }
+
+    // Get all visible, enabled form fields in the current page
+    const fields = Array.from(
+      pageContent.querySelectorAll(
+        'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
+      )
+    ).filter((field) => {
+      const style = window.getComputedStyle(field);
+
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        field.tabIndex !== -1
+      );
+    });
+
+    const currentIndex = fields.indexOf(target);
+
+    if (currentIndex === -1) {
+      return;
+    }
+
+    const nextField = fields[currentIndex + 1];
+
+    if (!nextField) {
+      return;
+    }
+
+    // Move to the next field after dropdown selection
+    requestAnimationFrame(() => {
+      nextField.focus();
+    });
+  };
+
+  document.addEventListener("change", handleSelectChange);
+
+  return () => {
+    document.removeEventListener("change", handleSelectChange);
+  };
+}, [page]);
   useEffect(() => {
     // Mark the current browser entry as an app page.
     window.history.replaceState(
