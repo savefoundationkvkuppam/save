@@ -13457,3 +13457,6 @@ select:focus {
 .short-date {
   width: 120px !important;
 }
+.other-payment-sl + label {
+  white-space: nowrap;
+}
