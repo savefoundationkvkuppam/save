@@ -3125,7 +3125,11 @@ const updateOtherPaymentField = (field, value) => {
 
     try {
       setOtherPaymentLoading(true);
-      const payload = { ...otherPaymentForm };
+      const payload = {
+        ...otherPaymentForm,
+        total: String(calculatedOtherPaymentTotal),
+      };
+
       let saved;
 
       if (selectedOtherPaymentId) {
