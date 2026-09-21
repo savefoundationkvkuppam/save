@@ -3125,10 +3125,25 @@ const updateOtherPaymentField = (field, value) => {
 
     try {
       setOtherPaymentLoading(true);
-      const payload = {
-        ...otherPaymentForm,
-        total: String(calculatedOtherPaymentTotal),
-      };
+      const calculatedTotal = [
+  otherPaymentForm.amount,
+  otherPaymentForm.amt1,
+  otherPaymentForm.amt2,
+  otherPaymentForm.amt3,
+  otherPaymentForm.amt4,
+  otherPaymentForm.amt5,
+  otherPaymentForm.amt6,
+  otherPaymentForm.amt7,
+  otherPaymentForm.amt8,
+].reduce((sum, value) => {
+  const number = Number.parseFloat(value);
+  return sum + (Number.isFinite(number) ? number : 0);
+}, 0);
+
+const payload = {
+  ...otherPaymentForm,
+  total: String(calculatedTotal),
+};
 
       let saved;
 
