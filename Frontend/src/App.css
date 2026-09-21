@@ -13460,6 +13460,12 @@ select:focus {
 }
 
 .other-payment-sl + label {
-  margin-left: 30px !important;
+  position: relative;
+  left: 50px !important;
   white-space: nowrap !important;
+}
+
+.other-payment-sl + label + input {
+  position: relative;
+  left: 50px !important;
 }
