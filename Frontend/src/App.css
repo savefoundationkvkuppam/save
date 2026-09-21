@@ -13461,11 +13461,12 @@ select:focus {
 
 .other-payment-sl + label {
   position: relative;
-  left: 50px !important;
+  left: 120px !important;
   white-space: nowrap !important;
 }
 
 .other-payment-sl + label + input {
   position: relative;
-  left: 50px !important;
+  left: 120px !important;
+  
 }
