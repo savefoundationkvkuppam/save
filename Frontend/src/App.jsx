@@ -31783,7 +31783,7 @@ const expenditureRecords = [
           </button>
           <button
             type="button"
-            disabled={otherPaymentLoading || otherPaymentMode === "view"}
+            disabled={otherPaymentLoading}
             onClick={saveOtherPayment}
           >
             Save
