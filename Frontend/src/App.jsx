@@ -387,6 +387,30 @@ function App() {
   };
 
   useEffect(() => {
+  const focusFirstField = () => {
+    const firstField = document.querySelector(
+      'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
+    );
+
+    if (firstField) {
+      firstField.focus();
+
+      if (
+        firstField.tagName === "INPUT" &&
+        firstField.type !== "date" &&
+        firstField.type !== "number"
+      ) {
+        firstField.select?.();
+      }
+    }
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(focusFirstField);
+  });
+}, [page]);
+
+  useEffect(() => {
     // Mark the current browser entry as an app page.
     window.history.replaceState(
       { ...(window.history.state || {}), saveAppPage: page },
