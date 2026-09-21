@@ -31784,51 +31784,246 @@ const expenditureRecords = [
             onChange={(e) => updateOtherPaymentField("total", e.target.value)}
           />
         </div>
+          {otherPaymentMode === "list" && (
+  <div style={{ marginTop: "18px" }}>
+    <div className="legacy-subtitle">Other Payment List</div>
 
-        {otherPaymentMode === "list" && (
-          <div style={{ marginTop: "18px" }}>
-            <div className="legacy-subtitle">Other Payment List</div>
-            <table className="legacy-table">
-              <thead>
-                <tr>
-                  <th>Voucher No.</th>
-                  <th>Date</th>
-                  <th>Voucher Type</th>
-                  <th>Account Type</th>
-                  <th>Total</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {otherPaymentRecords.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "12px" }}>
-                      No Other Payments found.
-                    </td>
-                  </tr>
-                ) : (
-                  otherPaymentRecords.map((record) => (
-                    <tr key={record.id}>
-                      <td>{record.voucherNo}</td>
-                      <td>{record.voucherDate}</td>
-                      <td>{record.voucherType}</td>
-                      <td>{record.accountType}</td>
-                      <td>{record.total || ""}</td>
-                      <td>
-                        <button type="button" onClick={() => selectOtherPayment(record)}>
-                          Select
-                        </button>
-                        <button type="button" onClick={() => deleteOtherPayment(record)}>
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+    {otherPaymentRecords.length === 0 ? (
+      <div
+        style={{
+          textAlign: "center",
+          padding: "15px",
+          border: "1px solid #ccc",
+          background: "#fff",
+        }}
+      >
+        No Other Payments found.
+      </div>
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px",
+        }}
+      >
+        {otherPaymentRecords.map((record) => (
+          <div
+            key={record.id}
+            style={{
+              border: "1px solid #999",
+              background: "#fff",
+              padding: "12px",
+              borderRadius: "4px",
+            }}
+          >
+            {/* BASIC DETAILS */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "8px",
+                marginBottom: "10px",
+              }}
+            >
+              <div>
+                <strong>Voucher No.</strong>
+                <br />
+                {record.voucherNo || "-"}
+              </div>
+
+              <div>
+                <strong>Voucher Date</strong>
+                <br />
+                {record.voucherDate || "-"}
+              </div>
+
+              <div>
+                <strong>Voucher Type</strong>
+                <br />
+                {record.voucherType || "-"}
+              </div>
+
+              <div>
+                <strong>Account Type</strong>
+                <br />
+                {record.accountType || "-"}
+              </div>
+
+              <div>
+                <strong>Bank, Branch</strong>
+                <br />
+                {record.bankBranch || "-"}
+              </div>
+
+              <div>
+                <strong>Account No.</strong>
+                <br />
+                {record.accountNo || "-"}
+              </div>
+
+              <div>
+                <strong>Cheque No.</strong>
+                <br />
+                {record.chequeNo || "-"}
+              </div>
+
+              <div>
+                <strong>S.L.</strong>
+                <br />
+                {record.sl || "-"}
+              </div>
+
+              <div>
+                <strong>Bank Loan Principal Date</strong>
+                <br />
+                {record.bankLoanPrincipalDate || "-"}
+              </div>
+
+              <div>
+                <strong>Cash Deposited Date</strong>
+                <br />
+                {record.cashDepositedDate || "-"}
+              </div>
+
+              <div>
+                <strong>SHG</strong>
+                <br />
+                {record.shg || "-"}
+              </div>
+
+              <div>
+                <strong>SAHAYA-Covid</strong>
+                <br />
+                {record.sahayaCovid || "-"}
+              </div>
+
+              <div>
+                <strong>ROC</strong>
+                <br />
+                {record.roc || "-"}
+              </div>
+
+              <div>
+                <strong>KDFS-Covid</strong>
+                <br />
+                {record.kdfsCovid || "-"}
+              </div>
+
+              <div>
+                <strong>MF-KDFS</strong>
+                <br />
+                {record.mfKdfs || "-"}
+              </div>
+
+              <div>
+                <strong>ROC-KDFS</strong>
+                <br />
+                {record.rocKdfs || "-"}
+              </div>
+
+              <div>
+                <strong>UPNRM-KDFS</strong>
+                <br />
+                {record.upnrmKdfs || "-"}
+              </div>
+
+              <div>
+                <strong>HOPE</strong>
+                <br />
+                {record.hope || "-"}
+              </div>
+            </div>
+
+            {/* SUB LEDGER DETAILS */}
+            <div
+              style={{
+                fontWeight: "700",
+                marginBottom: "6px",
+                borderTop: "1px solid #ccc",
+                paddingTop: "8px",
+              }}
+            >
+              Sub Ledger Details
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "8px",
+              }}
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+                <div
+                  key={index}
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    background: "#f8f8f8",
+                  }}
+                >
+                  <strong>Sub Led. {index}</strong>
+                  <br />
+                  Code: {record[`subLed${index}`] || "-"}
+                  <br />
+                  Amount: {record[`amt${index}`] || "-"}
+                </div>
+              ))}
+            </div>
+
+            {/* NARRATION + TOTAL */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 180px",
+                gap: "10px",
+                marginTop: "10px",
+                borderTop: "1px solid #ccc",
+                paddingTop: "8px",
+              }}
+            >
+              <div>
+                <strong>Narration</strong>
+                <br />
+                {record.narration || "-"}
+              </div>
+
+              <div>
+                <strong>Total</strong>
+                <br />
+                {record.total || "-"}
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginTop: "10px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => selectOtherPayment(record)}
+              >
+                Select
+              </button>
+
+              <button
+                type="button"
+                onClick={() => deleteOtherPayment(record)}
+              >
+                Delete
+              </button>
+            </div>
           </div>
-        )}
+        ))}
+      </div>
+    )}
+  </div>
+             )}
       </div>
     );
   }
