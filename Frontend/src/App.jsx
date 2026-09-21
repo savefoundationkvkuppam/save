@@ -2894,7 +2894,36 @@ if (!cancelled) {
   return;
 }
 
-    try {
+// =========================================================
+// DUPLICATE RCPT NO. CHECK
+// =========================================================
+const enteredReceiptNo = String(
+  memberReceiptForm.receiptNo || ""
+).trim();
+
+const duplicateReceipt = memberReceiptRecords.find((record) => {
+  if (
+    selectedMemberReceiptId &&
+    Number(record?.id) === Number(selectedMemberReceiptId)
+  ) {
+    return false;
+  }
+
+  return (
+    String(record?.receiptNo || "")
+      .trim()
+      .toLowerCase() === enteredReceiptNo.toLowerCase()
+  );
+});
+
+if (duplicateReceipt) {
+  alert(
+    `Rcpt No. "${enteredReceiptNo}" is already present here.\nPlease enter another number.`
+  );
+  return;
+}
+
+try {
       setMemberReceiptLoading(true);
 
       const payload = { ...memberReceiptForm };
@@ -3204,11 +3233,40 @@ const updateOtherPaymentField = (field, value) => {
 
   const saveOtherPayment = async () => {
     if (!otherPaymentForm.voucherDate.trim()) {
-      alert("Please enter Voucher Date.");
-      return;
-    }
+  alert("Please enter Voucher Date.");
+  return;
+}
 
-    try {
+// =========================================================
+// DUPLICATE VR. NO. CHECK
+// =========================================================
+const enteredVoucherNo = String(
+  otherPaymentForm.voucherNo || ""
+).trim();
+
+const duplicateVoucherNo = otherPaymentRecords.find((record) => {
+  if (
+    selectedOtherPaymentId &&
+    Number(record?.id) === Number(selectedOtherPaymentId)
+  ) {
+    return false;
+  }
+
+  return (
+    String(record?.voucherNo || "")
+      .trim()
+      .toLowerCase() === enteredVoucherNo.toLowerCase()
+  );
+});
+
+if (duplicateVoucherNo) {
+  alert(
+    `Vr. No. "${enteredVoucherNo}" is already present here.\nPlease enter another number.`
+  );
+  return;
+}
+
+try {
       setOtherPaymentLoading(true);
       const calculatedTotal = [
   otherPaymentForm.amount,
@@ -3374,7 +3432,36 @@ return () => {
   return;
 }
 
-    try {
+// =========================================================
+// DUPLICATE VR. NO. CHECK
+// =========================================================
+const enteredVoucherNo = String(
+  memberPaymentForm.voucherNo || ""
+).trim();
+
+const duplicateVoucherNo = memberPaymentRecords.find((record) => {
+  if (
+    selectedMemberPaymentId &&
+    Number(record?.id) === Number(selectedMemberPaymentId)
+  ) {
+    return false;
+  }
+
+  return (
+    String(record?.voucherNo || "")
+      .trim()
+      .toLowerCase() === enteredVoucherNo.toLowerCase()
+  );
+});
+
+if (duplicateVoucherNo) {
+  alert(
+    `Vr. No. "${enteredVoucherNo}" is already present here.\nPlease enter another number.`
+  );
+  return;
+}
+
+try {
       setMemberPaymentLoading(true);
 
   const calculatedTotal = [
@@ -4114,7 +4201,36 @@ if (!isMemberInCurrentContext(memberJournalForm.member)) {
   return;
 }
 
-    try {
+// =========================================================
+// DUPLICATE JR. NO. CHECK
+// =========================================================
+const enteredJrNo = String(
+  memberJournalForm.jrNo || ""
+).trim();
+
+const duplicateJrNo = memberJournalRecords.find((record) => {
+  if (
+    selectedMemberJournalId &&
+    Number(record?.id) === Number(selectedMemberJournalId)
+  ) {
+    return false;
+  }
+
+  return (
+    String(record?.jrNo || "")
+      .trim()
+      .toLowerCase() === enteredJrNo.toLowerCase()
+  );
+});
+
+if (duplicateJrNo) {
+  alert(
+    `Jr. No. "${enteredJrNo}" is already present here.\nPlease enter another number.`
+  );
+  return;
+}
+
+try {
       setMemberJournalLoading(true);
 
       const payload = {
@@ -5855,11 +5971,40 @@ useEffect(() => {
 
   const saveOtherJournal = async () => {
     if (!String(otherJournalData.journalDate || "").trim()) {
-      alert("Please enter Journal Date.");
-      return;
-    }
+  alert("Please enter Journal Date.");
+  return;
+}
 
-    try {
+// =========================================================
+// DUPLICATE JR. NO. CHECK
+// =========================================================
+const enteredJrNo = String(
+  otherJournalData.journalNumber || ""
+).trim();
+
+const duplicateJrNo = otherJournalRecords.find((record) => {
+  if (
+    selectedOtherJournalId &&
+    Number(record?.id) === Number(selectedOtherJournalId)
+  ) {
+    return false;
+  }
+
+  return (
+    String(record?.journalNumber || "")
+      .trim()
+      .toLowerCase() === enteredJrNo.toLowerCase()
+  );
+});
+
+if (duplicateJrNo) {
+  alert(
+    `Jr. No. "${enteredJrNo}" is already present here.\nPlease enter another number.`
+  );
+  return;
+}
+
+try {
       setOtherJournalLoading(true);
 
       const payload = {
@@ -31279,10 +31424,40 @@ const expenditureRecords = [
 
     const saveOtherReceiptLocal = async () => {
       if (!otherReceiptForm.receiptDate.trim()) {
-        alert("Please enter Receipt Date.");
-        return;
-      }
-      if (!otherReceiptForm.subLedger.trim()) {
+  alert("Please enter Receipt Date.");
+  return;
+}
+
+// =========================================================
+// DUPLICATE RCPT NO. CHECK
+// =========================================================
+const enteredReceiptNo = String(
+  otherReceiptForm.receiptNo || ""
+).trim();
+
+const duplicateReceipt = otherReceiptRecords.find((record) => {
+  if (
+    selectedOtherReceiptId &&
+    Number(record?.id) === Number(selectedOtherReceiptId)
+  ) {
+    return false;
+  }
+
+  return (
+    String(record?.receiptNo || "")
+      .trim()
+      .toLowerCase() === enteredReceiptNo.toLowerCase()
+  );
+});
+
+if (duplicateReceipt) {
+  alert(
+    `Rcpt No. "${enteredReceiptNo}" is already present here.\nPlease enter another number.`
+  );
+  return;
+}
+
+if (!otherReceiptForm.subLedger.trim()) {
         alert("Please select a Sub Ledger.");
         return;
       }
