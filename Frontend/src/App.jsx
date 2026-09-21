@@ -385,10 +385,17 @@ function App() {
 
     setPageState(nextPage);
   };
-
   useEffect(() => {
-  const focusFirstField = () => {
-    const firstField = document.querySelector(
+  const focusFirstPageField = () => {
+    const pageContent = document.querySelector(
+      ".main-container .content"
+    );
+
+    if (!pageContent) {
+      return;
+    }
+
+    const firstField = pageContent.querySelector(
       'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
     );
 
@@ -406,7 +413,7 @@ function App() {
   };
 
   requestAnimationFrame(() => {
-    requestAnimationFrame(focusFirstField);
+    requestAnimationFrame(focusFirstPageField);
   });
 }, [page]);
 
