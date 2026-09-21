@@ -13448,4 +13448,11 @@ select:focus {
   transform: translateY(-1px);
   transition: all 0.15s ease;
 }
+/* Other Payment - field sizes */
+.other-payment-sl {
+  width: 320px !important;
+}
 
+.short-date {
+  width: 120px !important;
+}
