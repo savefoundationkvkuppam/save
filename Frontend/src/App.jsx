@@ -3035,8 +3035,8 @@ const addOtherPaymentSubLedgerEntry = (amountValue) => {
   }
 
   const emptyIndex = [1, 2, 3, 4, 5, 6, 7, 8].find(
-    (index) => !otherPaymentForm[`subLed${index}`]
-  );
+  (index) => !otherPaymentForm[`amt${index}`]
+);
 
   if (!emptyIndex) {
     alert("All Sub Ledger entries are already filled.");
@@ -3052,8 +3052,32 @@ const addOtherPaymentSubLedgerEntry = (amountValue) => {
     amount: "",
   }));
 };
-
 const updateOtherPaymentField = (field, value) => {
+  if (field === "sl") {
+    const code = getSubLedgerCode(value);
+
+    setOtherPaymentForm((previous) => {
+      const emptyIndex = [1, 2, 3, 4, 5, 6, 7, 8].find(
+        (index) => !previous[`subLed${index}`]
+      );
+
+      if (!emptyIndex) {
+        return {
+          ...previous,
+          sl: value,
+        };
+      }
+
+      return {
+        ...previous,
+        sl: value,
+        [`subLed${emptyIndex}`]: code,
+      };
+    });
+
+    return;
+  }
+
   setOtherPaymentForm((previous) => ({
     ...previous,
     [field]: value,
@@ -3068,6 +3092,7 @@ const updateOtherPaymentField = (field, value) => {
     }
   }
 };
+
 
   
   const resetOtherPaymentForm = () => {
