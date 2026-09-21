@@ -31587,6 +31587,7 @@ const expenditureRecords = [
           />
           <label>Vr. Date</label>
           <input
+            className="short-date"
             value={otherPaymentForm.voucherDate}
             placeholder="dd-mm-yyyy"
             onChange={(e) => updateOtherPaymentField("voucherDate", e.target.value)}
@@ -31654,6 +31655,7 @@ const expenditureRecords = [
         <div className="legacy-form-row">
           <label>Date of Bank Loan Principle paid</label>
           <input
+            className="short-date"
             value={otherPaymentForm.bankLoanPrincipalDate}
             placeholder="dd-mm-yyyy"
             onChange={(e) => updateOtherPaymentField("bankLoanPrincipalDate", e.target.value)}
@@ -31663,6 +31665,7 @@ const expenditureRecords = [
         <div className="legacy-grid-row compact">
           <label>S.L.</label>
           <select
+            className="other-payment-sl"
             ref={firstOtherPaymentSubLedgerRef}
             value={otherPaymentForm.sl}
             onChange={(e) => updateOtherPaymentField("sl", e.target.value)}
@@ -31674,6 +31677,7 @@ const expenditureRecords = [
 
           <label>Date - Cash Deposited into Bank</label>
           <input
+            className="short-date"
             value={otherPaymentForm.cashDepositedDate}
             placeholder="dd-mm-yyyy"
             onChange={(e) => updateOtherPaymentField("cashDepositedDate", e.target.value)}
