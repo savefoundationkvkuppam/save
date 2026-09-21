@@ -13450,8 +13450,8 @@ select:focus {
 }
 /* Other Payment - field sizes */
 .other-payment-sl {
-  width: 400px !important;
-  max-width: 400px !important;
+  width: 380px !important;
+  max-width: 380px !important;
 }
 
 .short-date {
