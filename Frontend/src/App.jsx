@@ -3014,7 +3014,46 @@ useEffect(() => {
   const [selectedOtherPaymentId, setSelectedOtherPaymentId] = useState(null);
   const [otherPaymentMode, setOtherPaymentMode] = useState("view");
 
-  const updateOtherPaymentField = (field, value) => {
+  const getSubLedgerCode = (value) => {
+  if (!value) return "";
+
+  const match = String(value).match(/(\d+)\s*$/);
+
+  return match ? match[1] : String(value);
+};
+
+const addOtherPaymentSubLedgerEntry = (amountValue) => {
+  const amount = String(amountValue ?? "").trim();
+
+  if (!otherPaymentForm.sl) {
+    alert("Please select an S.L.");
+    return;
+  }
+
+  if (!amount) {
+    return;
+  }
+
+  const emptyIndex = [1, 2, 3, 4, 5, 6, 7, 8].find(
+    (index) => !otherPaymentForm[`subLed${index}`]
+  );
+
+  if (!emptyIndex) {
+    alert("All Sub Ledger entries are already filled.");
+    return;
+  }
+
+  const code = getSubLedgerCode(otherPaymentForm.sl);
+
+  setOtherPaymentForm((previous) => ({
+    ...previous,
+    [`subLed${emptyIndex}`]: code,
+    [`amt${emptyIndex}`]: amount,
+    amount: "",
+  }));
+};
+
+const updateOtherPaymentField = (field, value) => {
   setOtherPaymentForm((previous) => ({
     ...previous,
     [field]: value,
@@ -31600,9 +31639,19 @@ const expenditureRecords = [
         <div className="legacy-inline-fields centered">
           Amount
           <input
-            value={otherPaymentForm.amount}
-            onChange={(e) => updateOtherPaymentField("amount", e.target.value)}
-          />
+  value={otherPaymentForm.amount}
+  onChange={(e) => updateOtherPaymentField("amount", e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addOtherPaymentSubLedgerEntry(e.currentTarget.value);
+    }
+  }}
+  onBlur={(e) => {
+    addOtherPaymentSubLedgerEntry(e.currentTarget.value);
+  }}
+/>
+          
           <select
             value={otherPaymentForm.amountType}
             onChange={(e) => updateOtherPaymentField("amountType", e.target.value)}
@@ -31622,7 +31671,7 @@ const expenditureRecords = [
               onChange={(e) => updateOtherPaymentField(`subLed${left}`, e.target.value)}
             >
               <option value="">Select</option>
-              {otherPaymentSubLedgers.map((option) => <option key={option}>{option}</option>)}
+              {otherPaymentSubLedgers.map((option) => (<option key={option} value={getSubLedgerCode(option)}>{getSubLedgerCode(option)}</option>))}
             </select>
             <label>Amt.</label>
             <input
@@ -31635,7 +31684,7 @@ const expenditureRecords = [
               onChange={(e) => updateOtherPaymentField(`subLed${right}`, e.target.value)}
             >
               <option value="">Select</option>
-              {otherPaymentSubLedgers.map((option) => <option key={option}>{option}</option>)}
+              {otherPaymentSubLedgers.map((option) => (<option key={option} value={getSubLedgerCode(option)}>{getSubLedgerCode(option)}</option>))}
             </select>
             <label>Amt.</label>
             <input
