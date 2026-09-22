@@ -30493,10 +30493,12 @@ const expenditureRecords = [
   Member
   <select
     value={financialMember}
-   onChange={(e) => {
+  onChange={(e) => {
   const selectedMemberCode = e.target.value;
 
   setFinancialMember(selectedMemberCode);
+  sessionStorage.setItem("financialMember", selectedMemberCode);
+
   setFinancialFromDate("");
   setFinancialToDate("");
   setFinancialReportStatus("");
