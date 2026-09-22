@@ -13506,5 +13506,53 @@ select:focus {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
+/* =========================================================
+   CASH BOOK - FULL PAGE / STATEMENT SIZE
+   No div or class names changed
+   ========================================================= */
 
+.legacy-report-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.legacy-report-card table {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+.legacy-report-card table th,
+.legacy-report-card table td {
+  padding: 4px 3px !important;
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.legacy-report-card table th:first-child,
+.legacy-report-card table td:first-child {
+  text-align: left !important;
+}
+
+/* Cash Book report area */
+.legacy-report-card {
+  overflow-x: hidden !important;
+}
+
+/* Keep the report compact like a statement */
+.legacy-report-card .legacy-table {
+  white-space: normal !important;
+}
+
+/* Total rows */
+.legacy-report-card .legacy-table tr:last-child {
+  font-weight: 700 !important;
+}
 
