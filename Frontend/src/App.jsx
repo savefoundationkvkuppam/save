@@ -21509,6 +21509,7 @@ if (item === "Mark Dissolved Gps") {
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
+    const selectedFinancialMemberCode = financialMember;
 useEffect(() => {
   setFinancialReportResults([]);
   setFinancialReportStatus("");
@@ -25855,11 +25856,13 @@ const dates = (
       <strong>From Date</strong>
       <select
         value={financialFromDate}
-        onChange={(event) => {
-          setFinancialFromDate(event.target.value);
-          setFinancialReportStatus("");
-          setFinancialReportResults([]);
-        }}
+onChange={(event) => {
+  const selectedDate = event.target.value;
+
+  setFinancialFromDate(selectedDate);
+  setFinancialReportStatus("");
+  setFinancialReportResults([]);
+}}
       >
         <option value="">Select Date</option>
 
@@ -25875,11 +25878,13 @@ const dates = (
       <strong>To Date</strong>
       <select
         value={financialToDate}
-        onChange={(event) => {
-          setFinancialToDate(event.target.value);
-          setFinancialReportStatus("");
-          setFinancialReportResults([]);
-        }}
+onChange={(event) => {
+  const selectedDate = event.target.value;
+
+  setFinancialToDate(selectedDate);
+  setFinancialReportStatus("");
+  setFinancialReportResults([]);
+}}
       >
         <option value="">Select Date</option>
 
