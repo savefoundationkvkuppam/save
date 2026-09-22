@@ -25854,16 +25854,13 @@ const dates = (
   <>
     <div className="legacy-report-row">
       <strong>From Date</strong>
-      <select
-        value={financialFromDate}
-onChange={(event) => {
+    onChange={(event) => {
   const selectedDate = event.target.value;
 
+  console.log("FROM DATE SELECTED:", selectedDate);
+
   setFinancialFromDate(selectedDate);
-  setFinancialReportStatus("");
-  setFinancialReportResults([]);
 }}
-      >
         <option value="">Select Date</option>
 
         {financialMemberDates.map((date) => (
