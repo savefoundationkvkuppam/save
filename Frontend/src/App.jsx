@@ -21511,6 +21511,12 @@ if (item === "Mark Dissolved Gps") {
     const [financialReportStatus, setFinancialReportStatus] = useState("");
     const selectedFinancialMemberCode = financialMember;
 useEffect(() => {
+  console.log(
+    "FINANCIAL CONTEXT CHANGED:",
+    selectedCluster,
+    selectedVazhvathram
+  );
+
   setFinancialReportResults([]);
   setFinancialReportStatus("");
   setFinancialFromDate("");
