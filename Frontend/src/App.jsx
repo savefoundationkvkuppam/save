@@ -25859,13 +25859,17 @@ const dates = (
 
     <select
       value={financialFromDate}
-     onChange={(event) => {
+   onChange={(event) => {
   const selectedDate = event.target.value;
 
   console.log("FROM DATE SELECTED:", selectedDate);
 
   setFinancialFromDate(selectedDate);
+
+  // A new From Date means To Date must be selected again
+  setFinancialToDate("");
   sessionStorage.setItem("financialFromDate", selectedDate);
+  sessionStorage.removeItem("financialToDate");
 }}
     >
       <option value="">Select Date</option>
@@ -25894,11 +25898,16 @@ const dates = (
     >
       <option value="">Select Date</option>
 
-      {financialMemberDates.map((date) => (
-        <option key={`to-${date}`} value={date}>
-          {date}
-        </option>
-      ))}
+      {financialMemberDates
+  .filter(
+    (date) =>
+      !financialFromDate || date >= financialFromDate
+  )
+  .map((date) => (
+    <option key={`to-${date}`} value={date}>
+      {date}
+    </option>
+  ))}
     </select>
   </div>
 </>
