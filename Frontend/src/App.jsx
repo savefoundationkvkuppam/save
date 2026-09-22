@@ -25799,53 +25799,6 @@ const allRows = [
         )}
 {item === "Financial" && (
   <>
-    {financialMember && selectedFinancialMember && (
-      <div
-        style={{
-          marginTop: "10px",
-          marginBottom: "10px",
-          padding: "10px",
-          border: "1px solid #777",
-          background: "#f4f4f4",
-          fontWeight: "bold",
-        }}
-      >
-        <div>
-          Member Code:{" "}
-          {selectedFinancialMember.memberCode || ""}
-        </div>
-
-        <div>
-          Member Name:{" "}
-          {selectedFinancialMember.memberName ||
-            selectedFinancialMember.name ||
-            ""}
-        </div>
-
-        <div>
-          Cluster:{" "}
-          {selectedFinancialMember.clusterName ||
-            selectedCluster ||
-            ""}
-        </div>
-
-        <div>
-          Vazhvathram:{" "}
-          {selectedFinancialMember.vazhvathramName ||
-            selectedVazhvathram ||
-            ""}
-        </div>
-
-        <div>
-          From Date: {financialFromDate || "Not selected"}
-        </div>
-
-        <div>
-          To Date: {financialToDate || "Not selected"}
-        </div>
-      </div>
-    )}
-
     {renderFinancialReportResults()}
   </>
 )}
