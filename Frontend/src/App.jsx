@@ -27064,6 +27064,11 @@ useEffect(() => {
 
   checkCashBookLock();
 }, [financialReportSelection, financialFromDate]);
+const selectedFinancialMember = memberRecords.find(
+  (member) =>
+    String(member?.memberCode || "").trim().toLowerCase() ===
+    String(financialMember || "").trim().toLowerCase()
+);
 
     const renderFinancialReportResults = () => {
   if (!financialReportResults.length) return null;
@@ -27091,11 +27096,6 @@ useEffect(() => {
   };
 
   const reportTitle = financialReportSelection || "Financial Report";
-  const selectedFinancialMember = memberRecords.find(
-  (member) =>
-    String(member?.memberCode || "").trim().toLowerCase() ===
-    String(financialMember || "").trim().toLowerCase()
-);
   /*
    * CASH BOOK - FR01
    * Displayed in the same report-style structure as the reference.
