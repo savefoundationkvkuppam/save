@@ -21523,9 +21523,6 @@ useEffect(() => {
     selectedCluster,
     selectedVazhvathram
   );
-
-  setFinancialReportResults([]);
-  setFinancialReportStatus("");
 }, [selectedCluster, selectedVazhvathram]);
 
 
