@@ -30504,9 +30504,6 @@ sessionStorage.setItem("financialMember", selectedMemberCode);
 setFinancialFromDate("");
 setFinancialToDate("");
 
-sessionStorage.removeItem("financialFromDate");
-sessionStorage.removeItem("financialToDate");
-
 setFinancialReportStatus("");
 setFinancialReportResults([]);
   }}
