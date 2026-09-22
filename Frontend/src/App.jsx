@@ -26702,6 +26702,50 @@ const filteredMemberPayments =
       } catch(error) { console.error("Financial Report execute error:",error); setFinancialReportResults([]); setFinancialReportStatus(`Unable to load Financial Report data. ${error.message}`); } finally { setFinancialReportLoading(false); }
     };
 
+    const [cashBookLockChecking, setCashBookLockChecking] = useState(false);
+
+const getCashBookLockMonth = (dateValue) => {
+  if (!dateValue) return "";
+
+  const date = new Date(`${dateValue}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString("en-US", {
+    month: "long",
+  });
+};
+
+useEffect(() => {
+  if (
+    financialReportSelection !== "Cash Book - FR01" ||
+    !financialFromDate
+  ) {
+    setTransactionLockStatus(null);
+    setCashBookLockChecking(false);
+    return;
+  }
+
+  const month = getCashBookLockMonth(financialFromDate);
+
+  if (!month) {
+    setTransactionLockStatus(null);
+    setCashBookLockChecking(false);
+    return;
+  }
+
+  const checkCashBookLock = async () => {
+    try {
+      setCashBookLockChecking(true);
+      await loadTransactionLockStatus(month);
+    } finally {
+      setCashBookLockChecking(false);
+    }
+  };
+
+  checkCashBookLock();
+}, [financialReportSelection, financialFromDate]);
+
     const renderFinancialReportResults = () => {
   if (!financialReportResults.length) return null;
 
@@ -26914,6 +26958,24 @@ const closingCash =
         >
           Cash Book From {financialFromDate} To {financialToDate}
         </div>
+        {financialFromDate && (
+  <div
+    style={{
+      textAlign: "center",
+      fontWeight: "bold",
+      marginBottom: "12px",
+      fontSize: "16px",
+    }}
+  >
+    {cashBookLockChecking
+      ? "Checking Lock Status..."
+      : `${getCashBookLockMonth(financialFromDate)}: ${
+          transactionLockStatus
+            ? "🔒 Locked"
+            : "🔓 Not Locked"
+        }`}
+  </div>
+)}
 
         <div
           style={{
