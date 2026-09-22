@@ -21505,7 +21505,57 @@ if (item === "Mark Dissolved Gps") {
     const [financialBankLoanLedger, setFinancialBankLoanLedger] = useState("SHG Linkage - Bank");
     const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
     const [financialBankBranch, setFinancialBankBranch] = useState("");
-    const [financialAcctNo, setFinancialAcctNo] = useState("5243664550");
+    const [financialAcctNo, setFinancialAcctNo] = useState("");
+    useEffect(() => {
+  if (!financialMember) {
+    setFinancialAcctNo("");
+    setFinancialBankBranch("");
+    setFinancialAcctType("Savings Bank AC");
+    return;
+  }
+
+  const selectedMemberRecord = memberRecords.find(
+    (member) =>
+      String(member?.memberCode || "").trim() ===
+      String(financialMember || "").trim()
+  );
+
+  if (!selectedMemberRecord) {
+    setFinancialAcctNo("");
+    setFinancialBankBranch("");
+    setFinancialAcctType("Savings Bank AC");
+    return;
+  }
+
+  const selectedBankAccount = bankAccountRecords.find(
+    (record) =>
+      String(record?.memberId ?? "").trim() ===
+      String(selectedMemberRecord?.id ?? "").trim()
+  );
+
+  if (!selectedBankAccount) {
+    setFinancialAcctNo("");
+    setFinancialBankBranch("");
+    setFinancialAcctType("Savings Bank AC");
+    return;
+  }
+
+  setFinancialAcctNo(
+    String(selectedBankAccount.accountNumber || "")
+  );
+
+  setFinancialBankBranch(
+    selectedBankAccount.branchName || ""
+  );
+
+  setFinancialAcctType(
+    selectedBankAccount.accountType || ""
+  );
+}, [
+  financialMember,
+  memberRecords,
+  bankAccountRecords,
+]);
     const [financialFromDate, setFinancialFromDate] = useState(() => {
   return sessionStorage.getItem("financialFromDate") || "";
 });
