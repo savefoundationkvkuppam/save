@@ -30509,6 +30509,7 @@ sessionStorage.removeItem("financialToDate");
 
 setFinancialReportStatus("");
 setFinancialReportResults([]);
+  }}
   >
     <option value="">Select Member</option>
 
