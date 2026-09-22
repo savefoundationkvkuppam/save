@@ -21526,6 +21526,125 @@ useEffect(() => {
     const [journalReportLoading, setJournalReportLoading] = useState(false);
     const [journalReportStatus, setJournalReportStatus] = useState("");
     const [reportAvailableDates, setReportAvailableDates] = useState([]);
+    const [financialMemberDates, setFinancialMemberDates] = useState([]);
+useEffect(() => {
+  let cancelled = false;
+
+  const loadFinancialMemberDates = async () => {
+    if (!financialMember) {
+      setFinancialMemberDates([]);
+      setFinancialFromDate("");
+      setFinancialToDate("");
+      return;
+    }
+
+    try {
+      const [
+        memberReceipts,
+        memberPayments,
+        memberJournals,
+      ] = await Promise.all([
+        apiRequest("/member-receipts"),
+        apiRequest("/member-payments"),
+        apiRequest("/member-journals"),
+      ]);
+
+      const selectedCode = String(financialMember)
+        .trim()
+        .toLowerCase();
+
+      const records = [
+        ...(Array.isArray(memberReceipts) ? memberReceipts : []),
+        ...(Array.isArray(memberPayments) ? memberPayments : []),
+        ...(Array.isArray(memberJournals) ? memberJournals : []),
+      ];
+
+      const dateSet = new Set();
+
+      records.forEach((record) => {
+        const recordMemberCode = String(
+          record?.memberCode ||
+            record?.member ||
+            record?.memberId ||
+            ""
+        )
+          .trim()
+          .toLowerCase();
+
+        if (recordMemberCode !== selectedCode) {
+          return;
+        }
+
+        const rawDate =
+          record?.receiptDate ||
+          record?.voucherDate ||
+          record?.journalDate ||
+          record?.date ||
+          record?.transactionDate ||
+          record?.entryDate ||
+          "";
+
+        if (!rawDate) {
+          return;
+        }
+
+        const text = String(rawDate).trim();
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+          dateSet.add(text);
+          return;
+        }
+
+        if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
+          const [day, month, year] = text.split("-");
+          dateSet.add(`${year}-${month}-${day}`);
+          return;
+        }
+
+        const parsed = new Date(text);
+
+        if (!Number.isNaN(parsed.getTime())) {
+          const year = parsed.getFullYear();
+          const month = String(
+            parsed.getMonth() + 1
+          ).padStart(2, "0");
+          const day = String(
+            parsed.getDate()
+          ).padStart(2, "0");
+
+          dateSet.add(`${year}-${month}-${day}`);
+        }
+      });
+
+      const dates = Array.from(dateSet)
+        .filter(
+          (date) =>
+            date >= CURRENT_FINANCIAL_YEAR.apiStartDate &&
+            date <= CURRENT_FINANCIAL_YEAR.apiEndDate
+        )
+        .sort((a, b) => a.localeCompare(b));
+
+      if (!cancelled) {
+        setFinancialMemberDates(dates);
+      }
+    } catch (error) {
+      console.error(
+        "Could not load financial member dates:",
+        error
+      );
+
+      if (!cancelled) {
+        setFinancialMemberDates([]);
+      }
+    }
+  };
+
+  loadFinancialMemberDates();
+
+  return () => {
+    cancelled = true;
+  };
+}, [financialMember]);
 
     useEffect(() => {
   let cancelled = false;
@@ -25728,33 +25847,53 @@ const allRows = [
       </div>
     );
 
-    const dates = (
+const dates = (
   <>
-<div className="legacy-report-row">
-  <strong>From Date</strong>
-  <input
-    type="date"
-    value={financialFromDate}
-    min={CURRENT_FINANCIAL_YEAR.apiStartDate}
-    max={CURRENT_FINANCIAL_YEAR.apiEndDate}
-    onChange={(event) => {
-      setFinancialFromDate(event.target.value);
-    }}
-  />
-</div>
-<div className="legacy-report-row">
-  <strong>To Date</strong>
-  <input
-    type="date"
-    value={financialToDate}
-    min={CURRENT_FINANCIAL_YEAR.apiStartDate}
-    max={CURRENT_FINANCIAL_YEAR.apiEndDate}
-    onChange={(event) => {
-      setFinancialToDate(event.target.value);
-    }}
-  />
-</div>
+    <div className="legacy-report-row">
+      <strong>From Date</strong>
+      <select
+        value={financialFromDate}
+        onChange={(event) => {
+          setFinancialFromDate(event.target.value);
+        }}
+        disabled={!financialMember}
+      >
+        <option value="">
+          {financialMember
+            ? "Select Date"
+            : "Select Member First"}
+        </option>
 
+        {financialMemberDates.map((date) => (
+          <option key={`from-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="legacy-report-row">
+      <strong>To Date</strong>
+      <select
+        value={financialToDate}
+        onChange={(event) => {
+          setFinancialToDate(event.target.value);
+        }}
+        disabled={!financialMember}
+      >
+        <option value="">
+          {financialMember
+            ? "Select Date"
+            : "Select Member First"}
+        </option>
+
+        {financialMemberDates.map((date) => (
+          <option key={`to-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
   </>
 );
 
