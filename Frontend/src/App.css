@@ -13604,3 +13604,50 @@ select:focus {
   padding-right: 10px !important;
   text-align: center !important;
 }
+/* =========================================================
+   CASH BOOK - RECEIPTS HEADER SPACING
+   No JSX / div / className changes
+   ========================================================= */
+
+.legacy-report-card table.legacy-table:has(thead th:nth-child(15)) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
+thead th:first-child {
+  width: 18% !important;
+  min-width: 180px !important;
+  padding-left: 8px !important;
+  padding-right: 35px !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
+thead th:nth-child(2) {
+  width: 7% !important;
+  min-width: 70px !important;
+  padding-left: 25px !important;
+  padding-right: 10px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
+tbody td:first-child {
+  width: 18% !important;
+  min-width: 180px !important;
+  padding-left: 8px !important;
+  padding-right: 15px !important;
+  text-align: left !important;
+}
+
+.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
+tbody td:nth-child(2) {
+  width: 7% !important;
+  min-width: 70px !important;
+  text-align: center !important;
+}
