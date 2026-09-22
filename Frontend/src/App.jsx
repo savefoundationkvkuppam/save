@@ -3910,6 +3910,7 @@ try {
   const [bankAccountMode, setBankAccountMode] = useState("view");
   const [selectedBankAccountRecordId, setSelectedBankAccountRecordId] = useState(null);
   const [showBankAccountList, setShowBankAccountList] = useState(false);
+  const [bankAccountListType, setBankAccountListType] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -36812,13 +36813,44 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <button onClick={handleBankAccountSave} disabled={bankAccountMode !== "add" && bankAccountMode !== "edit"}>Save</button>
               <button onClick={resetBankAccountForm}>Cancel</button>
               <button onClick={handleBankAccountDelete}>Delete</button>
-              <button onClick={()=>setShowBankAccountList(true)}>List</button>
-              <button onClick={()=>setShowBankAccountList(true)}>List Nil Bal.</button>
-              <button onClick={()=>setShowBankAccountList(true)}>List All</button>
+              <button
+  onClick={() => {
+    setBankAccountListType("all");
+    setShowBankAccountList(true);
+  }}
+>
+  List
+</button>
+
+<button
+  onClick={() => {
+    setBankAccountListType("nil");
+    setShowBankAccountList(true);
+  }}
+>
+  List Nil Bal.
+</button>
+
+<button
+  onClick={() => {
+    setBankAccountListType("all");
+    setShowBankAccountList(true);
+  }}
+>
+  List All
+</button>
             </div>
           </div>
 
-          {showBankAccountList && (
+          {showBankAccountList && (() => {
+  const displayedBankAccountRecords =
+    bankAccountListType === "nil"
+      ? bankAccountRecords.filter(
+          (record) => Number(record.amount || 0) === 0
+        )
+      : bankAccountRecords;
+
+  return (
             <div className="master-list-panel">
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
                 <h3 style={{margin:0}}>Bank Account List</h3>
