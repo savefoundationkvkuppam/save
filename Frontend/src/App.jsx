@@ -21521,9 +21521,6 @@ useEffect(() => {
 
   setFinancialReportResults([]);
   setFinancialReportStatus("");
-  setFinancialFromDate("");
-  setFinancialToDate("");
-  setFinancialMemberDates([]);
 }, [selectedCluster, selectedVazhvathram]);
 
 
