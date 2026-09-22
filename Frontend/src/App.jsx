@@ -21506,8 +21506,13 @@ if (item === "Mark Dissolved Gps") {
     const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
     const [financialBankBranch, setFinancialBankBranch] = useState("");
     const [financialAcctNo, setFinancialAcctNo] = useState("5243664550");
-    const [financialFromDate, setFinancialFromDate] = useState("");
-    const [financialToDate, setFinancialToDate] = useState("");
+    const [financialFromDate, setFinancialFromDate] = useState(() => {
+  return sessionStorage.getItem("financialFromDate") || "";
+});
+
+const [financialToDate, setFinancialToDate] = useState(() => {
+  return sessionStorage.getItem("financialToDate") || "";
+});
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
@@ -25857,13 +25862,14 @@ const dates = (
 
     <select
       value={financialFromDate}
-      onChange={(event) => {
-        const selectedDate = event.target.value;
+     onChange={(event) => {
+  const selectedDate = event.target.value;
 
-        console.log("FROM DATE SELECTED:", selectedDate);
+  console.log("FROM DATE SELECTED:", selectedDate);
 
-        setFinancialFromDate(selectedDate);
-      }}
+  setFinancialFromDate(selectedDate);
+  sessionStorage.setItem("financialFromDate", selectedDate);
+}}
     >
       <option value="">Select Date</option>
 
@@ -25884,6 +25890,7 @@ const dates = (
         const selectedDate = event.target.value;
 
         setFinancialToDate(selectedDate);
+        sessionStorage.setItem("financialToDate", selectedDate);
         setFinancialReportStatus("");
         setFinancialReportResults([]);
       }}
@@ -30492,13 +30499,16 @@ const expenditureRecords = [
   const selectedMemberCode = e.target.value;
 
   setFinancialMember(selectedMemberCode);
-  sessionStorage.setItem("financialMember", selectedMemberCode);
+sessionStorage.setItem("financialMember", selectedMemberCode);
 
-  setFinancialFromDate("");
-  setFinancialToDate("");
-  setFinancialReportStatus("");
-  setFinancialReportResults([]);
-}}
+setFinancialFromDate("");
+setFinancialToDate("");
+
+sessionStorage.removeItem("financialFromDate");
+sessionStorage.removeItem("financialToDate");
+
+setFinancialReportStatus("");
+setFinancialReportResults([]);
   >
     <option value="">Select Member</option>
 
