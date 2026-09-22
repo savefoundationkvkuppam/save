@@ -21509,6 +21509,11 @@ if (item === "Mark Dissolved Gps") {
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
+useEffect(() => {
+  setFinancialMember("");
+  setFinancialReportResults([]);
+  setFinancialReportStatus("");
+}, [selectedCluster, selectedVazhvathram]);
 
 
     // JOURNAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
@@ -21622,13 +21627,13 @@ if (item === "Mark Dissolved Gps") {
     }
   };
 
-  loadReportAvailableDates();
+    loadReportAvailableDates();
 
   return () => {
     cancelled = true;
   };
-}, []);
-
+}, [selectedCluster, selectedVazhvathram]);
+    
     // MIS-SSP DATABASE CONNECTION (additive; original MIS-SSP page is preserved below)
     const [misSspReportSelection, setMisSspReportSelection] = useState(
       "MLSSP 01 - List of Members Enrolled during current year"
@@ -25668,7 +25673,58 @@ const allRows = [
             {financialReportLoading ? "Loading..." : financialReportStatus}
           </div>
         )}
-        {item === "Financial" && renderFinancialReportResults()}
+{item === "Financial" && (
+  <>
+    {financialMember && selectedFinancialMember && (
+      <div
+        style={{
+          marginTop: "10px",
+          marginBottom: "10px",
+          padding: "10px",
+          border: "1px solid #777",
+          background: "#f4f4f4",
+          fontWeight: "bold",
+        }}
+      >
+        <div>
+          Member Code:{" "}
+          {selectedFinancialMember.memberCode || ""}
+        </div>
+
+        <div>
+          Member Name:{" "}
+          {selectedFinancialMember.memberName ||
+            selectedFinancialMember.name ||
+            ""}
+        </div>
+
+        <div>
+          Cluster:{" "}
+          {selectedFinancialMember.clusterName ||
+            selectedCluster ||
+            ""}
+        </div>
+
+        <div>
+          Vazhvathram:{" "}
+          {selectedFinancialMember.vazhvathramName ||
+            selectedVazhvathram ||
+            ""}
+        </div>
+
+        <div>
+          From Date: {financialFromDate || "Not selected"}
+        </div>
+
+        <div>
+          To Date: {financialToDate || "Not selected"}
+        </div>
+      </div>
+    )}
+
+    {renderFinancialReportResults()}
+  </>
+)}
       </div>
     );
 
@@ -25730,6 +25786,16 @@ const allRows = [
     const loadFinancialEndpoint = async (endpoint) => { const data=await apiRequest(endpoint); return Array.isArray(data) ? data : []; };
     const runFinancialReport = async () => {
       setFinancialReportLoading(true); setFinancialReportStatus(""); setFinancialReportResults([]);
+const fromDate = parseFinancialDate(financialFromDate);
+const toDate = parseFinancialDate(financialToDate);
+
+if (fromDate && toDate && fromDate > toDate) {
+  setFinancialReportStatus(
+    "From Date cannot be later than To Date."
+  );
+  setFinancialReportLoading(false);
+  return;
+}
       try {
         let rows=[]; let sourceLabel="";
        if (financialReportSelection === "Cash Book - FR01") {
@@ -27025,7 +27091,11 @@ useEffect(() => {
   };
 
   const reportTitle = financialReportSelection || "Financial Report";
-
+  const selectedFinancialMember = memberRecords.find(
+  (member) =>
+    String(member?.memberCode || "").trim().toLowerCase() ===
+    String(financialMember || "").trim().toLowerCase()
+);
   /*
    * CASH BOOK - FR01
    * Displayed in the same report-style structure as the reference.
@@ -30283,15 +30353,28 @@ const expenditureRecords = [
       </div>
 
       <div className="legacy-fields">
-        <label>
-          Member
-          <input
-            type="text"
-            placeholder="Enter Member Name"
-            value={financialMember}
-            onChange={(e) => setFinancialMember(e.target.value)}
-            />
-        </label>
+<label>
+  Member
+  <select
+    value={financialMember}
+    onChange={(e) => {
+      setFinancialMember(e.target.value);
+      setFinancialReportStatus("");
+      setFinancialReportResults([]);
+    }}
+  >
+    <option value="">Select Member</option>
+
+    {getContextMembers().map((member) => (
+      <option
+        key={member.memberCode}
+        value={member.memberCode}
+      >
+        {member.memberCode} - {member.memberName || member.name || ""}
+      </option>
+    ))}
+  </select>
+</label>
 
         <label>
           Sub Ledger
