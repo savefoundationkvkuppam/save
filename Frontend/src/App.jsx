@@ -31425,10 +31425,17 @@ rows = filterReportRecordsByContext(
   // REPORTS HOME PAGE
   // =========================================================
 
-  if (page.startsWith("report:")) {
-    const reportName = page.slice("report:".length);
-    return <ReportPage item={reportName} />;
-  }
+  const reportName = page.startsWith("report:")
+  ? page.slice("report:".length)
+  : "";
+
+const reportPageElement = ReportPage({
+  item: reportName,
+});
+
+if (page.startsWith("report:")) {
+  return reportPageElement;
+}
 
   if (page === "reportsHome") {
     return (
