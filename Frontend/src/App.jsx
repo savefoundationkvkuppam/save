@@ -26929,7 +26929,7 @@ const closingCash =
           className="legacy-table"
           style={{
             width: "100%",
-            minWidth: "1450px",
+            minWidth: "0",
             tableLayout: "auto",
             borderCollapse: "collapse",
             whiteSpace: "nowrap",
