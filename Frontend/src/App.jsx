@@ -21498,7 +21498,9 @@ if (item === "Mark Dissolved Gps") {
 
     // FINANCIAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
     const [financialReportSelection, setFinancialReportSelection] = useState("Cash Book - FR01");
-    const [financialMember, setFinancialMember] = useState("");
+    const [financialMember, setFinancialMember] = useState(() => {
+        return sessionStorage.getItem("financialMember") || "";
+    });
     const [financialSubLedger, setFinancialSubLedger] = useState("Regular Savings");
     const [financialBankLoanLedger, setFinancialBankLoanLedger] = useState("SHG Linkage - Bank");
     const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
