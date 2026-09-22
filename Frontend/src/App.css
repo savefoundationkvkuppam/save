@@ -13605,49 +13605,50 @@ select:focus {
   text-align: center !important;
 }
 /* =========================================================
-   CASH BOOK - RECEIPTS HEADER SPACING
+   CASH BOOK - RECEIPTS MEMBER / REC NO SPACING
    No JSX / div / className changes
    ========================================================= */
 
-.legacy-report-card table.legacy-table:has(thead th:nth-child(15)) {
+.legacy-report-card table.legacy-table:has(thead th[colspan="4"]) {
   width: 100% !important;
   min-width: 0 !important;
   max-width: 100% !important;
   table-layout: fixed !important;
 }
 
-.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
-thead th:first-child {
+/* Member / Particulars */
+.legacy-report-card table.legacy-table:has(thead th[colspan="4"])
+thead tr:first-child th:nth-child(1) {
   width: 18% !important;
-  min-width: 180px !important;
   padding-left: 8px !important;
-  padding-right: 35px !important;
+  padding-right: 25px !important;
   text-align: left !important;
   white-space: nowrap !important;
 }
 
-.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
-thead th:nth-child(2) {
+/* Rec. No. */
+.legacy-report-card table.legacy-table:has(thead th[colspan="4"])
+thead tr:first-child th:nth-child(2) {
   width: 7% !important;
-  min-width: 70px !important;
-  padding-left: 25px !important;
+  padding-left: 20px !important;
   padding-right: 10px !important;
   text-align: center !important;
   white-space: nowrap !important;
 }
 
-.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
-tbody td:first-child {
+/* Member values */
+.legacy-report-card table.legacy-table:has(thead th[colspan="4"])
+tbody td:nth-child(1) {
   width: 18% !important;
-  min-width: 180px !important;
   padding-left: 8px !important;
-  padding-right: 15px !important;
   text-align: left !important;
+  white-space: nowrap !important;
 }
 
-.legacy-report-card table.legacy-table:has(thead th:nth-child(15))
+/* Rec. No. values */
+.legacy-report-card table.legacy-table:has(thead th[colspan="4"])
 tbody td:nth-child(2) {
   width: 7% !important;
-  min-width: 70px !important;
   text-align: center !important;
+  white-space: nowrap !important;
 }
