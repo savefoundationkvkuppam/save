@@ -27055,7 +27055,7 @@ const closingCash =
 </tr>
             ))}
             <tr>
-              <td colSpan="12" style={{
+              <td colSpan="14" style={{
                 fontWeight: "bold",
                  textAlign: "right",
               }}
@@ -27118,7 +27118,7 @@ const closingCash =
             ))}
            <tr>
   <td
-    colSpan="14"
+    colSpan="4"
     style={{
       fontWeight: "bold",
       textAlign: "right",
