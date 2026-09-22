@@ -2197,6 +2197,144 @@ const filterTransactionsByContext = (records) => {
   );
 };
 
+// =========================================================
+// COMMON REPORT CONTEXT FILTER
+// Cluster → Vazhvathram → Member → Report Data
+// =========================================================
+
+const filterReportRecordsByContext = (
+  records,
+  membersSource = memberRecords
+) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  // No context selected = show all records
+  if (!selectedCluster && !selectedVazhvathram) {
+    return records;
+  }
+
+  const normalize = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const contextMembers = Array.isArray(membersSource)
+    ? membersSource.filter((member) => {
+        const clusterMatches =
+          !selectedCluster ||
+          normalize(member?.clusterName) ===
+            normalize(selectedCluster);
+
+        const vazhvathramMatches =
+          !selectedVazhvathram ||
+          normalize(member?.vazhvathramName) ===
+            normalize(selectedVazhvathram);
+
+        return clusterMatches && vazhvathramMatches;
+      })
+    : [];
+
+  const contextMemberCodes = new Set(
+    contextMembers
+      .map((member) =>
+        normalize(
+          member?.memberCode ||
+          member?.code ||
+          member?.memberId
+        )
+      )
+      .filter(Boolean)
+  );
+
+  return records.filter((record) => {
+    const recordCluster = normalize(
+      record?.clusterName ||
+      record?.cluster
+    );
+
+    const recordVazhvathram = normalize(
+      record?.vazhvathramName ||
+      record?.vazhvathram
+    );
+
+    const recordMemberCode = normalize(
+      record?.memberCode ||
+      record?.member ||
+      record?.memberId
+    );
+
+    const recordVazhvathramCode = normalize(
+      record?.vazhvathramCode
+    );
+
+    // Direct Cluster information
+    if (selectedCluster && recordCluster) {
+      if (recordCluster !== normalize(selectedCluster)) {
+        return false;
+      }
+    }
+
+    // Direct Vazhvathram information
+    if (
+      selectedVazhvathram &&
+      recordVazhvathram
+    ) {
+      if (
+        recordVazhvathram !==
+        normalize(selectedVazhvathram)
+      ) {
+        return false;
+      }
+    }
+
+    // Member-based report records
+    if (recordMemberCode) {
+      return contextMemberCodes.has(recordMemberCode);
+    }
+
+    // Vazhvathram-code based records
+    if (recordVazhvathramCode) {
+      const matchingVazhvathram =
+        vazhvathrams.find(
+          (item) =>
+            normalize(item?.vazhvathramCode) ===
+            recordVazhvathramCode
+        );
+
+      if (matchingVazhvathram) {
+        const clusterMatches =
+          !selectedCluster ||
+          normalize(
+            matchingVazhvathram?.clusterName
+          ) === normalize(selectedCluster);
+
+        const vazhvathramMatches =
+          !selectedVazhvathram ||
+          normalize(
+            matchingVazhvathram?.vazhvathramName
+          ) === normalize(selectedVazhvathram);
+
+        return (
+          clusterMatches &&
+          vazhvathramMatches
+        );
+      }
+    }
+
+    // Records with direct context fields
+    if (recordCluster || recordVazhvathram) {
+      return true;
+    }
+
+    // If a context is selected but the record
+    // cannot be connected to that context,
+    // do not display it.
+    return false;
+  });
+};
+
   // =========================================================
   // CLUSTER
   // =========================================================
@@ -21550,12 +21688,26 @@ if (item === "Mark Dissolved Gps") {
           apiRequest("/member-journals"),
         ]);
         const rows = [
-          ...(Array.isArray(receipts) ? receipts : []).map((r) => ({ ...r, source: "Receipt" })),
-          ...(Array.isArray(payments) ? payments : []).map((r) => ({ ...r, source: "Payment" })),
-          ...(Array.isArray(journals) ? journals : []).map((r) => ({ ...r, source: "Journal" })),
-        ];
+  ...(Array.isArray(receipts) ? receipts : []).map((r) => ({
+    ...r,
+    source: "Receipt",
+  })),
+  ...(Array.isArray(payments) ? payments : []).map((r) => ({
+    ...r,
+    source: "Payment",
+  })),
+  ...(Array.isArray(journals) ? journals : []).map((r) => ({
+    ...r,
+    source: "Journal",
+  })),
+];
+
+const contextRows = filterReportRecordsByContext(
+  rows,
+  Array.isArray(members) ? members : []
+);
         const headText = analyticsForecastHead.split(" (")[0].toLowerCase();
-        const filtered = rows.filter((r) => {
+        const filtered = contextRows.filter((r) => {
           const text = Object.values(r || {}).join(" ").toLowerCase();
           return headText === "regular savings" ? text.includes("regular") || text.includes("savings") : text.includes(headText);
         });
@@ -21657,20 +21809,49 @@ if (item === "Mark Dissolved Gps") {
         const selectedSubledger = String(bankLinkSubledger || "").toLowerCase();
 
         let rows = [];
-        if (selected.includes("Fixed Deposit")) {
-          rows = fixedDeposits;
-        } else if (selected.includes("Branch wise") || selected.includes("Branchwise")) {
-          rows = branches;
-        } else if (selected.includes("Bank Linkage status") || selected.includes("Linkage Efficiency") || selected.includes("Interest Outstanding") || selected.includes("vazhvathrams not linked")) {
-          rows = members.filter((record) => {
-            const text = Object.values(record || {}).join(" ").toLowerCase();
-            return selected.includes("vazhvathrams not linked") ? !text.includes("bank") && !text.includes("") : true;
-          });
-        } else if (selected.includes("Disbursement") || selected.includes("Repayment") || selected.includes("Demand Collection")) {
-          rows = [...receipts, ...payments];
-        } else {
-          rows = [...bankDetails, ...branches, ...receipts, ...payments];
-        }
+
+if (selected.includes("Fixed Deposit")) {
+  rows = fixedDeposits;
+} else if (
+  selected.includes("Branch wise") ||
+  selected.includes("Branchwise")
+) {
+  rows = branches;
+} else if (
+  selected.includes("Bank Linkage status") ||
+  selected.includes("Linkage Efficiency") ||
+  selected.includes("Interest Outstanding") ||
+  selected.includes("vazhvathrams not linked")
+) {
+  rows = members.filter((record) => {
+    const text = Object.values(record || {})
+      .join(" ")
+      .toLowerCase();
+
+    return selected.includes("vazhvathrams not linked")
+      ? !text.includes("bank")
+      : true;
+  });
+} else if (
+  selected.includes("Disbursement") ||
+  selected.includes("Repayment") ||
+  selected.includes("Demand Collection")
+) {
+  rows = [...receipts, ...payments];
+} else {
+  rows = [
+    ...bankDetails,
+    ...branches,
+    ...receipts,
+    ...payments,
+  ];
+}
+
+// Apply selected Cluster → Vazhvathram context
+rows = filterReportRecordsByContext(
+  rows,
+  members
+);
 
         if (selectedSubledger && selectedSubledger !== "shg") {
           rows = rows.filter((record) => Object.values(record || {}).join(" ").toLowerCase().includes(selectedSubledger));
@@ -21787,7 +21968,12 @@ if (item === "Mark Dissolved Gps") {
           return t.includes(productType);
         };
 
-        const memberRows = members.map((member) => {
+        const contextMembers = filterReportRecordsByContext(
+  members,
+  members
+);
+
+const memberRows = contextMembers.map((member) => {
           const code = getMemberCode(member);
           const name = getMemberName(member);
           const memberJson = JSON.stringify(member).toLowerCase();
@@ -23724,10 +23910,18 @@ const monthlyPayments =
           const text = JSON.stringify(member || {}).toLowerCase();
           return /lock|locked/.test(text) || String(member?.locked || member?.isLocked || "").toLowerCase() === "true";
         };
-        let rows = members.filter((member) => {
-          if (demandMemberMode === "With Locked Members") return true;
-          return !isLocked(member);
-        });
+        let rows = filterReportRecordsByContext(
+  members,
+  members
+);
+
+rows = rows.filter((member) => {
+  if (demandMemberMode === "With Locked Members") {
+    return true;
+  }
+
+  return !isLocked(member);
+});
         rows = rows.map((member) => ({
           memberCode: member?.memberCode || member?.code || member?.memberId || member?.id || "",
           memberName: member?.memberName || member?.name || "",
@@ -24109,12 +24303,19 @@ const renderConfirmationReportResults = () => {
       setScheduleReportResults([]);
 
       try {
-        const [receiptsData, paymentsData, memberJournalsData, otherJournalsData] = await Promise.all([
-          apiRequest("/member-receipts"),
-          apiRequest("/member-payments"),
-          apiRequest("/member-journals"),
-          apiRequest("/other-journals"),
-        ]);
+        const [
+  receiptsData,
+  paymentsData,
+  memberJournalsData,
+  otherJournalsData,
+  membersData,
+] = await Promise.all([
+  apiRequest("/member-receipts"),
+  apiRequest("/member-payments"),
+  apiRequest("/member-journals"),
+  apiRequest("/other-journals"),
+  apiRequest("/members"),
+]);
 
         const sources = [
           ...(Array.isArray(receiptsData) ? receiptsData : []).map((row) => ({ ...row, _source: "Member Receipt" })),
@@ -24122,12 +24323,20 @@ const renderConfirmationReportResults = () => {
           ...(Array.isArray(memberJournalsData) ? memberJournalsData : []).map((row) => ({ ...row, _source: "Member Journal" })),
           ...(Array.isArray(otherJournalsData) ? otherJournalsData : []).map((row) => ({ ...row, _source: "Other Journal" })),
         ];
+    const members = Array.isArray(membersData)
+  ? membersData
+  : [];
+
+const contextSources = filterReportRecordsByContext(
+  sources,
+  members
+);
 
         const selectedLedger = String(scheduleGeneralLedger || "").toLowerCase();
         const selectedSubLedger = String(scheduleSubLedger || "").toLowerCase();
         const targetDate = scheduleAsOnDate ? new Date(`${scheduleAsOnDate}T23:59:59`) : null;
 
-        const rows = sources.filter((row) => {
+        const rows = contextSources.filter((row) => {
           const text = Object.entries(row)
             .filter(([key]) => !String(key).startsWith("_"))
             .map(([, value]) => String(value ?? ""))
@@ -24190,10 +24399,41 @@ const renderConfirmationReportResults = () => {
         const receipts = Array.isArray(receiptsData) ? receiptsData : [];
         const payments = Array.isArray(paymentsData) ? paymentsData : [];
         const journals = Array.isArray(journalsData) ? journalsData : [];
-        const transactionCount = receipts.length + payments.length + journals.length;
-        const lockedCount = members.filter((m) => Boolean(m.locked ?? m.isLocked ?? m.memberLocked)).length;
+        const contextMembers = filterReportRecordsByContext(
+  members,
+  members
+);
+
+const contextReceipts = filterReportRecordsByContext(
+  receipts,
+  members
+);
+
+const contextPayments = filterReportRecordsByContext(
+  payments,
+  members
+);
+
+const contextJournals = filterReportRecordsByContext(
+  journals,
+  members
+);
+        const transactionCount =
+  contextReceipts.length +
+  contextPayments.length +
+  contextJournals.length;
+        const lockedCount = contextMembers.filter(
+  (m) => Boolean(
+    m.locked ??
+    m.isLocked ??
+    m.memberLocked
+  )
+).length;
         const activeCount = members.filter((m) => String(m.status ?? "").toLowerCase().includes("active") || m.active === true).length;
-        const totalSavings = [...receipts, ...payments].reduce((sum, row) => {
+        const totalSavings = [
+  ...contextReceipts,
+  ...contextPayments,
+].reduce((sum, row) => {
           const value = Number(row.amount ?? row.receiptAmount ?? row.paymentAmount ?? 0);
           return sum + (Number.isFinite(value) ? value : 0);
         }, 0);
@@ -24293,8 +24533,21 @@ const renderConfirmationReportResults = () => {
           return;
         }
 
-        const data = await apiRequest(endpoint);
-        let rows = Array.isArray(data) ? data : [];
+const data = await apiRequest(endpoint);
+let rows = Array.isArray(data) ? data : [];
+
+// Apply selected Cluster → Vazhvathram context
+const memberMasterReports = [
+  "MA 06 - Member Details",
+  "MA 07 - Member Details - Active",
+  "MA 08 - Member Address",
+  "MA 22 - Removed Member Details",
+  "MA 23 - Locked MemBer Details",
+];
+
+if (memberMasterReports.includes(masterReportSelection)) {
+  rows = filterReportRecordsByContext(rows, rows);
+}
 
         if (masterReportSelection === "MA 07 - Member Details - Active") {
           rows = rows.filter((record) => {
@@ -30409,6 +30662,10 @@ const expenditureRecords = [
         }
 
         let rows = Array.isArray(data) ? data : [];
+        rows = filterReportRecordsByContext(
+  rows,
+  members
+);
         const fromCount = Number(blockFromMembers);
         const toCount = Number(blockToMembers);
         if (Number.isFinite(fromCount) && blockFromMembers.trim() !== "") {
@@ -30517,7 +30774,12 @@ const expenditureRecords = [
         const subText = String(vazSubLedger || "").toLowerCase();
         const from = Number(String(vazFromAmt).replace(/,/g, ""));
         const to = Number(String(vazToAmt).replace(/,/g, ""));
-        const filtered = rows.filter((row) => {
+  const contextRows = filterReportRecordsByContext(
+  rows,
+  Array.isArray(members) ? members : []
+);
+
+const filtered = contextRows.filter((row) => {
           const text = Object.values(row || {}).join(" ").toLowerCase();
           const amountValue = Object.entries(row || {})
             .filter(([key]) => /amount|amt|value|balance/i.test(key))
@@ -30745,7 +31007,13 @@ const expenditureRecords = [
           data = members;
         }
 
-        const rows = Array.isArray(data) ? data : [];
+        let rows = Array.isArray(data) ? data : [];
+
+// Apply selected Cluster → Vazhvathram context
+rows = filterReportRecordsByContext(
+  rows,
+  Array.isArray(members) ? members : []
+);
         setClusterReportResults(rows.slice(0, 500));
         setClusterReportStatus(`${clusterReportSelection} loaded from database (${rows.length} record(s)).`);
       } catch (error) {
