@@ -36795,6 +36795,12 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
   // =========================================================
   // VAZHVATHRAM BANK ACCOUNT DETAILS
   // =========================================================
+  const displayedBankAccountRecords =
+  bankAccountListType === "nil"
+    ? bankAccountRecords.filter(
+        (record) => Number(record.amount || 0) === 0
+      )
+    : bankAccountRecords;
   if (page === "bankAccount") {
     return (
       <div className="save-page"><TopBar /><div className="main-container"><SideMenu />
@@ -36808,77 +36814,138 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-row"><label>Account Date</label><input type="date" value={bankAccountData.accountDate} onChange={e=>updateData(setBankAccountData,"accountDate",e.target.value)} /></div>
             <div className="master-row amount-row"><label>Amount</label><input value={bankAccountData.amount} onChange={e=>updateData(setBankAccountData,"amount",e.target.value)} /><span>Bal. Sheet - Rs. 0 as on {new Date(CURRENT_FINANCIAL_YEAR.apiEndDate).toLocaleDateString("en-GB")}</span></div>
             <div className="master-buttons">
-              <button onClick={handleBankAccountAdd}>Add</button>
-              <button onClick={handleBankAccountEdit}>Edit</button>
-              <button onClick={handleBankAccountSave} disabled={bankAccountMode !== "add" && bankAccountMode !== "edit"}>Save</button>
-              <button onClick={resetBankAccountForm}>Cancel</button>
-              <button onClick={handleBankAccountDelete}>Delete</button>
-              <button
-  onClick={() => {
-    setBankAccountListType("all");
-    setShowBankAccountList(true);
-  }}
->
-  List
-</button>
+  <button onClick={handleBankAccountAdd}>Add</button>
 
-<button
-  onClick={() => {
-    setBankAccountListType("nil");
-    setShowBankAccountList(true);
-  }}
->
-  List Nil Bal.
-</button>
+  <button onClick={handleBankAccountEdit}>Edit</button>
 
-<button
-  onClick={() => {
-    setBankAccountListType("all");
-    setShowBankAccountList(true);
-  }}
->
-  List All
-</button>
-            </div>
-          </div>
+  <button
+    onClick={handleBankAccountSave}
+    disabled={bankAccountMode !== "add" && bankAccountMode !== "edit"}
+  >
+    Save
+  </button>
 
-          {showBankAccountList && (() => {
-  const displayedBankAccountRecords =
-    bankAccountListType === "nil"
-      ? bankAccountRecords.filter(
-          (record) => Number(record.amount || 0) === 0
-        )
-      : bankAccountRecords;
+  <button onClick={resetBankAccountForm}>Cancel</button>
 
-  return (
-            <div className="master-list-panel">
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}}>
-                <h3 style={{margin:0}}>Bank Account List</h3>
-                <button onClick={()=>setShowBankAccountList(false)}>Close</button>
-              </div>
-              {bankAccountRecords.length === 0 ? (
-                <p>No Bank Account records found.</p>
-              ) : (
-                <table className="master-table">
-                  <thead><tr><th>Bank</th><th>Branch</th><th>Account Type</th><th>Account Number</th><th>Date</th><th>Amount</th><th>Select</th></tr></thead>
-                  <tbody>
-                    {bankAccountRecords.map((record) => (
-                      <tr key={record.id}>
-                        <td>{record.bankName}</td>
-                        <td>{record.branchName}</td>
-                        <td>{record.accountType}</td>
-                        <td>{record.accountNumber}</td>
-                        <td>{record.accountDate}</td>
-                        <td>{record.amount}</td>
-                        <td><button onClick={()=>selectBankAccountRecord(record)}>Select</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
+  <button onClick={handleBankAccountDelete}>Delete</button>
 
+  <button
+    onClick={() => {
+      setBankAccountListType("all");
+      setShowBankAccountList(true);
+    }}
+  >
+    List
+  </button>
+
+  <button
+    onClick={() => {
+      setBankAccountListType("nil");
+      setShowBankAccountList(true);
+    }}
+  >
+    List Nil Bal.
+  </button>
+
+  <button
+    onClick={() => {
+      setBankAccountListType("all");
+      setShowBankAccountList(true);
+    }}
+  >
+    List All
+  </button>
+</div>
+</div>
+{showBankAccountList && (
+  <div className="master-list-panel">
+
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "10px"
+      }}
+    >
+      <h3 style={{ margin: 0 }}>
+        {bankAccountListType === "nil"
+          ? "Bank Account List - Nil Balance"
+          : "Bank Account List"}
+      </h3>
+
+      <button onClick={() => setShowBankAccountList(false)}>
+        Close
+      </button>
+    </div>
+
+    {displayedBankAccountRecords.length === 0 ? (
+      <p>
+        {bankAccountListType === "nil"
+          ? "No Bank Accounts with Nil Balance found."
+          : "No Bank Account records found."}
+      </p>
+    ) : (
+      <table className="master-table">
+
+        <thead>
+          <tr>
+            <th>Bank</th>
+            <th>Branch</th>
+            <th>Account Type</th>
+            <th>Account Number</th>
+            <th>Date</th>
+            <th>Account Balance</th>
+            <th>Select</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {displayedBankAccountRecords.map((record) => (
+            <tr key={record.id}>
+
+              <td>
+                {record.bankName}
+              </td>
+
+              <td>
+                {record.branchName}
+              </td>
+
+              <td>
+                {record.accountType}
+              </td>
+
+              <td>
+                {record.accountNumber}
+              </td>
+
+              <td>
+                {record.accountDate}
+              </td>
+
+              <td>
+                {Number(record.amount || 0)}
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  onClick={() => selectBankAccountRecord(record)}
+                >
+                  Select
+                </button>
+              </td>
+
+            </tr>
+          ))}
+        </tbody>
+
+      </table>
+    )}
+
+  </div>
+)}
           <div className="master-note bank-note"><p>For Editing the bank balance, click the list. Copy the Account No. you want to edit, Paste this against account Number. Click Edit Button. You will get the existing Values. Enter the amount you want to update. Then click Save. The new value will get updated.</p><p><b>Notes on Amount entry:</b><br/>1. Account opened in current financial year (date on or after {CURRENT_FINANCIAL_YEAR.startDate}): Enter Amount as 0. The system will automatically set Amount to 0. No opening balance exists for a current-year account — balance will build through transactions.<br/>2. Account opened in prior year / Opening Balance entry (date on or before {CURRENT_FINANCIAL_YEAR.priorYearEndDate}): Enter the actual opening balance in the Amount field. The Balance Sheet (Cash at Bank — 2112) will be updated automatically by summing all account entries dated before {CURRENT_FINANCIAL_YEAR.apiStartDate}.<br/>3. To record the first deposit made at the time of account opening, go to Other Voucher (Other Payment) → Voucher Type: Cash → GL Head: Cash at Bank (2112) → Amount: the deposit amount → Account Type: SB A/C (or Loan A/C as applicable).</p></div>
         </div>
       </div></div>
