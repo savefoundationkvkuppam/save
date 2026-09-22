@@ -30480,22 +30480,40 @@ const expenditureRecords = [
   Member
   <select
     value={financialMember}
-    onChange={(e) => {
-      setFinancialMember(e.target.value);
-      setFinancialReportStatus("");
-      setFinancialReportResults([]);
-    }}
+   onChange={(e) => {
+  const selectedMemberCode = e.target.value;
+
+  setFinancialMember(selectedMemberCode);
+  setFinancialFromDate("");
+  setFinancialToDate("");
+  setFinancialReportStatus("");
+  setFinancialReportResults([]);
+}}
   >
     <option value="">Select Member</option>
 
-    {getContextMembers().map((member) => (
-      <option
-        key={member.memberCode}
-        value={member.memberCode}
-      >
-        {member.memberCode} - {member.memberName || member.name || ""}
-      </option>
-    ))}
+{[
+  ...getContextMembers(),
+  ...(financialMember &&
+  !getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(financialMember || "").trim()
+  )
+    ? memberRecords.filter(
+        (member) =>
+          String(member.memberCode || "").trim() ===
+          String(financialMember || "").trim()
+      )
+    : []),
+].map((member) => (
+  <option
+    key={member.memberCode}
+    value={member.memberCode}
+  >
+    {member.memberCode} - {member.memberName || member.name || ""}
+  </option>
+))}
   </select>
 </label>
 
