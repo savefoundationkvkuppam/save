@@ -25857,14 +25857,11 @@ const dates = (
         value={financialFromDate}
         onChange={(event) => {
           setFinancialFromDate(event.target.value);
+          setFinancialReportStatus("");
+          setFinancialReportResults([]);
         }}
-        disabled={!financialMember}
       >
-        <option value="">
-          {financialMember
-            ? "Select Date"
-            : "Select Member First"}
-        </option>
+        <option value="">Select Date</option>
 
         {financialMemberDates.map((date) => (
           <option key={`from-${date}`} value={date}>
@@ -25880,14 +25877,11 @@ const dates = (
         value={financialToDate}
         onChange={(event) => {
           setFinancialToDate(event.target.value);
+          setFinancialReportStatus("");
+          setFinancialReportResults([]);
         }}
-        disabled={!financialMember}
       >
-        <option value="">
-          {financialMember
-            ? "Select Date"
-            : "Select Member First"}
-        </option>
+        <option value="">Select Date</option>
 
         {financialMemberDates.map((date) => (
           <option key={`to-${date}`} value={date}>
