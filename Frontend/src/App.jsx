@@ -25851,48 +25851,54 @@ const allRows = [
     );
 
 const dates = (
-  <>
-    <div className="legacy-report-row">
-      <strong>From Date</strong>
-    onChange={(event) => {
-  const selectedDate = event.target.value;
+<>
+  <div className="legacy-report-row">
+    <strong>From Date</strong>
 
-  console.log("FROM DATE SELECTED:", selectedDate);
+    <select
+      value={financialFromDate}
+      onChange={(event) => {
+        const selectedDate = event.target.value;
 
-  setFinancialFromDate(selectedDate);
-}}
-        <option value="">Select Date</option>
+        console.log("FROM DATE SELECTED:", selectedDate);
 
-        {financialMemberDates.map((date) => (
-          <option key={`from-${date}`} value={date}>
-            {date}
-          </option>
-        ))}
-      </select>
-    </div>
+        setFinancialFromDate(selectedDate);
+      }}
+    >
+      <option value="">Select Date</option>
 
-    <div className="legacy-report-row">
-      <strong>To Date</strong>
-      <select
-        value={financialToDate}
-onChange={(event) => {
-  const selectedDate = event.target.value;
+      {financialMemberDates.map((date) => (
+        <option key={`from-${date}`} value={date}>
+          {date}
+        </option>
+      ))}
+    </select>
+  </div>
 
-  setFinancialToDate(selectedDate);
-  setFinancialReportStatus("");
-  setFinancialReportResults([]);
-}}
-      >
-        <option value="">Select Date</option>
+  <div className="legacy-report-row">
+    <strong>To Date</strong>
 
-        {financialMemberDates.map((date) => (
-          <option key={`to-${date}`} value={date}>
-            {date}
-          </option>
-        ))}
-      </select>
-    </div>
-  </>
+    <select
+      value={financialToDate}
+      onChange={(event) => {
+        const selectedDate = event.target.value;
+
+        setFinancialToDate(selectedDate);
+        setFinancialReportStatus("");
+        setFinancialReportResults([]);
+      }}
+    >
+      <option value="">Select Date</option>
+
+      {financialMemberDates.map((date) => (
+        <option key={`to-${date}`} value={date}>
+          {date}
+        </option>
+      ))}
+    </select>
+  </div>
+</>
+  
 );
 
     const parseFinancialDate = (value) => {
