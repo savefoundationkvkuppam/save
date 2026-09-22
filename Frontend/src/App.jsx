@@ -21625,12 +21625,7 @@ useEffect(() => {
       });
 
       const dates = Array.from(dateSet)
-        .filter(
-          (date) =>
-            date >= CURRENT_FINANCIAL_YEAR.apiStartDate &&
-            date <= CURRENT_FINANCIAL_YEAR.apiEndDate
-        )
-        .sort((a, b) => a.localeCompare(b));
+  .sort((a, b) => a.localeCompare(b));
 
       if (!cancelled) {
         setFinancialMemberDates(dates);
