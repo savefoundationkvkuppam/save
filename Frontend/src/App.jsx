@@ -25730,43 +25730,31 @@ const allRows = [
 
     const dates = (
   <>
-    <div className="legacy-report-row">
-      <strong>From Date</strong>
-      <select
-        value={financialFromDate}
-        onChange={(event) => {
-          setFinancialFromDate(event.target.value);
-          setFinancialReportStatus("");
-          setFinancialReportResults([]);
-        }}
-      >
-        <option value="">Select Date</option>
-        {reportAvailableDates.map((date) => (
-          <option key={`from-${date}`} value={date}>
-            {date}
-          </option>
-        ))}
-      </select>
-    </div>
+<div className="legacy-report-row">
+  <strong>From Date</strong>
+  <input
+    type="date"
+    value={financialFromDate}
+    min={CURRENT_FINANCIAL_YEAR.apiStartDate}
+    max={CURRENT_FINANCIAL_YEAR.apiEndDate}
+    onChange={(event) => {
+      setFinancialFromDate(event.target.value);
+    }}
+  />
+</div>
+<div className="legacy-report-row">
+  <strong>To Date</strong>
+  <input
+    type="date"
+    value={financialToDate}
+    min={CURRENT_FINANCIAL_YEAR.apiStartDate}
+    max={CURRENT_FINANCIAL_YEAR.apiEndDate}
+    onChange={(event) => {
+      setFinancialToDate(event.target.value);
+    }}
+  />
+</div>
 
-    <div className="legacy-report-row">
-      <strong>To Date</strong>
-      <select
-        value={financialToDate}
-        onChange={(event) => {
-          setFinancialToDate(event.target.value);
-          setFinancialReportStatus("");
-          setFinancialReportResults([]);
-        }}
-      >
-        <option value="">Select Date</option>
-        {reportAvailableDates.map((date) => (
-          <option key={`to-${date}`} value={date}>
-            {date}
-          </option>
-        ))}
-      </select>
-    </div>
   </>
 );
 
