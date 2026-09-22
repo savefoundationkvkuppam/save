@@ -13555,4 +13555,23 @@ select:focus {
 .legacy-report-card .legacy-table tr:last-child {
   font-weight: 700 !important;
 }
+.legacy-report-card table.cash-book-table th,
+.legacy-report-card table.cash-book-table td {
+  padding: 5px 6px !important;
+}
 
+.legacy-report-card table.cash-book-table th:first-child,
+.legacy-report-card table.cash-book-table td:first-child {
+  width: 18% !important;
+  text-align: left !important;
+}
+
+.legacy-report-card table.cash-book-table th:nth-child(2),
+.legacy-report-card table.cash-book-table td:nth-child(2) {
+  width: 6% !important;
+}
+
+.legacy-report-card table.cash-book-table th:nth-child(3),
+.legacy-report-card table.cash-book-table td:nth-child(3) {
+  width: 7% !important;
+}
