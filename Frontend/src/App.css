@@ -13470,3 +13470,41 @@ select:focus {
   left: 120px !important;
   
 }
+/* =========================================================
+   OTHER RECEIPT - FULL PAGE SIZE
+   ========================================================= */
+
+.transaction-page .transaction-form-content {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.receipt-vazhvathram {
+  width: calc(100% - 20px) !important;
+  max-width: none !important;
+  margin: 10px auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Make the Other Receipt form use the available screen width */
+.receipt-vazhvathram .legacy-form-row,
+.receipt-vazhvathram .legacy-grid-row {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Make inputs/selects use the available row space */
+.receipt-vazhvathram input,
+.receipt-vazhvathram select {
+  box-sizing: border-box !important;
+}
+
+/* Keep the list inside the page */
+.receipt-vazhvathram .legacy-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+
