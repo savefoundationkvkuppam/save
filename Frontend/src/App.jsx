@@ -36801,7 +36801,246 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
         (record) => Number(record.amount || 0) === 0
       )
     : bankAccountRecords;
+  const getSelectedVazhvathramBankAccounts = () => {
+  const contextMembers = getContextMembers();
+
+  const memberIds = new Set(
+    contextMembers
+      .map((member) => String(member.id ?? "").trim())
+      .filter(Boolean)
+  );
+
+  const memberCodes = new Set(
+    contextMembers
+      .map((member) =>
+        String(member.memberCode || "")
+          .trim()
+          .toLowerCase()
+      )
+      .filter(Boolean)
+  );
+
+  const selectedVazhvathramName = String(
+    selectedVazhvathram || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  return bankAccountRecords.filter((record) => {
+
+    // If bank account has direct Vazhvathram information
+    const recordVazhvathram = String(
+      record.vazhvathramName ||
+      record.vazhvathram ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (recordVazhvathram) {
+      return recordVazhvathram === selectedVazhvathramName;
+    }
+
+    // Otherwise connect Bank Account -> Member
+    const recordMemberId = String(
+      record.memberId ?? ""
+    ).trim();
+
+    const recordMemberCode = String(
+      record.memberCode || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      (recordMemberId && memberIds.has(recordMemberId)) ||
+      (recordMemberCode && memberCodes.has(recordMemberCode))
+    );
+  });
+};
   if (page === "bankAccount") {
+    if (showBankAccountList) {
+
+  const selectedAccounts =
+    getSelectedVazhvathramBankAccounts();
+
+  const displayedAccounts =
+    bankAccountListType === "nil"
+      ? selectedAccounts.filter(
+          (record) =>
+            Number(record.amount || 0) === 0
+        )
+      : selectedAccounts;
+
+  return (
+    <div className="save-page">
+
+      <TopBar />
+
+      <div className="main-container">
+
+        <SideMenu />
+
+        <div className="content bank-account-list-page">
+
+          <div className="bank-list-header">
+
+            <h1>
+              Vazhvathram Bank Account Details
+            </h1>
+
+            <div className="selected-context">
+
+              <div>
+                <strong>Cluster:</strong>{" "}
+                {selectedCluster || "All"}
+              </div>
+
+              <div>
+                <strong>Vazhvathram:</strong>{" "}
+                {selectedVazhvathram || "All"}
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div className="bank-list-title">
+
+            {bankAccountListType === "nil"
+              ? "Bank Account List - Nil Balance"
+              : "Bank Account List"}
+
+          </div>
+
+
+          {displayedAccounts.length === 0 ? (
+
+            <div className="no-bank-records">
+
+              No bank account records found
+              for the selected Vazhvathram.
+
+            </div>
+
+          ) : (
+
+            <div className="bank-reference-table-wrapper">
+
+              <table className="bank-reference-table">
+
+                <thead>
+
+                  <tr>
+
+                    <th>Sl. No.</th>
+
+                    <th>Bank Name</th>
+
+                    <th>Branch Name</th>
+
+                    <th>Account Number</th>
+
+                    <th>Account Date</th>
+
+                    <th>Account Balance</th>
+
+                    <th>Account Type</th>
+
+                    <th>Action</th>
+
+                  </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                  {displayedAccounts.map(
+                    (record, index) => (
+
+                      <tr key={record.id}>
+
+                        <td>
+                          {index + 1}
+                        </td>
+
+                        <td>
+                          {record.bankName}
+                        </td>
+
+                        <td>
+                          {record.branchName}
+                        </td>
+
+                        <td>
+                          {record.accountNumber}
+                        </td>
+
+                        <td>
+                          {record.accountDate}
+                        </td>
+
+                        <td>
+                          {Number(
+                            record.amount || 0
+                          )}
+                        </td>
+
+                        <td>
+                          {record.accountType}
+                        </td>
+
+                        <td>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              selectBankAccountRecord(
+                                record
+                              );
+                            }}
+                          >
+                            Select
+                          </button>
+
+                        </td>
+
+                      </tr>
+
+                    )
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          )}
+
+
+          <div className="bank-list-footer">
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowBankAccountList(false);
+              }}
+            >
+              Back
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
     return (
       <div className="save-page"><TopBar /><div className="main-container"><SideMenu />
         <div className="content master-content bank-account-content">
@@ -36857,95 +37096,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
   </button>
 </div>
 </div>
-{showBankAccountList && (
-  <div className="master-list-panel">
 
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "10px"
-      }}
-    >
-      <h3 style={{ margin: 0 }}>
-        {bankAccountListType === "nil"
-          ? "Bank Account List - Nil Balance"
-          : "Bank Account List"}
-      </h3>
-
-      <button onClick={() => setShowBankAccountList(false)}>
-        Close
-      </button>
-    </div>
-
-    {displayedBankAccountRecords.length === 0 ? (
-      <p>
-        {bankAccountListType === "nil"
-          ? "No Bank Accounts with Nil Balance found."
-          : "No Bank Account records found."}
-      </p>
-    ) : (
-      <table className="master-table">
-
-        <thead>
-          <tr>
-            <th>Bank</th>
-            <th>Branch</th>
-            <th>Account Type</th>
-            <th>Account Number</th>
-            <th>Date</th>
-            <th>Account Balance</th>
-            <th>Select</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {displayedBankAccountRecords.map((record) => (
-            <tr key={record.id}>
-
-              <td>
-                {record.bankName}
-              </td>
-
-              <td>
-                {record.branchName}
-              </td>
-
-              <td>
-                {record.accountType}
-              </td>
-
-              <td>
-                {record.accountNumber}
-              </td>
-
-              <td>
-                {record.accountDate}
-              </td>
-
-              <td>
-                {Number(record.amount || 0)}
-              </td>
-
-              <td>
-                <button
-                  type="button"
-                  onClick={() => selectBankAccountRecord(record)}
-                >
-                  Select
-                </button>
-              </td>
-
-            </tr>
-          ))}
-        </tbody>
-
-      </table>
-    )}
-
-  </div>
-)}
           <div className="master-note bank-note"><p>For Editing the bank balance, click the list. Copy the Account No. you want to edit, Paste this against account Number. Click Edit Button. You will get the existing Values. Enter the amount you want to update. Then click Save. The new value will get updated.</p><p><b>Notes on Amount entry:</b><br/>1. Account opened in current financial year (date on or after {CURRENT_FINANCIAL_YEAR.startDate}): Enter Amount as 0. The system will automatically set Amount to 0. No opening balance exists for a current-year account — balance will build through transactions.<br/>2. Account opened in prior year / Opening Balance entry (date on or before {CURRENT_FINANCIAL_YEAR.priorYearEndDate}): Enter the actual opening balance in the Amount field. The Balance Sheet (Cash at Bank — 2112) will be updated automatically by summing all account entries dated before {CURRENT_FINANCIAL_YEAR.apiStartDate}.<br/>3. To record the first deposit made at the time of account opening, go to Other Voucher (Other Payment) → Voucher Type: Cash → GL Head: Cash at Bank (2112) → Amount: the deposit amount → Account Type: SB A/C (or Loan A/C as applicable).</p></div>
         </div>
       </div></div>
