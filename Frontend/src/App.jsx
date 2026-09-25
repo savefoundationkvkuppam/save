@@ -218,44 +218,74 @@ function ResultOnlyPage() {
       )
       .filter(Boolean)
   );
-
   // Filter Bank Accounts for selected Vazhvathram
-  if (selectedVazhvathram) {
-    bankRecords = bankRecords.filter((record) => {
-      const recordVazhvathram = String(
-        record?.vazhvathramName ||
-        record?.vazhvathram ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
+if (selectedVazhvathram || selectedVazhvathramCode) {
+  bankRecords = bankRecords.filter((record) => {
+    const recordVazhvathramName = String(
+      record?.vazhvathramName ||
+      record?.vazhvathram ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
 
-      if (recordVazhvathram) {
-        return (
-          recordVazhvathram ===
-          selectedVazhvathram
-        );
-      }
+    const recordVazhvathramCode = String(
+      record?.vazhvathramCode ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
 
-      const recordMemberId = String(
-        record?.memberId ?? ""
-      ).trim();
+    const recordMemberId = String(
+      record?.memberId ?? ""
+    ).trim();
 
-      const recordMemberCode = String(
-        record?.memberCode || ""
-      )
-        .trim()
-        .toLowerCase();
+    const recordMemberCode = String(
+      record?.memberCode || ""
+    )
+      .trim()
+      .toLowerCase();
 
-      return (
-        (recordMemberId &&
-          memberIds.has(recordMemberId)) ||
-        (recordMemberCode &&
-          memberCodes.has(recordMemberCode))
-      );
-    });
-  }
+    // 1. Match directly by Vazhvathram name
+    if (
+      recordVazhvathramName &&
+      selectedVazhvathram &&
+      recordVazhvathramName === selectedVazhvathram
+    ) {
+      return true;
+    }
 
+    // 2. Match directly by Vazhvathram code
+    if (
+      recordVazhvathramCode &&
+      selectedVazhvathramCode &&
+      recordVazhvathramCode ===
+        String(selectedVazhvathramCode)
+          .trim()
+          .toLowerCase()
+    ) {
+      return true;
+    }
+
+    // 3. Match through Member ID
+    if (
+      recordMemberId &&
+      memberIds.has(recordMemberId)
+    ) {
+      return true;
+    }
+
+    // 4. Match through Member Code
+    if (
+      recordMemberCode &&
+      memberCodes.has(recordMemberCode)
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+}
   // Nil Balance
   if (resultType === "nil") {
     bankRecords = bankRecords.filter(
