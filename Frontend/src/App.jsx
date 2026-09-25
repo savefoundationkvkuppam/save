@@ -111,37 +111,151 @@ function ResultOnlyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadResult = async () => {
-      try {
-        setLoading(true);
+  const loadResult = async () => {
+    try {
+      setLoading(true);
 
-        // Bank Account List
-        if (resultPage === "bankAccount") {
-          const data = await apiRequest("/bank-accounts");
+      // =====================================================
+      // BANK ACCOUNT LIST
+      // =====================================================
+      if (resultPage === "bankAccount") {
+        const [bankData, memberData] = await Promise.all([
+          apiRequest("/bank-accounts"),
+          apiRequest("/members"),
+        ]);
 
-          let records = Array.isArray(data) ? data : [];
+        let bankRecords = Array.isArray(bankData)
+          ? bankData
+          : [];
 
-          if (resultType === "nil") {
-            records = records.filter(
-              (record) => Number(record.amount || 0) === 0
+        const members = Array.isArray(memberData)
+          ? memberData
+          : [];
+
+        const selectedCluster = String(cluster || "")
+          .trim()
+          .toLowerCase();
+
+        const selectedVazhvathram = String(vazhvathram || "")
+          .trim()
+          .toLowerCase();
+
+        // If a Vazhvathram was selected,
+        // find all members belonging to it.
+        if (selectedVazhvathram) {
+          const contextMembers = members.filter((member) => {
+            const memberCluster = String(
+              member?.clusterName || ""
+            )
+              .trim()
+              .toLowerCase();
+
+            const memberVazhvathram = String(
+              member?.vazhvathramName || ""
+            )
+              .trim()
+              .toLowerCase();
+
+            const clusterMatches =
+              !selectedCluster ||
+              memberCluster === selectedCluster;
+
+            const vazhvathramMatches =
+              memberVazhvathram === selectedVazhvathram;
+
+            return (
+              clusterMatches &&
+              vazhvathramMatches
             );
-          }
+          });
 
-          setRows(records);
-          return;
+          const memberIds = new Set(
+            contextMembers
+              .map((member) =>
+                String(member?.id ?? "").trim()
+              )
+              .filter(Boolean)
+          );
+
+          const memberCodes = new Set(
+            contextMembers
+              .map((member) =>
+                String(member?.memberCode || "")
+                  .trim()
+                  .toLowerCase()
+              )
+              .filter(Boolean)
+          );
+
+          bankRecords = bankRecords.filter((record) => {
+            // Direct Vazhvathram relationship
+            const recordVazhvathram = String(
+              record?.vazhvathramName ||
+              record?.vazhvathram ||
+              ""
+            )
+              .trim()
+              .toLowerCase();
+
+            if (recordVazhvathram) {
+              return (
+                recordVazhvathram ===
+                selectedVazhvathram
+              );
+            }
+
+            // Member relationship
+            const recordMemberId = String(
+              record?.memberId ?? ""
+            ).trim();
+
+            const recordMemberCode = String(
+              record?.memberCode || ""
+            )
+              .trim()
+              .toLowerCase();
+
+            return (
+              (recordMemberId &&
+                memberIds.has(recordMemberId)) ||
+              (recordMemberCode &&
+                memberCodes.has(recordMemberCode))
+            );
+          });
         }
 
-        setRows([]);
-      } catch (error) {
-        console.error("Could not load result:", error);
-        setRows([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+        // Nil Balance filter
+        if (resultType === "nil") {
+          bankRecords = bankRecords.filter(
+            (record) =>
+              Number(record?.amount || 0) === 0
+          );
+        }
 
-    loadResult();
-  }, [resultPage, resultType, cluster, vazhvathram]);
+        setRows(bankRecords);
+        return;
+      }
+
+      setRows([]);
+    } catch (error) {
+      console.error(
+        "Could not load result:",
+        error
+      );
+
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadResult();
+}, [
+  resultPage,
+  resultType,
+  cluster,
+  vazhvathram,
+]);
 
   if (loading) {
     return (
