@@ -13303,7 +13303,10 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 } else if (item === "Delete") {
                   deleteGenDetail();
                 } else if (item === "List") {
-                  loadGenDetailMembers();
+                  openResultInNewTab({
+                    page: "genDetail",
+                    type: "all",
+                  });
                 } else if (item === "Family") {
                   setStatus("Family Member section selected.");
                 }
@@ -13323,11 +13326,17 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 } else if (item === "Delete") {
                   deleteFamilyMember();
                 } else if (item === "List") {
-                  loadFamilyMembers();
+                  openResultInNewTab({
+                    page: "familyMember",
+                    type: "all",
+                  });
                 } else if (item === "Not Entered") {
                   setStatus("Family Member Not Entered report selected.");
                 } else if (item === "List All") {
-                  loadFamilyMembers();
+                  openResultInNewTab({
+                    page: "familyMember",
+                    type: "all",
+                  });
                 }
                 return;
               }
@@ -13344,11 +13353,17 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 } else if (item === "Delete") {
                   deleteLivelihood();
                 } else if (item === "List") {
-                  loadLivelihoods();
+                  openResultInNewTab({
+                    page: "livelihood",
+                    type: "all",
+                  });
                 } else if (item === "Not Entered") {
                   setStatus("Livelihood Not Entered report selected.");
                 } else if (item === "List All") {
-                  loadLivelihoods();
+                  openResultInNewTab({
+                    page: "livelihood",
+                    type: "all",
+                  });
                 }
                 return;
               }
@@ -13365,10 +13380,18 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   clearLivestock();
                 } else if (item === "Delete") {
                   deleteLivestock();
-                } else if (item === "List" || item === "List All") {
-                  loadLivestocks();
+                } else if (item === "List") {
+                  openResultInNewTab({
+                    page: "livestock",
+                    type: "all",
+                  });
                 } else if (item === "Not Entered") {
                   setStatus("Livestock Not Entered report selected.");
+                } else if (item === "List All") {
+                  openResultInNewTab({
+                    page: "livestock",
+                    type: "all",
+                  });
                 }
                 return;
               }
@@ -14434,14 +14457,80 @@ const bankOutstanding = dashboardDebtRecords.reduce(
             ))}
           </div>
         ) : section === "Land" ? (
-          <div className="dis-actions">
-            {[ ["Add",clearLand],["Edit",loadLandForEdit],["Save",saveLand],["Cancel",clearLand],["Delete",deleteLand],["List",loadLands],["Not Entered",()=>setStatus("Not Entered report selected.")],["List All",loadLands] ].map(([item,handler])=><button key={item} type="button" onClick={handler} disabled={landLoading}>{item}</button>)}
-          </div>
-        ) : section === "Assets" ? (
-          <div className="dis-actions">
-            {[ ["Add",clearAssets],["Edit",loadAssetForEdit],["Save",saveAsset],["Cancel",clearAssets],["Delete",deleteAsset],["List",loadAssets],["Not Entered",()=>setStatus("Not Entered report selected.")],["List All",loadAssets] ].map(([item,handler])=><button key={item} type="button" onClick={handler} disabled={assetLoading}>{item}</button>)}
-          </div>
-        ) : section === "Bank Account" ? (
+  <div className="dis-actions">
+    {[
+      ["Add", clearLand],
+      ["Edit", loadLandForEdit],
+      ["Save", saveLand],
+      ["Cancel", clearLand],
+      ["Delete", deleteLand],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "land",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "land",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={landLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
+      ) : section === "Assets" ? (
+  <div className="dis-actions">
+    {[
+      ["Add", clearAssets],
+      ["Edit", loadAssetForEdit],
+      ["Save", saveAsset],
+      ["Cancel", clearAssets],
+      ["Delete", deleteAsset],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "assets",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "assets",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={assetLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div>  
+      ) : section === "Bank Account" ? (
           <div className="dis-actions">
             {[
               ["Add", clearBankAccountDis],
@@ -14464,49 +14553,190 @@ const bankOutstanding = dashboardDebtRecords.reduce(
             ))}
           </div>
         ) : section === "Debt" ? (
-          <div className="dis-actions">
-            {[ ["Add",clearDebt],["Edit",loadDebtForEdit],["Save",saveDebt],["Cancel",clearDebt],["Delete",deleteDebt],["List",loadDebts],["Not Entered",()=>setStatus("Not Entered report selected.")],["List All",loadDebts] ].map(([item,handler])=><button key={item} type="button" onClick={handler} disabled={debtLoading}>{item}</button>)}
-          </div>
-        ) : section === "Savings" ? (
-          <div className="dis-actions">
-            {[ ["Add",clearSavings],["Edit",loadSavingsForEdit],["Save",saveSavings],["Cancel",clearSavings],["Delete",deleteSavings],["List",loadSavings],["Not Entered",()=>setStatus("Not Entered report selected.")],["List All",loadSavings] ].map(([item,handler])=><button key={item} type="button" onClick={handler} disabled={savingsLoading}>{item}</button>)}
-          </div>
+  <div className="dis-actions">
+    {[
+      ["Add", clearDebt],
+      ["Edit", loadDebtForEdit],
+      ["Save", saveDebt],
+      ["Cancel", clearDebt],
+      ["Delete", deleteDebt],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "debt",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "debt",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={debtLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
+       ) : section === "Savings" ? (
+  <div className="dis-actions">
+    {[
+      ["Add", clearSavings],
+      ["Edit", loadSavingsForEdit],
+      ["Save", saveSavings],
+      ["Cancel", clearSavings],
+      ["Delete", deleteSavings],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "savings",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "savings",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={savingsLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
         ) : section === "Health" ? (
-          <div className="dis-actions">
-            {[
-              ["Add", clearHealth],
-              ["Edit", loadHealthForEdit],
-              ["Save", saveHealth],
-              ["Cancel", clearHealth],
-              ["Delete", deleteHealth],
-              ["List", loadHealths],
-              ["Not Entered", () => setStatus("Not Entered report selected.")],
-              ["List All", loadHealths],
-            ].map(([item, handler]) => (
-              <button key={item} type="button" onClick={handler} disabled={healthLoading}>
-                {item}
-              </button>
-            ))}
-          </div>
-        ) : section === "Entitlements" ? (
-          <div className="dis-actions">{[["Add",clearEntitlement],["Edit",loadEntitlementForEdit],["Save",saveEntitlement],["Cancel",clearEntitlement],["Delete",deleteEntitlement],["List",loadEntitlements],["Not Entered",()=>setStatus("Not Entered report selected.")],["List All",loadEntitlements]].map(([item,handler])=><button key={item} type="button" onClick={handler} disabled={entitlementLoading}>{item}</button>)}</div>
+  <div className="dis-actions">
+    {[
+      ["Add", clearHealth],
+      ["Edit", loadHealthForEdit],
+      ["Save", saveHealth],
+      ["Cancel", clearHealth],
+      ["Delete", deleteHealth],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "health",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "health",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={healthLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
+      ) : section === "Entitlements" ? (
+  <div className="dis-actions">
+    {[
+      ["Add", clearEntitlement],
+      ["Edit", loadEntitlementForEdit],
+      ["Save", saveEntitlement],
+      ["Cancel", clearEntitlement],
+      ["Delete", deleteEntitlement],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "entitlements",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "entitlements",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={entitlementLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div> 
         ) : section === "Legal" ? (
-          <div className="dis-actions">
-            {[
-              ["Add", clearLegal],
-              ["Edit", loadLegalForEdit],
-              ["Save", saveLegal],
-              ["Cancel", clearLegal],
-              ["Delete", deleteLegal],
-              ["List", loadLegals],
-              ["Not Entered", () => setStatus("Not Entered report selected.")],
-              ["List All", loadLegals],
-            ].map(([item, handler]) => (
-              <button key={item} type="button" onClick={handler} disabled={legalLoading}>
-                {item}
-              </button>
-            ))}
-          </div>
+  <div className="dis-actions">
+    {[
+      ["Add", clearLegal],
+      ["Edit", loadLegalForEdit],
+      ["Save", saveLegal],
+      ["Cancel", clearLegal],
+      ["Delete", deleteLegal],
+
+      ["List", () =>
+        openResultInNewTab({
+          page: "legal",
+          type: "all",
+        })
+      ],
+
+      ["Not Entered", () =>
+        setStatus("Not Entered report selected.")
+      ],
+
+      ["List All", () =>
+        openResultInNewTab({
+          page: "legal",
+          type: "all",
+        })
+      ],
+    ].map(([item, handler]) => (
+      <button
+        key={item}
+        type="button"
+        onClick={handler}
+        disabled={legalLoading}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
         ) : actions(
           section === "Gen. Detail"
             ? ["Add", "Edit", "Save", "Cancel", "Family", "List"]
