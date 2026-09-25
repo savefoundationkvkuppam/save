@@ -119,10 +119,174 @@ function ResultOnlyPage() {
       // BANK ACCOUNT LIST
       // =====================================================
       if (resultPage === "bankAccount") {
-        const [bankData, memberData] = await Promise.all([
-          apiRequest("/bank-accounts"),
-          apiRequest("/members"),
-        ]);
+  const [
+    bankData,
+    memberData,
+    vazhvathramData,
+  ] = await Promise.all([
+    apiRequest("/bank-accounts"),
+    apiRequest("/members"),
+    apiRequest("/vazhvathrams"),
+  ]);
+
+  let bankRecords = Array.isArray(bankData)
+    ? bankData
+    : [];
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const vazhvathrams = Array.isArray(vazhvathramData)
+    ? vazhvathramData
+    : [];
+
+  const selectedCluster = String(cluster || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedVazhvathram = String(vazhvathram || "")
+    .trim()
+    .toLowerCase();
+
+  // Find the selected Vazhvathram record
+  const selectedVazhvathramRecord =
+    vazhvathrams.find((record) => {
+      const name = String(
+        record?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const recordCluster = String(
+        record?.clusterName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        name === selectedVazhvathram &&
+        (!selectedCluster ||
+          recordCluster === selectedCluster)
+      );
+    }) || null;
+
+  const selectedVazhvathramCode =
+    selectedVazhvathramRecord?.vazhvathramCode || "";
+
+  const selectedVazhvathramName =
+    selectedVazhvathramRecord?.vazhvathramName ||
+    vazhvathram ||
+    "";
+
+  // Find members belonging to the selected Vazhvathram
+  const contextMembers = members.filter((member) => {
+    const memberCluster = String(
+      member?.clusterName || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const memberVazhvathram = String(
+      member?.vazhvathramName || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      (!selectedCluster ||
+        memberCluster === selectedCluster) &&
+      (!selectedVazhvathram ||
+        memberVazhvathram === selectedVazhvathram)
+    );
+  });
+
+  const memberIds = new Set(
+    contextMembers
+      .map((member) =>
+        String(member?.id ?? "").trim()
+      )
+      .filter(Boolean)
+  );
+
+  const memberCodes = new Set(
+    contextMembers
+      .map((member) =>
+        String(member?.memberCode || "")
+          .trim()
+          .toLowerCase()
+      )
+      .filter(Boolean)
+  );
+
+  // Filter Bank Accounts for selected Vazhvathram
+  if (selectedVazhvathram) {
+    bankRecords = bankRecords.filter((record) => {
+      const recordVazhvathram = String(
+        record?.vazhvathramName ||
+        record?.vazhvathram ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+      if (recordVazhvathram) {
+        return (
+          recordVazhvathram ===
+          selectedVazhvathram
+        );
+      }
+
+      const recordMemberId = String(
+        record?.memberId ?? ""
+      ).trim();
+
+      const recordMemberCode = String(
+        record?.memberCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        (recordMemberId &&
+          memberIds.has(recordMemberId)) ||
+        (recordMemberCode &&
+          memberCodes.has(recordMemberCode))
+      );
+    });
+  }
+
+  // Nil Balance
+  if (resultType === "nil") {
+    bankRecords = bankRecords.filter(
+      (record) =>
+        Number(record?.amount || 0) === 0
+    );
+  }
+
+  // Add Vazhvathram information to every row
+  const resultRows = bankRecords.map((record) => ({
+    ...record,
+
+    vazhvathramCode:
+      record?.vazhvathramCode ||
+      selectedVazhvathramCode,
+
+    vazhvathramName:
+      record?.vazhvathramName ||
+      record?.vazhvathram ||
+      selectedVazhvathramName,
+
+    bankCode:
+      record?.bankCode || "",
+
+    branchCode:
+      record?.branchCode || "",
+  }));
+
+  setRows(resultRows);
+  return;
+}
 
         let bankRecords = Array.isArray(bankData)
           ? bankData
@@ -326,58 +490,104 @@ function ResultOnlyPage() {
               }}
             >
               <thead>
-                <tr>
-                  <th style={resultTableHeaderStyle}>Sl. No.</th>
-                  <th style={resultTableHeaderStyle}>Bank Name</th>
-                  <th style={resultTableHeaderStyle}>Branch Name</th>
-                  <th style={resultTableHeaderStyle}>
-                    Account Number
-                  </th>
-                  <th style={resultTableHeaderStyle}>
-                    Account Date
-                  </th>
-                  <th style={resultTableHeaderStyle}>
-                    Account Balance
-                  </th>
-                  <th style={resultTableHeaderStyle}>
-                    Account Type
-                  </th>
-                </tr>
-              </thead>
+  <tr>
+    <th style={oldResultHeaderStyle}>
+      Sl.<br />No.
+    </th>
 
-              <tbody>
-                {rows.map((record, index) => (
-                  <tr key={record.id || index}>
-                    <td style={resultTableCellStyle}>
-                      {index + 1}
-                    </td>
+    <th style={oldResultHeaderStyle}>
+      Vazhvathram<br />Code
+    </th>
 
-                    <td style={resultTableCellStyle}>
-                      {record.bankName || ""}
-                    </td>
+    <th style={oldResultHeaderStyle}>
+      Vazhvathram<br />Name
+    </th>
 
-                    <td style={resultTableCellStyle}>
-                      {record.branchName || ""}
-                    </td>
+    <th style={oldResultHeaderStyle}>
+      Bank<br />Code
+    </th>
 
-                    <td style={resultTableCellStyle}>
-                      {record.accountNumber || ""}
-                    </td>
+    <th style={oldResultHeaderStyle}>
+      Bank<br />Name
+    </th>
 
-                    <td style={resultTableCellStyle}>
-                      {record.accountDate || ""}
-                    </td>
+    <th style={oldResultHeaderStyle}>
+      Branch<br />Code
+    </th>
 
-                    <td style={resultTableCellStyle}>
-                      {Number(record.amount || 0)}
-                    </td>
+    <th style={oldResultHeaderStyle}>
+      Branch<br />Name
+    </th>
 
-                    <td style={resultTableCellStyle}>
-                      {record.accountType || ""}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+    <th style={oldResultHeaderStyle}>
+      Account<br />Number
+    </th>
+
+    <th style={oldResultHeaderStyle}>
+      Account<br />Date
+    </th>
+
+    <th style={oldResultHeaderStyle}>
+      Account Balance
+    </th>
+
+    <th style={oldResultHeaderStyle}>
+      Account<br />Type
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  {rows.map((record, index) => (
+    <tr key={record.id || index}>
+
+      <td style={oldResultCellStyle}>
+        {index + 1}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.vazhvathramCode || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.vazhvathramName || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.bankCode || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.bankName || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.branchCode || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.branchName || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.accountNumber || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.accountDate || ""}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {Number(record.amount || 0)}
+      </td>
+
+      <td style={oldResultCellStyle}>
+        {record.accountType || ""}
+      </td>
+
+    </tr>
+  ))}
+</tbody>
             </table>
           </div>
         )}
