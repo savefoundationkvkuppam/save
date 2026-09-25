@@ -362,9 +362,18 @@ function App() {
   };
 
   const [page, setPageState] = useState(() => {
-    // Restore the last page stored in browser history when possible.
-    return window.history.state?.saveAppPage || "login";
-  });
+  const params = new URLSearchParams(window.location.search);
+
+  // If this is a List/Execute result opened in a new tab,
+  // open the requested result page instead of Login.
+  const resultPage = params.get("resultPage");
+
+  if (resultPage) {
+    return resultPage;
+  }
+
+  return window.history.state?.saveAppPage || "login";
+});
 
   // =========================================================
   // IN-APP BROWSER HISTORY
@@ -3937,6 +3946,18 @@ try {
   const [selectedBankAccountRecordId, setSelectedBankAccountRecordId] = useState(null);
   const [showBankAccountList, setShowBankAccountList] = useState(false);
   const [bankAccountListType, setBankAccountListType] = useState("all");
+
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+
+  const resultPage = params.get("resultPage");
+  const resultType = params.get("resultType");
+
+  if (resultPage === "bankAccount") {
+    setBankAccountListType(resultType || "all");
+    setShowBankAccountList(true);
+  }
+}, []);
 
   useEffect(() => {
     let cancelled = false;
