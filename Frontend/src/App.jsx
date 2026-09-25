@@ -7222,27 +7222,36 @@ try {
     let saved;
 
     // Find the selected Vazhvathram record
-    const currentVazhvathramRecord =
-      vazhvathramRecords.find(
-        (record) =>
-          String(record.vazhvathramName || "")
-            .trim()
-            .toLowerCase() ===
-          String(selectedVazhvathram || "")
-            .trim()
-            .toLowerCase()
-      );
+const effectiveVazhvathram =
+  String(selectedVazhvathram || "").trim() ||
+  String(vazhvathrams?.[0] || "").trim();
 
-    // Add Vazhvathram details to the Bank Account
-    const bankAccountPayload = {
-      ...bankAccountData,
-      vazhvathramCode:
-        currentVazhvathramRecord?.vazhvathramCode || "",
-      vazhvathramName:
-        currentVazhvathramRecord?.vazhvathramName ||
-        selectedVazhvathram ||
-        "",
-    };
+const currentVazhvathramRecord =
+  vazhvathramRecords.find(
+    (record) =>
+      String(record.vazhvathramName || "")
+        .trim()
+        .toLowerCase() ===
+      effectiveVazhvathram.toLowerCase()
+  );
+
+// Stop saving if Vazhvathram cannot be identified
+if (!currentVazhvathramRecord) {
+  alert(
+    "Vazhvathram could not be identified. Please select Cluster and Vazhvathram before saving."
+  );
+  return;
+}
+
+// Add Vazhvathram details to the Bank Account
+const bankAccountPayload = {
+  ...bankAccountData,
+  vazhvathramCode:
+    currentVazhvathramRecord.vazhvathramCode || "",
+  vazhvathramName:
+    currentVazhvathramRecord.vazhvathramName ||
+    effectiveVazhvathram,
+};
 
     if (selectedBankAccountRecordId) {
       saved = await apiRequest(
