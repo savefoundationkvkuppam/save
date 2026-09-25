@@ -7188,6 +7188,26 @@ try {
   };
 
 const handleBankAccountSave = async () => {
+  const currentVazhvathramRecord =
+  vazhvathrams.find(
+    (item) =>
+      String(item.vazhvathramName || "")
+        .trim()
+        .toLowerCase() ===
+      String(selectedVazhvathram || "")
+        .trim()
+        .toLowerCase()
+  );
+
+const bankAccountPayload = {
+  ...bankAccountData,
+  vazhvathramCode:
+    currentVazhvathramRecord?.vazhvathramCode || "",
+  vazhvathramName:
+    currentVazhvathramRecord?.vazhvathramName ||
+    selectedVazhvathram ||
+    "",
+};
   try {
     let saved;
 
@@ -7196,7 +7216,7 @@ const handleBankAccountSave = async () => {
         `/bank-accounts/${selectedBankAccountRecordId}`,
         {
           method: "PUT",
-          body: JSON.stringify(bankAccountData),
+          body: JSON.stringify(bankAccountPayData),
         }
       );
 
@@ -7210,7 +7230,7 @@ const handleBankAccountSave = async () => {
     } else {
       saved = await apiRequest("/bank-accounts", {
         method: "POST",
-        body: JSON.stringify(bankAccountData),
+        body: JSON.stringify(bankAccountPayData),
       });
 
       setBankAccountRecords(previous => [
