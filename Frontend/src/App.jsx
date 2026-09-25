@@ -2570,28 +2570,52 @@ useEffect(() => {
   // =========================================================
 // OPEN LIST / EXECUTE RESULT IN NEW TAB
 // =========================================================
-
 const openResultInNewTab = ({
   page,
   type = "all",
 }) => {
   const params = new URLSearchParams();
 
+  params.set("resultOnly", "1");
   params.set("resultPage", page);
   params.set("resultType", type);
 
-  if (selectedCluster) {
-    params.set("cluster", selectedCluster);
+  // Use the selected value.
+  // If state is empty, use the first value currently
+  // displayed in the dropdown.
+  const currentCluster =
+    String(selectedCluster || "").trim() ||
+    String(clusters?.[0] || "").trim();
+
+  const currentVazhvathram =
+    String(selectedVazhvathram || "").trim() ||
+    String(vazhvathrams?.[0] || "").trim();
+
+  if (currentCluster) {
+    params.set("cluster", currentCluster);
   }
 
-  if (selectedVazhvathram) {
-    params.set("vazhvathram", selectedVazhvathram);
+  if (currentVazhvathram) {
+    params.set("vazhvathram", currentVazhvathram);
   }
 
-  const url = `${window.location.origin}${window.location.pathname}?resultOnly=1&${params.toString()}`;
+  const url =
+    `${window.location.origin}` +
+    `${window.location.pathname}?${params.toString()}`;
 
-  window.open(url, "_blank", "noopener,noreferrer");
+  console.log("Result page context:", {
+    cluster: currentCluster,
+    vazhvathram: currentVazhvathram,
+  });
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
 };
+
+  
 
   // =========================================================
 // GLOBAL CONTEXT FILTER
