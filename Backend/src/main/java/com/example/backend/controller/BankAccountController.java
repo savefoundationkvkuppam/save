@@ -53,6 +53,8 @@ public class BankAccountController {
                     existing.setAccountNumber(updated.getAccountNumber());
                     existing.setAccountDate(updated.getAccountDate());
                     existing.setAmount(updated.getAmount());
+                    existing.setVazhvathramCode(updated.getVazhvathramCode());
+                    existing.setVazhvathramName(updated.getVazhvathramName());
 
                     existing.setMemberId(updated.getMemberId());
                     existing.setMemberName(updated.getMemberName());
