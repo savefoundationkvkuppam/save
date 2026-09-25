@@ -17,6 +17,10 @@ public class BankAccount {
     private String accountDate;
     private String amount;
 
+   // Vazhvathram details
+   private String vazhvathramCode;
+   private String vazhvathramName;
+
     // DIS -> Bank Account fields
     private Long memberId;
     private String memberName;
@@ -78,6 +82,21 @@ public class BankAccount {
 
     public void setAmount(String amount) {
         this.amount = amount;
+    }
+    public String getVazhvathramCode() {
+         return vazhvathramCode;
+    }
+
+    public void setVazhvathramCode(String vazhvathramCode) {
+        this.vazhvathramCode = vazhvathramCode;
+    }
+
+    public String getVazhvathramName() {
+        return vazhvathramName;
+    }
+
+    public void setVazhvathramName(String vazhvathramName) {
+        this.vazhvathramName = vazhvathramName;
     }
 
     public Long getMemberId() {
