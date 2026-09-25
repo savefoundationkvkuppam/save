@@ -287,119 +287,6 @@ function ResultOnlyPage() {
   setRows(resultRows);
   return;
 }
-
-        let bankRecords = Array.isArray(bankData)
-          ? bankData
-          : [];
-
-        const members = Array.isArray(memberData)
-          ? memberData
-          : [];
-
-        const selectedCluster = String(cluster || "")
-          .trim()
-          .toLowerCase();
-
-        const selectedVazhvathram = String(vazhvathram || "")
-          .trim()
-          .toLowerCase();
-
-        // If a Vazhvathram was selected,
-        // find all members belonging to it.
-        if (selectedVazhvathram) {
-          const contextMembers = members.filter((member) => {
-            const memberCluster = String(
-              member?.clusterName || ""
-            )
-              .trim()
-              .toLowerCase();
-
-            const memberVazhvathram = String(
-              member?.vazhvathramName || ""
-            )
-              .trim()
-              .toLowerCase();
-
-            const clusterMatches =
-              !selectedCluster ||
-              memberCluster === selectedCluster;
-
-            const vazhvathramMatches =
-              memberVazhvathram === selectedVazhvathram;
-
-            return (
-              clusterMatches &&
-              vazhvathramMatches
-            );
-          });
-
-          const memberIds = new Set(
-            contextMembers
-              .map((member) =>
-                String(member?.id ?? "").trim()
-              )
-              .filter(Boolean)
-          );
-
-          const memberCodes = new Set(
-            contextMembers
-              .map((member) =>
-                String(member?.memberCode || "")
-                  .trim()
-                  .toLowerCase()
-              )
-              .filter(Boolean)
-          );
-
-          bankRecords = bankRecords.filter((record) => {
-            // Direct Vazhvathram relationship
-            const recordVazhvathram = String(
-              record?.vazhvathramName ||
-              record?.vazhvathram ||
-              ""
-            )
-              .trim()
-              .toLowerCase();
-
-            if (recordVazhvathram) {
-              return (
-                recordVazhvathram ===
-                selectedVazhvathram
-              );
-            }
-
-            // Member relationship
-            const recordMemberId = String(
-              record?.memberId ?? ""
-            ).trim();
-
-            const recordMemberCode = String(
-              record?.memberCode || ""
-            )
-              .trim()
-              .toLowerCase();
-
-            return (
-              (recordMemberId &&
-                memberIds.has(recordMemberId)) ||
-              (recordMemberCode &&
-                memberCodes.has(recordMemberCode))
-            );
-          });
-        }
-
-        // Nil Balance filter
-        if (resultType === "nil") {
-          bankRecords = bankRecords.filter(
-            (record) =>
-              Number(record?.amount || 0) === 0
-          );
-        }
-
-        setRows(bankRecords);
-        return;
-      }
-
       setRows([]);
     } catch (error) {
       console.error(
@@ -491,47 +378,47 @@ function ResultOnlyPage() {
             >
               <thead>
   <tr>
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Sl.<br />No.
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Vazhvathram<br />Code
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Vazhvathram<br />Name
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Bank<br />Code
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Bank<br />Name
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Branch<br />Code
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Branch<br />Name
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Account<br />Number
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Account<br />Date
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Account Balance
     </th>
 
-    <th style={oldResultHeaderStyle}>
+    <th style={resultTableHeaderStyle}>
       Account<br />Type
     </th>
   </tr>
@@ -541,47 +428,47 @@ function ResultOnlyPage() {
   {rows.map((record, index) => (
     <tr key={record.id || index}>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {index + 1}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.vazhvathramCode || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.vazhvathramName || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.bankCode || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.bankName || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.branchCode || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.branchName || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.accountNumber || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.accountDate || ""}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {Number(record.amount || 0)}
       </td>
 
-      <td style={oldResultCellStyle}>
+      <td style={resultTableCellStyle}>
         {record.accountType || ""}
       </td>
 
