@@ -2140,6 +2140,32 @@ useEffect(() => {
   const [selectedVazhvathram, setSelectedVazhvathram] = useState("");
 
   // =========================================================
+// OPEN LIST / EXECUTE RESULT IN NEW TAB
+// =========================================================
+
+const openResultInNewTab = ({
+  page,
+  type = "all",
+}) => {
+  const params = new URLSearchParams();
+
+  params.set("resultPage", page);
+  params.set("resultType", type);
+
+  if (selectedCluster) {
+    params.set("cluster", selectedCluster);
+  }
+
+  if (selectedVazhvathram) {
+    params.set("vazhvathram", selectedVazhvathram);
+  }
+
+  const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+  window.open(url, "_blank", "noopener,noreferrer");
+};
+
+  // =========================================================
 // GLOBAL CONTEXT FILTER
 // Cluster → Vazhvathram → Member → Transactions
 // =========================================================
@@ -37069,31 +37095,37 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
   <button onClick={handleBankAccountDelete}>Delete</button>
 
   <button
-    onClick={() => {
-      setBankAccountListType("all");
-      setShowBankAccountList(true);
-    }}
-  >
-    List
-  </button>
+  onClick={() =>
+    openResultInNewTab({
+      page: "bankAccount",
+      type: "all",
+    })
+  }
+>
+  List
+</button>
 
   <button
-    onClick={() => {
-      setBankAccountListType("nil");
-      setShowBankAccountList(true);
-    }}
-  >
-    List Nil Bal.
-  </button>
+  onClick={() =>
+    openResultInNewTab({
+      page: "bankAccount",
+      type: "nil",
+    })
+  }
+>
+  List Nil Bal.
+</button>
 
   <button
-    onClick={() => {
-      setBankAccountListType("all");
-      setShowBankAccountList(true);
-    }}
-  >
-    List All
-  </button>
+  onClick={() =>
+    openResultInNewTab({
+      page: "bankAccount",
+      type: "all",
+    })
+  }
+>
+  List All
+</button>
 </div>
 </div>
 
