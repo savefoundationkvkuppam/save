@@ -13408,10 +13408,18 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   clearMigration();
                 } else if (item === "Delete") {
                   deleteMigration();
-                } else if (item === "List" || item === "List All") {
-                  loadMigrations();
+                } else if (item === "List") {
+                  openResultInNewTab({
+                    page: "migration",
+                    type: "all",
+                  });
                 } else if (item === "Not Entered") {
                   setStatus("Migration Not Entered report selected.");
+                } else if (item === "List All") {
+                  openResultInNewTab({
+                    page: "migration",
+                    type: "all",
+                  });
                 }
                 return;
               }
