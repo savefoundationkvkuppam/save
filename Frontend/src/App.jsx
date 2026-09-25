@@ -95,7 +95,215 @@ const usePersistentMenuScroll = (menuKey) => {
   return [menuScrollRef, saveMenuScroll];
 };
 
+// =========================================================
+// RESULT-ONLY PAGE
+// Opens List / Execute results without the SAVE website shell.
+// =========================================================
+function ResultOnlyPage() {
+  const params = new URLSearchParams(window.location.search);
+
+  const resultPage = params.get("resultPage") || "";
+  const resultType = params.get("resultType") || "all";
+  const cluster = params.get("cluster") || "";
+  const vazhvathram = params.get("vazhvathram") || "";
+
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadResult = async () => {
+      try {
+        setLoading(true);
+
+        // Bank Account List
+        if (resultPage === "bankAccount") {
+          const data = await apiRequest("/bank-accounts");
+
+          let records = Array.isArray(data) ? data : [];
+
+          if (resultType === "nil") {
+            records = records.filter(
+              (record) => Number(record.amount || 0) === 0
+            );
+          }
+
+          setRows(records);
+          return;
+        }
+
+        setRows([]);
+      } catch (error) {
+        console.error("Could not load result:", error);
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadResult();
+  }, [resultPage, resultType, cluster, vazhvathram]);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          padding: "30px",
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  // =========================================================
+  // BANK ACCOUNT RESULT
+  // =========================================================
+  if (resultPage === "bankAccount") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: "25px",
+          background: "#ffffff",
+          fontFamily: "Arial, sans-serif",
+          boxSizing: "border-box",
+        }}
+      >
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: "10px",
+          }}
+        >
+          Vazhvathram Bank Account Details
+        </h1>
+
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+          }}
+        >
+          {resultType === "nil"
+            ? "Bank Account List - Nil Balance"
+            : "Bank Account List"}
+        </h2>
+
+        <div
+          style={{
+            marginBottom: "20px",
+            fontSize: "15px",
+          }}
+        >
+          <strong>Cluster:</strong> {cluster || "All"}
+          {"   "}
+          <strong>Vazhvathram:</strong> {vazhvathram || "All"}
+        </div>
+
+        {rows.length === 0 ? (
+          <p>No records found.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={resultTableHeaderStyle}>Sl. No.</th>
+                  <th style={resultTableHeaderStyle}>Bank Name</th>
+                  <th style={resultTableHeaderStyle}>Branch Name</th>
+                  <th style={resultTableHeaderStyle}>
+                    Account Number
+                  </th>
+                  <th style={resultTableHeaderStyle}>
+                    Account Date
+                  </th>
+                  <th style={resultTableHeaderStyle}>
+                    Account Balance
+                  </th>
+                  <th style={resultTableHeaderStyle}>
+                    Account Type
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id || index}>
+                    <td style={resultTableCellStyle}>
+                      {index + 1}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.bankName || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.branchName || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.accountNumber || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.accountDate || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {Number(record.amount || 0)}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.accountType || ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        padding: "30px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <h2>Result</h2>
+      <p>No result renderer is configured for:</p>
+      <strong>{resultPage}</strong>
+    </div>
+  );
+}
+
+const resultTableHeaderStyle = {
+  border: "1px solid #333",
+  padding: "10px",
+  background: "#eeeeee",
+  textAlign: "left",
+};
+
+const resultTableCellStyle = {
+  border: "1px solid #333",
+  padding: "10px",
+};
 function App() {
+    const resultParams = new URLSearchParams(
+    window.location.search
+  );
+
+  if (resultParams.get("resultOnly") === "1") {
+    return <ResultOnlyPage />;
+  }
   // =========================================================
   // GLOBAL ENTER KEY NAVIGATION
   // Press Enter to move to the next form field.
@@ -2169,7 +2377,7 @@ const openResultInNewTab = ({
     params.set("vazhvathram", selectedVazhvathram);
   }
 
-  const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  const url = `${window.location.origin}${window.location.pathname}?resultOnly=1&${params.toString()}`;
 
   window.open(url, "_blank", "noopener,noreferrer");
 };
