@@ -7187,67 +7187,79 @@ try {
     setBankAccountMode("edit");
   };
 
-const handleBankAccountSave = async () => {
-  const currentVazhvathramRecord =
-  vazhvathrams.find(
-    (item) =>
-      String(item.vazhvathramName || "")
-        .trim()
-        .toLowerCase() ===
-      String(selectedVazhvathram || "")
-        .trim()
-        .toLowerCase()
-  );
-
-const bankAccountPayload = {
-  ...bankAccountData,
-  vazhvathramCode:
-    currentVazhvathramRecord?.vazhvathramCode || "",
-  vazhvathramName:
-    currentVazhvathramRecord?.vazhvathramName ||
-    selectedVazhvathram ||
-    "",
-};
+  const handleBankAccountSave = async () => {
   try {
     let saved;
+
+    // Find the selected Vazhvathram record
+    const currentVazhvathramRecord =
+      vazhvathramRecords.find(
+        (record) =>
+          String(record.vazhvathramName || "")
+            .trim()
+            .toLowerCase() ===
+          String(selectedVazhvathram || "")
+            .trim()
+            .toLowerCase()
+      );
+
+    // Add Vazhvathram details to the Bank Account
+    const bankAccountPayload = {
+      ...bankAccountData,
+      vazhvathramCode:
+        currentVazhvathramRecord?.vazhvathramCode || "",
+      vazhvathramName:
+        currentVazhvathramRecord?.vazhvathramName ||
+        selectedVazhvathram ||
+        "",
+    };
 
     if (selectedBankAccountRecordId) {
       saved = await apiRequest(
         `/bank-accounts/${selectedBankAccountRecordId}`,
         {
           method: "PUT",
-          body: JSON.stringify(bankAccountPayData),
+          body: JSON.stringify(bankAccountPayload),
         }
       );
 
-      setBankAccountRecords(previous =>
-        previous.map(item =>
+      setBankAccountRecords((previous) =>
+        previous.map((item) =>
           item.id === saved.id ? saved : item
         )
       );
 
-      alert("Bank Account details updated successfully!");
+      alert(
+        "Bank Account details updated successfully!"
+      );
     } else {
-      saved = await apiRequest("/bank-accounts", {
-        method: "POST",
-        body: JSON.stringify(bankAccountPayData),
-      });
+      saved = await apiRequest(
+        "/bank-accounts",
+        {
+          method: "POST",
+          body: JSON.stringify(bankAccountPayload),
+        }
+      );
 
-      setBankAccountRecords(previous => [
+      setBankAccountRecords((previous) => [
         ...previous,
-        saved
+        saved,
       ]);
 
       setSelectedBankAccountRecordId(saved.id);
 
-      alert("Bank Account details saved successfully!");
+      alert(
+        "Bank Account details saved successfully!"
+      );
     }
 
     setBankAccountMode("view");
-
   } catch (error) {
     console.error(error);
-    alert(`Could not save Bank Account details: ${error.message}`);
+
+    alert(
+      `Could not save Bank Account details: ${error.message}`
+    );
   }
 };
 
