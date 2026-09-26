@@ -14487,7 +14487,25 @@ const bankOutstanding = dashboardDebtRecords.reduce(
 
         {section === "Housing" ? (
           <div className="dis-actions">
-            {[["Add", clearHousing], ["Edit", loadHousingForEdit], ["Save", saveHousing], ["Cancel", clearHousing], ["Delete", deleteHousing], ["List", loadHousings], ["Not Entered", () => setStatus("Not Entered report selected.")], ["List All", loadHousings]].map(([item, handler]) => (
+            {[["Add", clearHousing],
+              ["Edit", loadHousingForEdit], 
+              ["Save", saveHousing], ["Cancel", clearHousing], 
+              ["Delete", deleteHousing],
+              ["List", () =>
+               openResultInNewTab({
+                 page: "housing",
+                 type: "all",
+               })
+              ],
+              ["Not Entered", () =>
+                setStatus("Not Entered report selected.")
+              ],
+              ["List All", () =>
+                openResultInNewTab({
+                  page: "housing",
+                  type: "all",
+                })
+              ]].map(([item, handler]) => (
               <button key={item} type="button" onClick={handler} disabled={housingLoading}>{item}</button>
             ))}
           </div>
@@ -14573,9 +14591,21 @@ const bankOutstanding = dashboardDebtRecords.reduce(
               ["Save", saveBankAccountDis],
               ["Cancel", clearBankAccountDis],
               ["Delete", deleteBankAccountDis],
-              ["List", loadBankAccountDis],
-              ["Not Entered", () => setStatus("Not Entered report selected.")],
-              ["List All", loadBankAccountDis],
+              ["List", () =>
+                openResultInNewTab({
+                  page: "bankAccount",
+                  type: "all",
+                })
+              ],
+            ["Not Entered", () =>
+              setStatus("Not Entered report selected.")
+            ],
+            ["List All", () =>
+              openResultInNewTab({
+                page: "bankAccount",
+                type: "all",
+              })
+            ],
             ].map(([item, handler]) => (
               <button
                 key={item}
@@ -25475,21 +25505,45 @@ const contextJournals = filterReportRecordsByContext(
       onClick ||
       (() => {
         if (item === "Financial" && children === "Execute") {
-          runFinancialReport();
+          openResultInNewTab({
+            page: "financial",
+            type: "all",
+        });
         } else if (item === "Journals" && children === "Execute") {
-          runJournalReport();
+          openResultInNewTab({
+            page: "journals",
+            type: "all",
+          });
         } else if (item === "MIS-SSP" && children === "Execute") {
-          runMISSSPReport();
+          openResultInNewTab({
+            page: "misSsp",
+            type: "all",
+          });
         } else if (item === "MIS" && children === "Execute") {
-          runMISReport();
+          openResultInNewTab({
+            page: "mis",
+            type: "all",
+          });
         } else if (item === "Dem. Sheet" && children === "Execute") {
-          runDemandSheetReport();
+          openResultInNewTab({
+            page: "demandSheet",
+            type: "all",
+          });
         } else if (item === "Confirmation" && children === "Execute") {
-          runConfirmationReport();
+          openResultInNewTab({
+              page: "confirmation",
+              type: "all",
+           });
         } else if (item === "Schedule" && children === "Execute") {
-          runScheduleReport();
+          openResultInNewTab({
+            page: "schedule",
+            type: "all",
+          });
         } else if (item === "Grading" && children === "Generate Rating") {
-          runGradingReport();
+          openResultInNewTab({
+            page: "grading",
+            type: "all",
+          });
         } else {
           alert(`${item}: ${children}`);
         }
@@ -26425,8 +26479,15 @@ const allRows = [
         </div>
 
         <div className="legacy-report-actions">
-          <Button onClick={runJournalReport}>
-            {journalReportLoading ? "Loading..." : "Execute"}
+          <Button
+            onClick={() =>
+              openResultInNewTab({
+                page: "journals",
+                type: "all",
+              })
+            }
+            >
+            Execute
           </Button>
         </div>
 
@@ -28889,7 +28950,16 @@ const closingCash =
   </select>
 </div>    
           <div className="legacy-report-actions">
-            <Button onClick={runMasterReport}>{masterReportLoading ? "Loading..." : "Execute"}</Button>
+             <Button
+               onClick={() =>
+                 openResultInNewTab({
+                   page: "masterReport",
+                   type: "all",
+                 })
+               }
+               >
+               Execute
+             </Button>
           </div>
           {masterReportStatus && (
             <div style={{ padding: "8px", fontWeight: "bold", textAlign: "center" }}>
@@ -31298,9 +31368,17 @@ const expenditureRecords = [
           </div>
 
           <div className="legacy-report-actions">
-            <Button onClick={runOpeningBalanceReport}>Execute</Button>
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "openingBalance",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
           </div>
-
           {openingBalanceStatus && (
             <div
               style={{
@@ -31789,10 +31867,32 @@ setFinancialReportResults([]);
           </div>
           <div className="legacy-report-section-label">Projection Period</div>
           <select value={analyticsProjectionPeriod} onChange={(e) => setAnalyticsProjectionPeriod(e.target.value)}><option>1 Year</option><option>2 Years</option><option>3 Years</option><option>4 Years</option><option>5 Year</option><option>6 Year</option><option>7 Year</option><option>8 Year</option><option>9 Year</option><option>10 Year</option></select>
-          <div className="legacy-report-actions"><Button onClick={runAnalyticsReport}>{analyticsLoading ? "Loading..." : "Generate Forecast"}</Button></div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "analyticsForecast",
+                  type: "all",
+                })
+              }
+              >
+              Generate Forecast
+            </Button>
+          </div>
           <div className="accuracy-label">— Test Accuracy of this Model —</div>
           <div className="legacy-report-row"><strong>Test Period</strong><select value={analyticsTestPeriod} onChange={(e) => setAnalyticsTestPeriod(e.target.value)}><option>-- Select --</option><option>1 Year (Current FY)</option><option>2 Year</option><option>3 Year</option></select></div>
-          <div className="legacy-report-actions"><Button onClick={runAnalyticsReport}>Test Model Accuracy</Button></div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "analyticsAccuracy",
+                  type: "all",
+                })
+              }
+              >
+              Test Model Accuracy
+            </Button>
+          </div>
           {analyticsStatus && <div className="legacy-report-status">{analyticsStatus}</div>}
           {analyticsResults.length > 0 && <div className="legacy-report-results"><table><thead><tr>{Object.keys(analyticsResults[0]).map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{analyticsResults.map((row, index) => <tr key={index}>{Object.keys(row).map((key) => <td key={key}>{String(row[key])}</td>)}</tr>)}</tbody></table></div>}
         </>
@@ -31813,7 +31913,18 @@ setFinancialReportResults([]);
             <div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5} value={blockMonth} onChange={(event) => setBlockMonth(event.target.value)} /></div>
             <div><div className="legacy-report-section-label">Scheme</div><select value={blockScheme} onChange={(event) => setBlockScheme(event.target.value)}><option value=""></option><option>Regular Savings</option><option>Special Savings</option><option>Livelihood Loan Support 1</option><option>Livelihood Loan Support 2</option><option>Housing Loan</option></select></div>
           </div>
-          <div className="legacy-report-actions"><Button onClick={runBlockReport}>{blockReportLoading ? "Loading..." : "Execute"}</Button></div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "block",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
           {blockReportStatus && <div className="legacy-report-status">{blockReportStatus}</div>}
           {blockReportResults.length > 0 && (
             <div className="legacy-report-results"><table><thead><tr>{Array.from(new Set(blockReportResults.flatMap((row) => Object.keys(row || {})))).filter((key) => key !== "id").slice(0, 10).map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{blockReportResults.map((row, index) => { const keys = Array.from(new Set(blockReportResults.flatMap((entry) => Object.keys(entry || {})))).filter((key) => key !== "id").slice(0, 10); return <tr key={row?.id ?? index}>{keys.map((key) => <td key={key}>{String(row?.[key] ?? "")}</td>)}</tr>; })}</tbody></table></div>
@@ -31891,7 +32002,18 @@ const filtered = contextRows.filter((row) => {
             <div><div className="legacy-report-section-label">Sub Ledger</div><ListBox options={["Livelihood Loan Support 1", "Livelihood Loan Support 2", "Housing Loan", "Savings"]} size={4} value={vazSubLedger} onChange={(e) => setVazSubLedger(e.target.value)} /></div>
             <div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5} value={vazMonth} onChange={(e) => setVazMonth(e.target.value)} /></div>
           </div>
-          <div className="legacy-report-actions"><Button onClick={runVazhvathramReport}>{vazReportLoading ? "Loading..." : "Execute"}</Button></div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "vazhvathramReport",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
           {vazReportStatus && <div className="legacy-report-status">{vazReportStatus}</div>}
           {vazReportResults.length > 0 && <div className="legacy-report-results"><table><thead><tr>{Object.keys(vazReportResults[0]).filter((key) => key !== "id").map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{vazReportResults.map((row, index) => <tr key={index}>{Object.keys(row).filter((key) => key !== "id").map((key) => <td key={key}>{String(row[key] ?? "")}</td>)}</tr>)}</tbody></table></div>}
         </>
@@ -32051,7 +32173,18 @@ const filtered = contextRows.filter((row) => {
               </select>
             </div>
           </div>
-          <div className="legacy-report-actions"><Button onClick={runBankLinkReport}>Execute</Button></div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "bankLinkReport",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
           {bankLinkReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{bankLinkReportLoading ? "Loading Bank Link Report..." : bankLinkReportStatus}</div>}
           {renderBankLinkReportResults()}
         </>
@@ -32161,10 +32294,17 @@ rows = filterReportRecordsByContext(
             </select>
           </div>
           <div className="legacy-report-actions">
-            <Button onClick={runClusterReport}>
-              {clusterReportLoading ? "Loading..." : "Execute"}
-            </Button>
-          </div>
+            <Button
+               onClick={() =>
+                 openResultInNewTab({
+                    page: "clusterReport",
+                    type: "all",
+                   })
+                 }
+               >
+                Execute
+             </Button>
+           </div>
           {clusterReportStatus && (
             <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
               {clusterReportStatus}
@@ -32235,8 +32375,15 @@ rows = filterReportRecordsByContext(
             <MonthBox size={5} value={clusterMonth} onChange={(event) => setClusterMonth(event.target.value)} />
           </div>
           <div className="legacy-report-actions">
-            <Button onClick={() => runClusterReportFull(clusterDisplayedSelection)}>
-              {clusterReportLoading ? "Loading..." : "Execute"}
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                   page: "clusterReportFull",
+                   type: "all",
+                 })
+                }
+              >
+               Execute
             </Button>
           </div>
           {clusterReportStatus && (
