@@ -511,6 +511,130 @@ if (selectedVazhvathram || selectedVazhvathramCode) {
       </div>
     );
   }
+  // =========================================================
+  // DEBT RESULT
+  // =========================================================
+  if (resultPage === "debt") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: "25px",
+          background: "#ffffff",
+          fontFamily: "Arial, sans-serif",
+          boxSizing: "border-box",
+        }}
+      >
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: "10px",
+          }}
+        >
+          Vazhvathram Debt Details
+        </h1>
+
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+          }}
+        >
+          Debt List
+        </h2>
+
+        <div
+          style={{
+            marginBottom: "20px",
+            fontSize: "15px",
+          }}
+        >
+          <strong>Cluster:</strong> {cluster || "All"}
+          {"   "}
+          <strong>Vazhvathram:</strong> {vazhvathram || "All"}
+        </div>
+
+        {rows.length === 0 ? (
+          <p>No records found.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={resultTableHeaderStyle}>Sl.<br />No.</th>
+                  <th style={resultTableHeaderStyle}>Member<br />ID</th>
+                  <th style={resultTableHeaderStyle}>Member<br />Name</th>
+                  <th style={resultTableHeaderStyle}>Debt<br />Type</th>
+                  <th style={resultTableHeaderStyle}>Source</th>
+                  <th style={resultTableHeaderStyle}>Loan<br />Amount</th>
+                  <th style={resultTableHeaderStyle}>Present<br />Outstanding</th>
+                  <th style={resultTableHeaderStyle}>Borrowing<br />Year</th>
+                  <th style={resultTableHeaderStyle}>Interest<br />Rate</th>
+                  <th style={resultTableHeaderStyle}>Loan<br />Purpose</th>
+                  <th style={resultTableHeaderStyle}>Repayment<br />Frequency</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id || index}>
+                    <td style={resultTableCellStyle}>
+                      {index + 1}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.memberId || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.memberName || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.debtType || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.source || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.loanAmount || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.presentOutstanding || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.borrowingYear || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.interestRate || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.loanPurpose || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.repaymentFrequency || ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
