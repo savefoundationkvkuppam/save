@@ -13423,6 +13423,33 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 }
                 return;
               }
+              if (section === "Other Income") {
+                if (item === "Add") {
+                  clearOtherIncome();
+                  setStatus("Ready to enter a new Other Income record.");
+                } else if (item === "Edit") {
+                  loadOtherIncomeForEdit();
+                } else if (item === "Save") {
+                  saveOtherIncome();
+                } else if (item === "Cancel") {
+                  clearOtherIncome();
+                } else if (item === "Delete") {
+                  deleteOtherIncome();
+                } else if (item === "List") {
+                  openResultInNewTab({
+                    page: "otherIncome",
+                    type: "all",
+                  });
+                } else if (item === "Not Entered") {
+                  setStatus("Other Income Not Entered report selected.");
+                } else if (item === "List All") {
+                  openResultInNewTab({
+                  page: "otherIncome",
+                  type: "all",
+                });
+               }
+               return;
+               }
 
               if (item === "Cancel") {
                 setValues({});
