@@ -114,6 +114,83 @@ function ResultOnlyPage() {
   const loadResult = async () => {
     try {
       setLoading(true);
+      // =====================================================
+// DEBT LIST
+// =====================================================
+if (resultPage === "debt") {
+  const [debtData, memberData] = await Promise.all([
+    apiRequest("/debts"),
+    apiRequest("/members"),
+  ]);
+
+  const debts = Array.isArray(debtData) ? debtData : [];
+  const members = Array.isArray(memberData) ? memberData : [];
+
+  const contextMembers = members.filter((member) => {
+    const memberCluster = String(
+      member.clusterName ||
+        member.cluster ||
+        member.clusterCode ||
+        ""
+    ).trim().toLowerCase();
+
+    const memberVazhvathram = String(
+      member.vazhvathramName ||
+        member.vazhvathram ||
+        member.vazhvathramCode ||
+        ""
+    ).trim().toLowerCase();
+
+    const selectedCluster = String(cluster || "")
+      .trim()
+      .toLowerCase();
+
+    const selectedVazhvathram = String(vazhvathram || "")
+      .trim()
+      .toLowerCase();
+
+    const clusterMatches =
+      !selectedCluster ||
+      memberCluster === selectedCluster;
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      memberVazhvathram === selectedVazhvathram;
+
+    return clusterMatches && vazhvathramMatches;
+  });
+
+  const contextMemberIds = new Set(
+    contextMembers.map((member) =>
+      String(member.id ?? member.memberId ?? "")
+    )
+  );
+
+  const contextMemberNames = new Set(
+    contextMembers.map((member) =>
+      String(member.memberName || member.name || "")
+        .trim()
+        .toLowerCase()
+    )
+  );
+
+  const filteredDebts = debts.filter((debt) => {
+    const debtMemberId = String(debt.memberId ?? "");
+
+    const debtMemberName = String(debt.memberName || "")
+      .trim()
+      .toLowerCase();
+
+    return (
+      contextMemberIds.has(debtMemberId) ||
+      contextMemberNames.has(debtMemberName)
+    );
+  });
+
+  setRows(filteredDebts);
+  setLoading(false);
+  return;
+}
 
       // =====================================================
       // BANK ACCOUNT LIST
