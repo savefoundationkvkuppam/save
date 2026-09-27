@@ -1108,7 +1108,164 @@ if (selectedCluster || selectedVazhvathram) {
       </div>
     );
   }
+// =====================================================
+// MEMBER RESULT
+// =====================================================
+if (resultPage === "member") {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "12px",
+        background: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          border: "1px solid #777",
+          padding: "6px",
+          textAlign: "center",
+          marginBottom: "2px",
+        }}
+      >
+        <h2
+          style={{
+            margin: "2px 0",
+            fontFamily: "Georgia, serif",
+          }}
+        >
+          Member Details
+        </h2>
+      </div>
 
+      <div
+        style={{
+          border: "1px solid #777",
+          padding: "6px",
+          fontWeight: "bold",
+          marginBottom: "2px",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>
+          Federation : SAVE Foundation
+        </span>
+
+        <span>
+          Cluster : {cluster || "All"}
+        </span>
+      </div>
+
+      <div
+        style={{
+          border: "1px solid #777",
+          padding: "6px",
+          fontWeight: "bold",
+          marginBottom: "2px",
+        }}
+      >
+        Vazhvathram : {vazhvathram || "All"}
+      </div>
+
+      {rows.length === 0 ? (
+        <div
+          style={{
+            border: "1px solid #777",
+            padding: "20px",
+            textAlign: "center",
+          }}
+        >
+          No Member records found.
+        </div>
+      ) : (
+        <div
+          style={{
+            overflowX: "auto",
+            border: "1px solid #777",
+          }}
+        >
+          <table
+            style={{
+              width: "100%",
+              minWidth: "900px",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+            }}
+          >
+            <thead>
+              <tr>
+                <th style={resultTableHeaderStyle}>
+                  Sl.<br />No.
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Member<br />Code
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Member<br />Name
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Regional<br />Name
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Mobile
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Category
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Caste
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {rows.map((record, index) => (
+                <tr key={record.id || index}>
+                  <td style={resultTableCellStyle}>
+                    {index + 1}
+                  </td>
+
+                  <td style={resultTableCellStyle}>
+                    {record.memberCode || ""}
+                  </td>
+
+                  <td style={resultTableCellStyle}>
+                    {record.memberName || ""}
+                  </td>
+
+                  <td style={resultTableCellStyle}>
+                    {record.regionalMemberName || ""}
+                  </td>
+
+                  <td style={resultTableCellStyle}>
+                    {record.mobileNumber || ""}
+                  </td>
+
+                  <td style={resultTableCellStyle}>
+                    {record.category || ""}
+                  </td>
+
+                  <td style={resultTableCellStyle}>
+                    {record.caste || ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
   return (
     <div
       style={{
