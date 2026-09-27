@@ -1163,6 +1163,119 @@ if (resultPage === "taluk") {
     );
   }
   // =====================================================
+// PAN. UNION RESULT
+// =====================================================
+if (resultPage === "panUnion") {
+  return (
+    <div
+      style={{
+        width: "90%",
+        margin: "30px auto",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #777",
+        }}
+      >
+        <tbody>
+          <tr>
+            <td
+              colSpan="2"
+              style={{
+                border: "1px solid #777",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "18px",
+                padding: "6px",
+              }}
+            >
+              Federation : SAVE Foundation
+            </td>
+          </tr>
+
+          <tr>
+            <td
+              colSpan="2"
+              style={{
+                border: "1px solid #777",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "18px",
+                padding: "6px",
+              }}
+            >
+              Panchayat Union Details
+            </td>
+          </tr>
+
+          <tr>
+            <th
+              style={{
+                border: "1px solid #777",
+                textAlign: "left",
+                padding: "5px",
+              }}
+            >
+              Union Code
+            </th>
+
+            <th
+              style={{
+                border: "1px solid #777",
+                textAlign: "left",
+                padding: "5px",
+              }}
+            >
+              Union Name
+            </th>
+          </tr>
+
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan="2"
+                style={{
+                  border: "1px solid #777",
+                  textAlign: "center",
+                  padding: "10px",
+                }}
+              >
+                No Pan. Union records found.
+              </td>
+            </tr>
+          ) : (
+            rows.map((record, index) => (
+              <tr key={record.id ?? index}>
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "5px",
+                  }}
+                >
+                  {record.panUnionCode || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "5px",
+                  }}
+                >
+                  {record.panUnionName || ""}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+  // =====================================================
 // TALUK RESULT
 // =====================================================
 if (resultPage === "taluk") {
