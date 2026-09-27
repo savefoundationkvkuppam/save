@@ -9775,10 +9775,14 @@ const handleAuditorAdd = () => {
     setTalukMode("view");
   };
 
-  const handleTalukList = () => {
-    setShowTalukList((previous) => !previous);
-    setTalukMode("view");
-  };
+const handleTalukList = () => {
+  openResultInNewTab({
+    page: "taluk",
+    type: "all",
+  });
+
+  setTalukMode("view");
+};
 
   const loadTaluk = (record) => {
     setSelectedTalukRecordId(record.id);
