@@ -1134,38 +1134,40 @@ if (resultPage === "member") {
     <div
       style={{
         minHeight: "100vh",
-        padding: "12px",
+        padding: "10px",
         background: "#ffffff",
         fontFamily: "Arial, sans-serif",
         boxSizing: "border-box",
       }}
     >
+      {/* TITLE */}
       <div
         style={{
-          border: "1px solid #777",
-          padding: "6px",
+          border: "1px solid #333",
+          padding: "5px",
           textAlign: "center",
-          marginBottom: "2px",
         }}
       >
         <h2
           style={{
-            margin: "2px 0",
+            margin: "0",
             fontFamily: "Georgia, serif",
+            fontSize: "18px",
           }}
         >
-          Member Details
+          Member Details of Vazhvathram: {vazhvathram || "All"}
         </h2>
       </div>
 
+      {/* FEDERATION / CLUSTER */}
       <div
         style={{
-          border: "1px solid #777",
-          padding: "6px",
-          fontWeight: "bold",
-          marginBottom: "2px",
+          border: "1px solid #333",
           display: "flex",
           justifyContent: "space-between",
+          padding: "4px",
+          fontWeight: "bold",
+          fontSize: "13px",
         }}
       >
         <span>
@@ -1177,21 +1179,10 @@ if (resultPage === "member") {
         </span>
       </div>
 
-      <div
-        style={{
-          border: "1px solid #777",
-          padding: "6px",
-          fontWeight: "bold",
-          marginBottom: "2px",
-        }}
-      >
-        Vazhvathram : {vazhvathram || "All"}
-      </div>
-
       {rows.length === 0 ? (
         <div
           style={{
-            border: "1px solid #777",
+            border: "1px solid #333",
             padding: "20px",
             textAlign: "center",
           }}
@@ -1202,15 +1193,15 @@ if (resultPage === "member") {
         <div
           style={{
             overflowX: "auto",
-            border: "1px solid #777",
+            width: "100%",
           }}
         >
           <table
             style={{
               width: "100%",
-              minWidth: "900px",
+              minWidth: "1900px",
               borderCollapse: "collapse",
-              fontSize: "13px",
+              fontSize: "11px",
             }}
           >
             <thead>
@@ -1224,7 +1215,55 @@ if (resultPage === "member") {
                 </th>
 
                 <th style={resultTableHeaderStyle}>
+                  UID
+                </th>
+
+                <th style={resultTableHeaderStyle}>
                   Member<br />Name
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Joining<br />Date
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Year of<br />Birth
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Age as<br />on 2026
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Husband /<br />Father Name
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Husband /<br />Father Status
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Designation
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Designation<br />Date
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Mobile<br />No.
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Ration<br />Card No.
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Voter<br />ID No.
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Aadhar<br />ID No.
                 </th>
 
                 <th style={resultTableHeaderStyle}>
@@ -1232,7 +1271,15 @@ if (resultPage === "member") {
                 </th>
 
                 <th style={resultTableHeaderStyle}>
-                  Mobile
+                  Withdraw
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Withdraw<br />Date
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Locked
                 </th>
 
                 <th style={resultTableHeaderStyle}>
@@ -1240,43 +1287,134 @@ if (resultPage === "member") {
                 </th>
 
                 <th style={resultTableHeaderStyle}>
-                  Caste
+                  Family<br />Category
                 </th>
               </tr>
             </thead>
 
             <tbody>
-              {rows.map((record, index) => (
-                <tr key={record.id || index}>
-                  <td style={resultTableCellStyle}>
-                    {index + 1}
-                  </td>
+              {rows.map((record, index) => {
+                const yearOfBirth =
+                  record.yearOfBirth || "";
 
-                  <td style={resultTableCellStyle}>
-                    {record.memberCode || ""}
-                  </td>
+                const calculatedAge =
+                  yearOfBirth
+                    ? new Date().getFullYear() -
+                      Number(yearOfBirth)
+                    : "";
 
-                  <td style={resultTableCellStyle}>
-                    {record.memberName || ""}
-                  </td>
+                const isWithdrawn =
+                  String(
+                    record.withdraw ||
+                    record.withdrawStatus ||
+                    ""
+                  ).toUpperCase() === "Y";
 
-                  <td style={resultTableCellStyle}>
-                    {record.regionalMemberName || ""}
-                  </td>
+                return (
+                  <tr
+                    key={record.id || index}
+                    style={{
+                      color: isWithdrawn
+                        ? "red"
+                        : "black",
+                    }}
+                  >
+                    <td style={resultTableCellStyle}>
+                      {index + 1}
+                    </td>
 
-                  <td style={resultTableCellStyle}>
-                    {record.mobileNumber || ""}
-                  </td>
+                    <td style={resultTableCellStyle}>
+                      {record.memberCode || ""}
+                    </td>
 
-                  <td style={resultTableCellStyle}>
-                    {record.category || ""}
-                  </td>
+                    <td style={resultTableCellStyle}>
+                      {record.uid ||
+                        record.uidNumber ||
+                        ""}
+                    </td>
 
-                  <td style={resultTableCellStyle}>
-                    {record.caste || ""}
-                  </td>
-                </tr>
-              ))}
+                    <td style={resultTableCellStyle}>
+                      {record.memberName || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.dateOfJoining ||
+                        record.date ||
+                        ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {yearOfBirth}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {calculatedAge}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.husbandFatherName || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.husbandFatherStatus ||
+                        record.aliveStatus ||
+                        ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.designation || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.designationDate ||
+                        record.dateOfJoining ||
+                        ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.mobileNumber || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.rationCardNo || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.voterId || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.aadharId || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.regionalMemberName || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.withdraw ||
+                        record.withdrawStatus ||
+                        "N"}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.withdrawDate || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.locked ? "Y" : "N"}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.category || ""}
+                    </td>
+
+                    <td style={resultTableCellStyle}>
+                      {record.familyCategory || ""}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -1284,6 +1422,8 @@ if (resultPage === "member") {
     </div>
   );
 }
+
+  
   return (
     <div
       style={{
