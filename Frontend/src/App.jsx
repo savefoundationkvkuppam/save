@@ -39701,15 +39701,44 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
             <div className="master-row"><label>Annual Interest Rate</label><select value={savingRateData.annualRate} onChange={e=>updateData(setSavingRateData,"annualRate",e.target.value)}>{["9"].map(v=><option key={v}>{v}</option>)}</select></div>
             <div className="master-row"><label>Date of Change</label><input type="date" value={savingRateData.dateChange} onChange={e=>updateData(setSavingRateData,"dateChange",e.target.value)}/></div>
 
-            <div className="master-buttons">
-              <button onClick={handleSavingRateAdd}>Add</button>
-              <button onClick={handleSavingRateEdit}>Edit</button>
-              <button onClick={handleSavingRateSave} disabled={savingRateMode !== "add" && savingRateMode !== "edit"}>Save</button>
-              <button onClick={resetSavingRateForm}>Cancel</button>
-              <button onClick={handleSavingRateDelete}>Delete</button>
-              <button onClick={()=>setShowSavingRateList(true)}>List 1</button>
-              <button onClick={()=>setShowSavingRateList(true)}>List 2</button>
-              <button onClick={()=>setShowSavingRateList(true)}>List All</button>
+<div className="master-buttons">
+  <button onClick={handleSavingRateAdd}>Add</button>
+  <button onClick={handleSavingRateEdit}>Edit</button>
+  <button onClick={handleSavingRateSave} disabled={savingRateMode !== "add" && savingRateMode !== "edit"}>Save</button>
+  <button onClick={resetSavingRateForm}>Cancel</button>
+  <button onClick={handleSavingRateDelete}>Delete</button>
+  <button
+    onClick={() =>
+      openResultInNewTab({
+        page: "savingInterest",
+        type: "list1",
+     })
+   }
+ >
+   List 1
+</button>
+
+<button
+  onClick={() =>
+    openResultInNewTab({
+      page: "savingInterest",
+      type: "list2",
+    })
+  }
+>
+  List 2
+</button>
+
+<button
+  onClick={() =>
+    openResultInNewTab({
+      page: "savingInterest",
+      type: "all",
+    })
+  }
+>
+  List All
+</button>
             </div>
           </div>
 
