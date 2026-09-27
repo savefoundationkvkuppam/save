@@ -487,6 +487,24 @@ if (resultPage === "panchayat") {
   return;
 }
 // =====================================================
+// VILLAGE / SLUM LIST
+// =====================================================
+if (resultPage === "village") {
+  const data = await apiRequest("/villages");
+
+  const villageRecords = Array.isArray(data)
+    ? data
+    : [];
+
+  console.log(
+    "Village / Slum result records:",
+    villageRecords
+  );
+
+  setRows(villageRecords);
+  return;
+}
+// =====================================================
 // TALUK LIST
 // =====================================================
 if (resultPage === "taluk") {
@@ -1293,7 +1311,164 @@ if (resultPage === "panUnion") {
     </div>
   );
 }
-  // =====================================================
+// =====================================================
+// VILLAGE / SLUM DETAILS RESULT
+// =====================================================
+if (resultPage === "village") {
+  return (
+    <div
+      style={{
+        width: "90%",
+        margin: "20px auto",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #777",
+        }}
+      >
+        <tbody>
+
+          <tr>
+            <td
+              colSpan="6"
+              style={{
+                border: "1px solid #777",
+                padding: "6px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              Federation : SAVE Foundation
+            </td>
+          </tr>
+
+          <tr>
+            <td
+              colSpan="6"
+              style={{
+                border: "1px solid #777",
+                padding: "6px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              Village Details
+            </td>
+          </tr>
+
+          <tr>
+            <th style={resultTableHeaderStyle}>
+              Panchayat / Ward
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Panchayat / Ward Name
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Village / Slum
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Village Code
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Village Name
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Pincode
+            </th>
+          </tr>
+
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan="6"
+                style={{
+                  border: "1px solid #777",
+                  padding: "8px",
+                  textAlign: "center",
+                }}
+              >
+                No Village / Slum records found.
+              </td>
+            </tr>
+          ) : (
+            rows.map((record, index) => (
+              <tr key={record.id ?? index}>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.panchayatWard || "Panchayat"}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.panchayatName || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.villageSlum || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.code || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.name || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.pinCode || ""}
+                </td>
+
+              </tr>
+            ))
+          )}
+
+        </tbody>
+      </table>
+    </div>
+  );
+}
+// =====================================================
 // TALUK RESULT
 // =====================================================
 if (resultPage === "taluk") {
@@ -8383,11 +8558,13 @@ try {
   };
 
   const handleVillageList = () => {
-    setShowVillageList(
-      (previous) => !previous
-    );
-    setVillageMode("view");
-  };
+  openResultInNewTab({
+    page: "village",
+    type: "all",
+  });
+
+  setVillageMode("view");
+};
 
   const loadVillage = (record) => {
     setSelectedVillageRecordId(record.id);
