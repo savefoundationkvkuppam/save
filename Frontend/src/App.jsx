@@ -939,6 +939,150 @@ if (selectedVazhvathram || selectedVazhvathramCode) {
     );
   }
 
+  // =========================================================
+  // VAZHVATHRAM RESULT
+  // =========================================================
+  if (resultPage === "vazhvathram") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: "12px",
+          background: "#ffffff",
+          fontFamily: "Arial, sans-serif",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            border: "1px solid #777",
+            padding: "6px",
+            textAlign: "center",
+            marginBottom: "2px",
+          }}
+        >
+          <h2
+            style={{
+              margin: "2px 0",
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            Vazhvathram Details
+          </h2>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid #777",
+            padding: "6px",
+            fontWeight: "bold",
+            marginBottom: "2px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>
+            Federation : SAVE Foundation
+          </span>
+
+          <span>
+            Cluster : {cluster || "All"}
+          </span>
+        </div>
+
+        {rows.length === 0 ? (
+          <div
+            style={{
+              border: "1px solid #777",
+              padding: "20px",
+              textAlign: "center",
+            }}
+          >
+            No Vazhvathram records found.
+          </div>
+        ) : (
+          <div
+            style={{
+              overflowX: "auto",
+              border: "1px solid #777",
+            }}
+          >
+            <table
+              style={{
+                width: "100%",
+                minWidth: "1500px",
+                borderCollapse: "collapse",
+                fontSize: "13px",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={resultTableHeaderStyle}>Sl.<br />No.</th>
+                  <th style={resultTableHeaderStyle}>Vazhvathram<br />Code</th>
+                  <th style={resultTableHeaderStyle}>Vazhvathram<br />Name</th>
+                  <th style={resultTableHeaderStyle}>Regional<br />Name</th>
+                  <th style={resultTableHeaderStyle}>Formation<br />Date</th>
+                  <th style={resultTableHeaderStyle}>Quality Checked<br />Date</th>
+                  <th style={resultTableHeaderStyle}>Meeting<br />Type</th>
+                  <th style={resultTableHeaderStyle}>Meeting<br />Date</th>
+                  <th style={resultTableHeaderStyle}>Formed<br />By</th>
+                  <th style={resultTableHeaderStyle}>Village</th>
+                  <th style={resultTableHeaderStyle}>Bank</th>
+                  <th style={resultTableHeaderStyle}>Branch</th>
+                  <th style={resultTableHeaderStyle}>Service Area<br />Branch</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id || index}>
+                    <td style={resultTableCellStyle}>{index + 1}</td>
+                    <td style={resultTableCellStyle}>
+                      {record.vazhvathramCode || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.vazhvathramName || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.regionalVazhvathramName || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.formationDate || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.qualityCheckedDate || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.meetingType || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.meetingDate || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.formedBy || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.villageName || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.bankName || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.branchName || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.serviceAreaBranch || ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
