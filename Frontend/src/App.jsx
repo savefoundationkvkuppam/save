@@ -451,9 +451,6 @@ if (selectedCluster || selectedVazhvathram) {
         setRows(vazhvathramRecords);
         return;
       }
-      setRows(vazhvathramRecords);
-return;
-}
      setRows([]);
     } catch (error) {
       console.error(
