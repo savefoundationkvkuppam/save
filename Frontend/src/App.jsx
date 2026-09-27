@@ -451,6 +451,24 @@ if (selectedCluster || selectedVazhvathram) {
         setRows(vazhvathramRecords);
         return;
       }
+       // =====================================================
+      // MEMBER LIST
+      // =====================================================
+      if (resultPage === "member") {
+        const data = await apiRequest("/members");
+
+        const memberRecords = Array.isArray(data)
+          ? data
+          : [];
+
+        console.log(
+          "Member result records:",
+          memberRecords
+        );
+
+        setRows(memberRecords);
+        return;
+      }
      setRows([]);
     } catch (error) {
       console.error(
