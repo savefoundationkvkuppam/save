@@ -40420,5 +40420,4 @@ const districtOptions = [
 
   return null;
 }
-}
 export default App;
