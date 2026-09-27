@@ -1199,7 +1199,7 @@ if (resultPage === "member") {
           <table
             style={{
               width: "100%",
-              tableLayout: "fixed",
+              tableLayout: "auto",
               borderCollapse: "collapse",
               fontSize: "9px",
             }}
@@ -1444,7 +1444,8 @@ const resultTableHeaderStyle = {
   background: "#eeeeee",
   textAlign: "center",
   whiteSpace: "normal",
-  wordBreak: "break-word",
+  wordBreak: "normal",
+  overflowWrap: "break-word",
 };
 
 const resultTableCellStyle = {
@@ -1452,7 +1453,8 @@ const resultTableCellStyle = {
   padding: "4px 3px",
   textAlign: "center",
   whiteSpace: "normal",
-  wordBreak: "break-word",
+  wordBreak: "normal",
+  overflowWrap: "break-word",
 };
 function App() {
     const resultParams = new URLSearchParams(
