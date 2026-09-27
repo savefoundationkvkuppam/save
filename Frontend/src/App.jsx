@@ -469,6 +469,24 @@ if (resultPage === "panUnion") {
   return;
 }
 // =====================================================
+// PANCHAYAT / WARD LIST
+// =====================================================
+if (resultPage === "panchayat") {
+  const data = await apiRequest("/panchayats");
+
+  const panchayatRecords = Array.isArray(data)
+    ? data
+    : [];
+
+  console.log(
+    "Panchayat / Ward result records:",
+    panchayatRecords
+  );
+
+  setRows(panchayatRecords);
+  return;
+}
+// =====================================================
 // TALUK LIST
 // =====================================================
 if (resultPage === "taluk") {
@@ -1665,6 +1683,137 @@ if (resultPage === "member") {
           </table>
         </div>
       )}
+    </div>
+  );
+}
+// =====================================================
+// PANCHAYAT / WARD DETAILS RESULT
+// =====================================================
+if (resultPage === "panchayat") {
+  return (
+    <div
+      style={{
+        width: "90%",
+        margin: "20px auto",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #777",
+        }}
+      >
+        <tbody>
+
+          <tr>
+            <td
+              colSpan="4"
+              style={{
+                border: "1px solid #777",
+                padding: "6px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              Federation : SAVE Foundation
+            </td>
+          </tr>
+
+          <tr>
+            <td
+              colSpan="4"
+              style={{
+                border: "1px solid #777",
+                padding: "6px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              Panchayat Details
+            </td>
+          </tr>
+
+          <tr>
+            <th style={resultTableHeaderStyle}>
+              Panchayat Union Name
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Panchayat / Ward
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Code
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Name
+            </th>
+          </tr>
+
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan="4"
+                style={{
+                  border: "1px solid #777",
+                  padding: "8px",
+                  textAlign: "center",
+                }}
+              >
+                No Panchayat / Ward records found.
+              </td>
+            </tr>
+          ) : (
+            rows.map((record, index) => (
+              <tr key={record.id ?? index}>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.panchayatUnionName || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.panchayatWard || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.code || ""}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                  }}
+                >
+                  {record.name || ""}
+                </td>
+
+              </tr>
+            ))
+          )}
+
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -10971,12 +11120,13 @@ setMemberVazhvathram(
   };
 
   const handlePanchayatList = () => {
-    setShowPanchayatList(
-      (previous) => !previous
-    );
+  openResultInNewTab({
+    page: "panchayat",
+    type: "all",
+  });
 
-    setPanchayatMode("view");
-  };
+  setPanchayatMode("view");
+};
 
   const loadPanchayat = (record) => {
     setSelectedPanchayatRecordId(
