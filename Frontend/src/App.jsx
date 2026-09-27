@@ -409,18 +409,44 @@ if (selectedVazhvathram || selectedVazhvathramCode) {
           .toLowerCase();
 
         // Show Vazhvathrams belonging to the selected Cluster
-        if (selectedCluster) {
-          vazhvathramRecords =
-            vazhvathramRecords.filter((record) => {
-              const recordCluster = String(
-                record?.clusterName || ""
-              )
-                .trim()
-                .toLowerCase();
+        const selectedVazhvathram = String(vazhvathram || "")
+  .trim()
+  .toLowerCase();
 
-              return recordCluster === selectedCluster;
-            });
-        }
+if (selectedCluster || selectedVazhvathram) {
+  vazhvathramRecords =
+    vazhvathramRecords.filter((record) => {
+      const recordCluster = String(
+        record?.clusterName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const recordVazhvathram = String(
+        record?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      // Match the selected Vazhvathram directly
+      if (
+        selectedVazhvathram &&
+        recordVazhvathram === selectedVazhvathram
+      ) {
+        return true;
+      }
+
+      // Otherwise match the selected Cluster
+      if (
+        selectedCluster &&
+        recordCluster === selectedCluster
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+}
 
         setRows(vazhvathramRecords);
         return;
