@@ -1192,16 +1192,16 @@ if (resultPage === "member") {
       ) : (
         <div
           style={{
-            overflowX: "auto",
             width: "100%",
+            overflow: "hidden",
           }}
         >
           <table
             style={{
               width: "100%",
-              minWidth: "1900px",
+              tableLayout: "fixed",
               borderCollapse: "collapse",
-              fontSize: "11px",
+              fontSize: "9px",
             }}
           >
             <thead>
@@ -1440,14 +1440,19 @@ if (resultPage === "member") {
 
 const resultTableHeaderStyle = {
   border: "1px solid #333",
-  padding: "10px",
+  padding: "4px 3px",
   background: "#eeeeee",
-  textAlign: "left",
+  textAlign: "center",
+  whiteSpace: "normal",
+  wordBreak: "break-word",
 };
 
 const resultTableCellStyle = {
   border: "1px solid #333",
-  padding: "10px",
+  padding: "4px 3px",
+  textAlign: "center",
+  whiteSpace: "normal",
+  wordBreak: "break-word",
 };
 function App() {
     const resultParams = new URLSearchParams(
