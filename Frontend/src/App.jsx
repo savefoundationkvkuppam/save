@@ -451,6 +451,63 @@ if (selectedCluster || selectedVazhvathram) {
         setRows(vazhvathramRecords);
         return;
       }
+      setRows(vazhvathramRecords);
+return;
+}
+
+// =====================================================
+// MEMBER LIST
+// =====================================================
+if (resultPage === "member") {
+  const data = await apiRequest("/members");
+
+  let memberRecords = Array.isArray(data)
+    ? data
+    : [];
+
+  const selectedCluster = String(cluster || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedVazhvathram = String(vazhvathram || "")
+    .trim()
+    .toLowerCase();
+
+  // Filter members by selected Cluster + Vazhvathram
+  if (selectedCluster || selectedVazhvathram) {
+    memberRecords = memberRecords.filter((record) => {
+      const recordCluster = String(
+        record?.clusterName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const recordVazhvathram = String(
+        record?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const clusterMatches =
+        !selectedCluster ||
+        recordCluster === selectedCluster;
+
+      const vazhvathramMatches =
+        !selectedVazhvathram ||
+        recordVazhvathram === selectedVazhvathram;
+
+      return (
+        clusterMatches &&
+        vazhvathramMatches
+      );
+    });
+  }
+
+  setRows(memberRecords);
+  return;
+}
+
+setRows([]);
       setRows([]);
     } catch (error) {
       console.error(
@@ -9908,12 +9965,13 @@ setMemberVazhvathram(
   };
 
   const handleMemberList = () => {
-    setShowMemberList(
-      (previous) => !previous
-    );
+  openResultInNewTab({
+    page: "member",
+    type: "all",
+  });
 
-    setMemberMode("view");
-  };
+  setMemberMode("view");
+};
 
   const handleMemberDelete = async (record = null) => {
     const targetRecord = record || memberRecords.find(
