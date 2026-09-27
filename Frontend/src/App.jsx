@@ -505,6 +505,82 @@ if (resultPage === "village") {
   return;
 }
 // =====================================================
+// SAVINGS INTEREST RATE - LIST 1
+// =====================================================
+if (
+  resultPage === "savingInterest" &&
+  resultType === "list1"
+) {
+  const [rateData, vazhvathramData] = await Promise.all([
+    apiRequest("/saving-interest-rates"),
+    apiRequest("/vazhvathrams"),
+  ]);
+
+  const rates = Array.isArray(rateData)
+    ? rateData
+    : [];
+
+  const vazhvathramRecords = Array.isArray(vazhvathramData)
+    ? vazhvathramData
+    : [];
+
+  const selectedCluster = String(cluster || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedVazhvathram = String(vazhvathram || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedVazhvathramRecord =
+    vazhvathramRecords.find((record) => {
+      const recordName = String(
+        record?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const recordCluster = String(
+        record?.clusterName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        recordName === selectedVazhvathram &&
+        (!selectedCluster ||
+          recordCluster === selectedCluster)
+      );
+    }) || null;
+
+  const selectedCode = String(
+    selectedVazhvathramRecord?.vazhvathramCode || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const filteredRates = rates.filter((record) => {
+    const recordCode = String(
+      record?.vazhvathramCode || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      !selectedCode ||
+      recordCode === selectedCode
+    );
+  });
+
+  console.log(
+    "Savings Interest Rate List 1:",
+    filteredRates
+  );
+
+  setRows(filteredRates);
+  return;
+}
+// =====================================================
 // TALUK LIST
 // =====================================================
 if (resultPage === "taluk") {
@@ -1465,6 +1541,127 @@ if (resultPage === "village") {
 
         </tbody>
       </table>
+    </div>
+  );
+}
+// =========================================================
+// SAVINGS INTEREST RATE - LIST 1 RESULT
+// =========================================================
+if (
+  resultPage === "savingInterest" &&
+  resultType === "list1"
+) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "12px",
+        background: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        boxSizing: "border-box",
+      }}
+    >
+      <h2
+        style={{
+          textAlign: "center",
+          fontFamily: "Georgia, serif",
+          margin: "5px 0 25px",
+        }}
+      >
+        Interest Rate Entered Details
+      </h2>
+
+      <table
+        style={{
+          borderCollapse: "collapse",
+          margin: "0 auto",
+          fontSize: "14px",
+          width: "auto",
+          minWidth: "620px",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={resultTableHeaderStyle}>
+              Cluster
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Kalanjiam
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Sub Ledger
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Date
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Rate
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((record, index) => (
+            <tr key={record.id || index}>
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {cluster || ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {record.vazhvathramCode || ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {record.subLedger || ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {record.dateChange || ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                  textAlign: "center",
+                }}
+              >
+                {record.annualRate || ""}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {rows.length === 0 && (
+        <p style={{ textAlign: "center" }}>
+          No Interest Rate records found.
+        </p>
+      )}
     </div>
   );
 }
