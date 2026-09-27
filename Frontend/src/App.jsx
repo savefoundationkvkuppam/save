@@ -451,6 +451,24 @@ if (selectedCluster || selectedVazhvathram) {
         setRows(vazhvathramRecords);
         return;
 // =====================================================
+// PAN. UNION LIST
+// =====================================================
+if (resultPage === "panUnion") {
+  const data = await apiRequest("/pan-unions");
+
+  const panUnionRecords = Array.isArray(data)
+    ? data
+    : [];
+
+  console.log(
+    "Pan. Union result records:",
+    panUnionRecords
+  );
+
+  setRows(panUnionRecords);
+  return;
+}
+// =====================================================
 // TALUK LIST
 // =====================================================
 if (resultPage === "taluk") {
@@ -9878,10 +9896,13 @@ const handleAuditorAdd = () => {
   };
 
   const handlePanUnionList = () => {
-    setShowPanUnionList((previous) => !previous);
-    setPanUnionMode("view");
-  };
+  openResultInNewTab({
+    page: "panUnion",
+    type: "all",
+  });
 
+  setPanUnionMode("view");
+};
   const loadPanUnion = (record) => {
     setSelectedPanUnionRecordId(record.id);
     setPanUnionCode(record.panUnionCode || "");
