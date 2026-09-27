@@ -394,6 +394,37 @@ if (selectedVazhvathram || selectedVazhvathramCode) {
   setRows(resultRows);
   return;
 }
+            // =====================================================
+      // VAZHVATHRAM LIST
+      // =====================================================
+      if (resultPage === "vazhvathram") {
+        const data = await apiRequest("/vazhvathrams");
+
+        let vazhvathramRecords = Array.isArray(data)
+          ? data
+          : [];
+
+        const selectedCluster = String(cluster || "")
+          .trim()
+          .toLowerCase();
+
+        // Show Vazhvathrams belonging to the selected Cluster
+        if (selectedCluster) {
+          vazhvathramRecords =
+            vazhvathramRecords.filter((record) => {
+              const recordCluster = String(
+                record?.clusterName || ""
+              )
+                .trim()
+                .toLowerCase();
+
+              return recordCluster === selectedCluster;
+            });
+        }
+
+        setRows(vazhvathramRecords);
+        return;
+      }
       setRows([]);
     } catch (error) {
       console.error(
@@ -36155,16 +36186,13 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                 </button>
 
                 <button
-                  onClick={() => {
-                    setShowVazhvathramList(
-                      (previous) =>
-                        !previous
-                    );
-                    setVazhvathramMode(
-                      "view"
-                    );
-                  }}
-                >
+                  onClick={() =>
+                    openResultInNewTab({
+                      page: "vazhvathram",
+                      type: "all",
+                    })
+                  }
+                  >
                   List
                 </button>
 
