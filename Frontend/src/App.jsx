@@ -450,6 +450,24 @@ if (selectedCluster || selectedVazhvathram) {
 
         setRows(vazhvathramRecords);
         return;
+// =====================================================
+// TALUK LIST
+// =====================================================
+if (resultPage === "taluk") {
+  const data = await apiRequest("/taluks");
+
+  const talukRecords = Array.isArray(data)
+    ? data
+    : [];
+
+  console.log(
+    "Taluk result records:",
+    talukRecords
+  );
+
+  setRows(talukRecords);
+  return;
+}
       }
        // =====================================================
       // MEMBER LIST
@@ -1126,6 +1144,108 @@ if (selectedCluster || selectedVazhvathram) {
       </div>
     );
   }
+  // =====================================================
+// TALUK RESULT
+// =====================================================
+if (resultPage === "taluk") {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "20px",
+        background: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          width: "60%",
+          margin: "0 auto",
+          border: "1px solid #777",
+          textAlign: "center",
+          fontWeight: "bold",
+          padding: "5px",
+        }}
+      >
+        Federation : SAVE Foundation
+      </div>
+
+      <div
+        style={{
+          width: "60%",
+          margin: "2px auto 0",
+          border: "1px solid #777",
+          textAlign: "center",
+          fontWeight: "bold",
+          padding: "5px",
+          fontSize: "16px",
+        }}
+      >
+        Taluk Details
+      </div>
+
+      <table
+        style={{
+          width: "60%",
+          margin: "2px auto 0",
+          borderCollapse: "collapse",
+          tableLayout: "fixed",
+          fontSize: "13px",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={resultTableHeaderStyle}>State</th>
+            <th style={resultTableHeaderStyle}>District</th>
+            <th style={resultTableHeaderStyle}>Taluk Code</th>
+            <th style={resultTableHeaderStyle}>Taluk Name</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan="4"
+                style={resultTableCellStyle}
+              >
+                No Taluk records found.
+              </td>
+            </tr>
+          ) : (
+            rows.map((record, index) => (
+              <tr key={record.id || index}>
+                <td style={resultTableCellStyle}>
+                  {record.stateName ||
+                    record.state ||
+                    ""}
+                </td>
+
+                <td style={resultTableCellStyle}>
+                  {record.districtName || ""}
+                </td>
+
+                <td style={resultTableCellStyle}>
+                  {record.talukCode || ""}
+                </td>
+
+                <td style={resultTableCellStyle}>
+                  {record.talukName || ""}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// =====================================================
+// MEMBER RESULT
+// =====================================================
+if (resultPage === "member") {
 // =====================================================
 // MEMBER RESULT
 // =====================================================
@@ -1422,8 +1542,114 @@ if (resultPage === "member") {
     </div>
   );
 }
+// =====================================================
+// TALUK DETAILS RESULT
+// =====================================================
+if (resultPage === "taluk") {
+  return (
+    <div
+      style={{
+        width: "60%",
+        margin: "20px auto",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
 
-  
+      {/* Federation */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #777",
+        }}
+      >
+        <tbody>
+
+          <tr>
+            <td
+              colSpan="4"
+              style={{
+                border: "1px solid #777",
+                padding: "6px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              Federation : SAVE Foundation
+            </td>
+          </tr>
+
+          {/* Title */}
+          <tr>
+            <td
+              colSpan="4"
+              style={{
+                border: "1px solid #777",
+                padding: "6px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              Taluk Details
+            </td>
+          </tr>
+
+          {/* Column headings */}
+          <tr>
+            <th style={resultTableHeaderStyle}>
+              State
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              District
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Taluk Code
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Taluk Name
+            </th>
+          </tr>
+
+          {/* Data */}
+          {rows.map((record, index) => (
+            <tr key={record.id || index}>
+
+              <td style={resultTableCellStyle}>
+                {record.stateName || "Tamil Nadu"}
+              </td>
+
+              <td style={resultTableCellStyle}>
+                {record.districtName || ""}
+              </td>
+
+              <td style={resultTableCellStyle}>
+                {record.talukCode || ""}
+              </td>
+
+              <td style={resultTableCellStyle}>
+                {record.talukName || ""}
+              </td>
+
+            </tr>
+          ))}
+
+        </tbody>
+      </table>
+
+      {rows.length === 0 && (
+        <p style={{ textAlign: "center" }}>
+          No Taluk records found.
+        </p>
+      )}
+
+    </div>
+  );
+}
   return (
     <div
       style={{
