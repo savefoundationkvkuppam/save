@@ -693,10 +693,40 @@ if (resultPage === "loanInterest") {
     });
   }
 
-  // LIST 2
-  if (resultType === "list2") {
+  // LIST 2 - Interest Rate Not Entered Details
+if (resultType === "list2") {
+  const selectedRateExists = rates.some((record) => {
+    const recordCode = String(
+      record?.vazhvathramCode || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      selectedCode &&
+      recordCode === selectedCode
+    );
+  });
+
+  if (
+    selectedVazhvathramRecord &&
+    !selectedRateExists
+  ) {
+    filteredRates = [
+      {
+        clusterName:
+          selectedVazhvathramRecord.clusterName || cluster,
+
+        vazhvathramCode:
+          selectedVazhvathramRecord.vazhvathramCode || "",
+
+        subLedger: "",
+      },
+    ];
+  } else {
     filteredRates = [];
   }
+}
 
   // LIST ALL
   if (resultType === "all") {
