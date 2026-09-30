@@ -1561,8 +1561,7 @@ if (resultPage === "village") {
 // SAVINGS INTEREST RATE - LIST 1 RESULT
 // =========================================================
 if (
-  resultPage === "savingInterest" &&
-  resultType === "list1"
+  resultPage === "savingInterest"
 ) {
   return (
     <div
