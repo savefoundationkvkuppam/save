@@ -505,12 +505,9 @@ if (resultPage === "village") {
   return;
 }
 // =====================================================
-// SAVINGS INTEREST RATE - LIST 1
+// SAVINGS INTEREST RATE
 // =====================================================
-if (
-  resultPage === "savingInterest" &&
-  resultType === "list1"
-) {
+if (resultPage === "savingInterest") {
   const [rateData, vazhvathramData] = await Promise.all([
     apiRequest("/saving-interest-rates"),
     apiRequest("/vazhvathrams"),
@@ -559,21 +556,37 @@ if (
     .trim()
     .toLowerCase();
 
-  const filteredRates = rates.filter((record) => {
-    const recordCode = String(
-      record?.vazhvathramCode || ""
-    )
-      .trim()
-      .toLowerCase();
+  let filteredRates = rates;
 
-    return (
-      !selectedCode ||
-      recordCode === selectedCode
-    );
-  });
+  // LIST 1 - Interest Rate Entered Details
+  if (resultType === "list1") {
+    filteredRates = rates.filter((record) => {
+      const recordCode = String(
+        record?.vazhvathramCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        !selectedCode ||
+        recordCode === selectedCode
+      );
+    });
+  }
+
+  // LIST 2 - temporarily show no records
+  if (resultType === "list2") {
+    filteredRates = [];
+  }
+
+  // LIST ALL - show all interest rate records
+  if (resultType === "all") {
+    filteredRates = rates;
+  }
 
   console.log(
-    "Savings Interest Rate List 1:",
+    "Savings Interest Rate result:",
+    resultType,
     filteredRates
   );
 
