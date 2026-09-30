@@ -574,10 +574,40 @@ if (resultPage === "savingInterest") {
     });
   }
 
-  // LIST 2 - temporarily show no records
-  if (resultType === "list2") {
+  // LIST 2 - Interest Rate Not Entered Details
+if (resultType === "list2") {
+  const selectedRateExists = rates.some((record) => {
+    const recordCode = String(
+      record?.vazhvathramCode || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      selectedCode &&
+      recordCode === selectedCode
+    );
+  });
+
+  if (
+    selectedVazhvathramRecord &&
+    !selectedRateExists
+  ) {
+    filteredRates = [
+      {
+        clusterName:
+          selectedVazhvathramRecord.clusterName || cluster,
+
+        vazhvathramCode:
+          selectedVazhvathramRecord.vazhvathramCode || "",
+
+        subLedger: "",
+      },
+    ];
+  } else {
     filteredRates = [];
   }
+}
 
   // LIST ALL - show all interest rate records
   if (resultType === "all") {
@@ -1580,7 +1610,9 @@ if (
           margin: "5px 0 25px",
         }}
       >
-        Interest Rate Entered Details
+        {resultType === "list2"
+           ? "Interest Rate Not Entered Details"
+           : "Interest Rate Entered Details"}
       </h2>
 
       <table
@@ -1594,25 +1626,29 @@ if (
       >
         <thead>
           <tr>
-            <th style={resultTableHeaderStyle}>
-              Cluster
-            </th>
+<th style={resultTableHeaderStyle}>
+  Cluster
+</th>
 
-            <th style={resultTableHeaderStyle}>
-              Kalanjiam
-            </th>
+<th style={resultTableHeaderStyle}>
+  Kalanjiam
+</th>
 
-            <th style={resultTableHeaderStyle}>
-              Sub Ledger
-            </th>
+<th style={resultTableHeaderStyle}>
+  Sub Ledger
+</th>
 
-            <th style={resultTableHeaderStyle}>
-              Date
-            </th>
+{resultType !== "list2" && (
+  <>
+    <th style={resultTableHeaderStyle}>
+      Date
+    </th>
 
-            <th style={resultTableHeaderStyle}>
-              Rate
-            </th>
+    <th style={resultTableHeaderStyle}>
+      Rate
+    </th>
+  </>
+)}
           </tr>
         </thead>
 
