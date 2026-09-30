@@ -18211,6 +18211,11 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     const [categories, setCategories] = useState(() => memberRows.map(() => "Not Applicable"));
     const [familyCategories, setFamilyCategories] = useState(() => memberRows.map(() => "Not Applicable"));
     const [houseOwnership, setHouseOwnership] = useState(() => memberRows.map(() => ""));
+
+const [interestRateRequestDate, setInterestRateRequestDate] = useState("");
+const [interestRateRows, setInterestRateRows] = useState([]);
+const [interestRateLoading, setInterestRateLoading] = useState(false);
+const [selectedInterestRateId, setSelectedInterestRateId] = useState(null);
     // =========================================================
     // OTHERS -> SB A/C STATUS
     // Database-backed SB account status.
@@ -23430,10 +23435,6 @@ if (item === "Req. For Edit") {
     // =========================================================
 
     if (item === "ReqMemLnIntRateChange") {
-      const [interestRateRequestDate, setInterestRateRequestDate] = useState("");
-      const [interestRateRows, setInterestRateRows] = useState([]);
-      const [interestRateLoading, setInterestRateLoading] = useState(false);
-      const [selectedInterestRateId, setSelectedInterestRateId] = useState(null);
 
       const loadInterestRateRequests = async (approvedOnly = false) => {
         if (!interestRateRequestDate) {
@@ -34223,15 +34224,9 @@ rows = filterReportRecordsByContext(
   const reportName = page.startsWith("report:")
   ? page.slice("report:".length)
   : "";
-
-const reportPageElement = ReportPage({
-  item: reportName,
-});
-
 if (page.startsWith("report:")) {
-  return reportPageElement;
+  return <ReportPage item={reportName} />;
 }
-
   if (page === "reportsHome") {
     return (
       <div className="save-page reports-page">
