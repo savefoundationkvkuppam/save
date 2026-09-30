@@ -2420,6 +2420,12 @@ function App() {
 
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [bankOptions, setBankOptions] = useState([
+  "UNION BANK KV KUPPAM",
+  "CENTRAL BANK OF INDIA",
+  "UNION BANK OF INDIA",
+  "CANARA BANK"
+]);
 
   // =========================================================
   // REQUEST FOR EDITING TRANSACTIONS
@@ -40277,13 +40283,6 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
   "North Middle Andaman",
   "South Andaman"
 ];
-
-const [bankOptions, setBankOptions] = useState([
-  "UNION BANK KV KUPPAM",
-  "CENTRAL BANK OF INDIA",
-  "UNION BANK OF INDIA",
-  "CANARA BANK"
-]);
     const branchFields = [
       ["Bank Name", "bankName"],
       ["Branch Code", "branchCode"],
