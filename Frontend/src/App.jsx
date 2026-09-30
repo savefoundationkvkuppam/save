@@ -624,6 +624,95 @@ if (resultType === "list2") {
   return;
 }
 // =====================================================
+// LOAN INTEREST RATE
+// =====================================================
+if (resultPage === "loanInterest") {
+  const [rateData, vazhvathramData] = await Promise.all([
+    apiRequest("/loan-interest-rates"),
+    apiRequest("/vazhvathrams"),
+  ]);
+
+  const rates = Array.isArray(rateData)
+    ? rateData
+    : [];
+
+  const vazhvathramRecords = Array.isArray(vazhvathramData)
+    ? vazhvathramData
+    : [];
+
+  const selectedCluster = String(cluster || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedVazhvathram = String(vazhvathram || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedVazhvathramRecord =
+    vazhvathramRecords.find((record) => {
+      const recordName = String(
+        record?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const recordCluster = String(
+        record?.clusterName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        recordName === selectedVazhvathram &&
+        (!selectedCluster ||
+          recordCluster === selectedCluster)
+      );
+    }) || null;
+
+  const selectedCode = String(
+    selectedVazhvathramRecord?.vazhvathramCode || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  let filteredRates = rates;
+
+  // LIST 1
+  if (resultType === "list1") {
+    filteredRates = rates.filter((record) => {
+      const recordCode = String(
+        record?.vazhvathramCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        !selectedCode ||
+        recordCode === selectedCode
+      );
+    });
+  }
+
+  // LIST 2
+  if (resultType === "list2") {
+    filteredRates = [];
+  }
+
+  // LIST ALL
+  if (resultType === "all") {
+    filteredRates = rates;
+  }
+
+  console.log(
+    "Loan Interest Rate result:",
+    resultType,
+    filteredRates
+  );
+
+  setRows(filteredRates);
+  return;
+}
+// =====================================================
 // TALUK LIST
 // =====================================================
 if (resultPage === "taluk") {
@@ -40039,9 +40128,38 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <button onClick={handleLoanRateSave} disabled={loanRateMode !== "add" && loanRateMode !== "edit"}>Save</button>
               <button onClick={resetLoanRateForm}>Cancel</button>
               <button onClick={handleLoanRateDelete}>Delete</button>
-              <button onClick={() => setShowLoanRateList(previous => !previous)}>List 1</button>
-              <button onClick={() => setShowLoanRateList(previous => !previous)}>List 2</button>
-              <button onClick={() => setShowLoanRateList(previous => !previous)}>List All</button>
+              <button
+  onClick={() =>
+    openResultInNewTab({
+      page: "loanInterest",
+      type: "list1",
+    })
+  }
+>
+  List 1
+</button>
+
+<button
+  onClick={() =>
+    openResultInNewTab({
+      page: "loanInterest",
+      type: "list2",
+    })
+  }
+>
+  List 2
+</button>
+
+<button
+  onClick={() =>
+    openResultInNewTab({
+      page: "loanInterest",
+      type: "all",
+    })
+  }
+>
+  List All
+</button>
             </div>
           </div>
 
