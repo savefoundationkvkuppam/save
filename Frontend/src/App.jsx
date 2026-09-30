@@ -1802,6 +1802,136 @@ if (
     </div>
   );
 }
+// =========================================================
+// LOAN INTEREST RATE RESULT
+// =========================================================
+if (resultPage === "loanInterest") {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "12px",
+        background: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        boxSizing: "border-box",
+      }}
+    >
+      <h2
+        style={{
+          textAlign: "center",
+          fontFamily: "Georgia, serif",
+          margin: "5px 0 25px",
+        }}
+      >
+        {resultType === "list2"
+          ? "Interest Rate Not Entered Details"
+          : resultType === "all"
+          ? "Interest Rate Entered Details for All Kalanjiam"
+          : "Interest Rate Entered Details"}
+      </h2>
+
+      <table
+        style={{
+          borderCollapse: "collapse",
+          margin: "0 auto",
+          fontSize: "14px",
+          width: "auto",
+          minWidth: "620px",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={resultTableHeaderStyle}>
+              Cluster
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Kalanjiam
+            </th>
+
+            <th style={resultTableHeaderStyle}>
+              Sub Ledger
+            </th>
+
+            {resultType !== "list2" && (
+              <>
+                <th style={resultTableHeaderStyle}>
+                  Date
+                </th>
+
+                <th style={resultTableHeaderStyle}>
+                  Rate
+                </th>
+              </>
+            )}
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((record, index) => (
+            <tr key={record.id || index}>
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {cluster || record.clusterName || ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {record.vazhvathramCode || ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "3px 5px",
+                }}
+              >
+                {record.subLedger || ""}
+              </td>
+
+              {resultType !== "list2" && (
+                <>
+                  <td
+                    style={{
+                      border: "1px solid #777",
+                      padding: "3px 5px",
+                    }}
+                  >
+                    {record.dateChange || ""}
+                  </td>
+
+                  <td
+                    style={{
+                      border: "1px solid #777",
+                      padding: "3px 5px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {record.annualRate || ""}
+                  </td>
+                </>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {rows.length === 0 && (
+        <p style={{ textAlign: "center" }}>
+          No Interest Rate records found.
+        </p>
+      )}
+    </div>
+  );
+}
 // =====================================================
 // TALUK RESULT
 // =====================================================
