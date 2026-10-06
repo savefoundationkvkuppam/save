@@ -2842,6 +2842,42 @@ const [financialToDate, setFinancialToDate] = useState(() => {
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
+  useEffect(() => {
+  if (!financialReportResults.length) return;
+
+  const reportElement = document.getElementById(
+    "financial-report-result"
+  );
+
+  if (!reportElement) return;
+
+  const newTab = window.open("", "_blank");
+
+  if (!newTab) {
+    alert("Please allow pop-ups for this website.");
+    return;
+  }
+
+  newTab.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Financial Report</title>
+        <style>
+          body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+          }
+        </style>
+      </head>
+      <body>
+        ${reportElement.innerHTML}
+      </body>
+    </html>
+  `);
+
+  newTab.document.close();
+}, [financialReportResults]);
     const selectedFinancialMemberCode = financialMember;
 useEffect(() => {
   console.log(
@@ -7155,9 +7191,9 @@ const allRows = [
           </div>
         )}
 {item === "Financial" && (
-  <>
+  <div id="financial-report-result">
     {renderFinancialReportResults()}
-  </>
+  </div>
 )}
       </div>
     );
