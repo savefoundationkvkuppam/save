@@ -2626,6 +2626,107 @@ const resultTableCellStyle = {
   wordBreak: "normal",
   overflowWrap: "break-word",
 };
+// =========================================================
+// REPORTS MENU
+// =========================================================
+
+const ReportsMenu = ({ reportItems, setPage, openUploadImages }) => {
+  const [menuScrollRef, saveMenuScroll] =
+    usePersistentMenuScroll("reports");
+
+  return (
+    <div className="side-menu reports-side-menu">
+      <div
+        className="menu-scroll"
+        ref={menuScrollRef}
+        onScroll={saveMenuScroll}
+      >
+
+        <button
+          className="reports-parent"
+          type="button"
+          onClick={() => setPage("save")}
+        >
+          Master
+        </button>
+
+        <button
+          className="reports-parent"
+          type="button"
+          onClick={() => setPage("attendance")}
+        >
+          Transactions
+        </button>
+
+        <button
+          className="reports-parent"
+          type="button"
+          onClick={() => setPage("othersHome")}
+        >
+          Others
+        </button>
+
+        <button
+          className="reports-parent"
+          type="button"
+          onClick={() => openUploadImages()}
+        >
+          Upload Images
+        </button>
+
+        <button
+          className="reports-parent"
+          type="button"
+          onClick={() => setPage("mutualLifeHome")}
+        >
+          Mutual Life
+        </button>
+
+        <button
+          className="reports-parent"
+          type="button"
+          onClick={() => setPage("disHome")}
+        >
+          DIS
+        </button>
+
+        <div className="reports-section-title">
+          Reports
+        </div>
+
+        {reportItems.map((item, index) => (
+          <button
+            key={item}
+            type="button"
+            className={
+              index === 0
+                ? "reports-item active"
+                : "reports-item"
+            }
+            onClick={() => setPage(`report:${item}`)}
+          >
+            {item}
+          </button>
+        ))}
+
+      </div>
+
+      <div className="logout-area">
+        <div className="menu-divider"></div>
+
+        <button
+          type="button"
+          className="logout-btn"
+          onClick={() => setPage("login")}
+        >
+          <span className="menu-dot">↪</span>
+          <span>Log out</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
     const resultParams = new URLSearchParams(
     window.location.search
@@ -12246,100 +12347,7 @@ setMemberVazhvathram(
 
   // =========================================================
   // REPORTS MENU
-  // =========================================================
-
-  const ReportsMenu = () => {
-    const [menuScrollRef, saveMenuScroll] =
-      usePersistentMenuScroll("reports");
-
-    return (
-      <div className="side-menu reports-side-menu">
-        <div className="menu-scroll" ref={menuScrollRef} onScroll={saveMenuScroll}>
-
-          <button
-            className="reports-parent"
-            type="button"
-            onClick={() => setPage("save")}
-          >
-            Master
-          </button>
-
-          <button
-            className="reports-parent"
-            type="button"
-            onClick={() => setPage("attendance")}
-          >
-            Transactions
-          </button>
-
-          <button
-            className="reports-parent"
-            type="button"
-            onClick={() => setPage("othersHome")}
-          >
-            Others
-          </button>
-
-          <button
-            className="reports-parent"
-            type="button"
-            onClick={() => openUploadImages()}
-          >
-            Upload Images
-          </button>
-
-          <button
-            className="reports-parent"
-            type="button"
-            onClick={() => setPage("mutualLifeHome")}
-          >
-            Mutual Life
-          </button>
-
-          <button
-            className="reports-parent"
-            type="button"
-            onClick={() => setPage("disHome")}
-          >
-            DIS
-          </button>
-
-          <div className="reports-section-title">
-            Reports
-          </div>
-
-          {reportItems.map((item, index) => (
-            <button
-              key={item}
-              type="button"
-              className={
-                index === 0
-                  ? "reports-item active"
-                  : "reports-item"
-              }
-              onClick={() => setPage(`report:${item}`)}
-            >
-              {item}
-            </button>
-          ))}
-
-        </div>
-
-        <div className="logout-area">
-          <div className="menu-divider"></div>
-
-          <button
-            type="button"
-            className="logout-btn"
-            onClick={() => setPage("login")}
-          >
-            <span className="menu-dot">↪</span>
-            <span>Log out</span>
-          </button>
-        </div>
-      </div>
-    );
-  };
+  // ========================================================
 
 
   // =========================================================
@@ -34505,7 +34513,11 @@ rows = filterReportRecordsByContext(
       <div className="save-page reports-page">
         <TopBar />
         <div className="main-container">
-          <ReportsMenu />
+          <ReportsMenu
+            reportItems={reportItems}
+            setPage={setPage}
+            openUploadImages={openUploadImages}
+            />
           <div className="content legacy-report-content">
             {body}
           </div>
@@ -34530,7 +34542,11 @@ if (page.startsWith("report:")) {
         <TopBar />
 
         <div className="main-container">
-          <ReportsMenu />
+          <ReportsMenu
+            reportItems={reportItems}
+            setPage={setPage}
+            openUploadImages={openUploadImages}
+            />
 
           <div className="content reports-home-content">
             <div className="reports-home-card">
