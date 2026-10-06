@@ -8790,21 +8790,24 @@ const closingCash =
   openingCash + overallReceiptTotal - totalAmount(payments);
 
     return (
-      <div
+<div
         style={{
-          marginTop: "14px",
-          border: "1px solid #777",
-          background: "#fff",
-          overflowX: "auto",
-          padding: "10px",
-        }}
-      >
+  marginTop: "8px",
+  border: "1px solid #777",
+  background: "#fff",
+  width: "100%",
+  boxSizing: "border-box",
+  overflow: "hidden",
+  padding: "4px",
+  fontSize: "10px",
+}}
+  >
         <div
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            fontSize: "18px",
-            marginBottom: "8px",
+            fontSize: "14px",
+            marginBottom: "4px",
           }}
         >
           Cash Book From {financialFromDate} To {financialToDate}
@@ -8814,8 +8817,8 @@ const closingCash =
     style={{
       textAlign: "center",
       fontWeight: "bold",
-      marginBottom: "12px",
-      fontSize: "16px",
+      marginBottom: "5px",
+      fontSize: "12px",
     }}
   >
     {cashBookLockChecking
@@ -8832,22 +8835,23 @@ const closingCash =
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            marginBottom: "14px",
+            marginBottom: "5px",
           }}
         >
           Receipts
         </div>
-
-        <table
-          className="legacy-table"
-          style={{
-            width: "100%",
-            tableLayout: "fixed",
-            borderCollapse: "collapse",
-            fontSize: "11px",
-            wordBreak: "break-word",
-          }}
-        >
+ <table
+  className="legacy-table"
+  cellPadding="2"
+  style={{
+    width: "100%",
+    tableLayout: "auto",
+    borderCollapse: "collapse",
+    fontSize: "9px",
+    lineHeight: "1",
+    wordBreak: "break-word",
+  }}
+>
           <thead>
   <tr>
     <th rowSpan="2">Member / Particulars</th>
@@ -8999,8 +9003,8 @@ const closingCash =
           className="legacy-table"
           style={{
             width: "100%",
-            minWidth: "700px",
             borderCollapse: "collapse",
+            fontSize: "10px",
           }}
         >
           <thead>
@@ -9063,8 +9067,8 @@ const closingCash =
               className="legacy-table"
               style={{
                 width: "100%",
-                minWidth: "700px",
                 borderCollapse: "collapse",
+                fontSize: "10px",
               }}
             >
               <thead>
