@@ -24360,6 +24360,10 @@ if (item === "Mark Dissolved Gps") {
   // =========================================================
 
   const ReportPage = ({ item }) => {
+useEffect(() => {
+  console.log("REPORT PAGE CREATED");
+  return () => console.log("REPORT PAGE REMOVED");
+}, []);
     const months = [
       "April", "May", "June", "July", "August", "September",
       "October", "November", "December", "January", "February", "March",
