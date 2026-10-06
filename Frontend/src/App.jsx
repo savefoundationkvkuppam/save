@@ -8842,10 +8842,10 @@ const closingCash =
           className="legacy-table"
           style={{
             width: "100%",
-            minWidth: "0",
-            tableLayout: "auto",
+            tableLayout: "fixed",
             borderCollapse: "collapse",
-            whiteSpace: "nowrap",
+            fontSize: "11px",
+            wordBreak: "break-word",
           }}
         >
           <thead>
