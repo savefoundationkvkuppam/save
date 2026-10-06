@@ -3039,37 +3039,6 @@ function App() {
 
     setPageState(nextPage);
   };
-  useEffect(() => {
-  const focusFirstPageField = () => {
-    const pageContent = document.querySelector(
-      ".main-container .content"
-    );
-
-    if (!pageContent) {
-      return;
-    }
-
-    const firstField = pageContent.querySelector(
-      'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
-    );
-
-    if (firstField) {
-      firstField.focus();
-
-      if (
-        firstField.tagName === "INPUT" &&
-        firstField.type !== "date" &&
-        firstField.type !== "number"
-      ) {
-        firstField.select?.();
-      }
-    }
-  };
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(focusFirstPageField);
-  });
-}, [page]);
 useEffect(() => {
   const handleSelectChange = (event) => {
     const target = event.target;
