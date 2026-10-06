@@ -2727,6 +2727,10109 @@ const ReportsMenu = ({ reportItems, setPage, openUploadImages }) => {
   );
 };
 
+const ReportPage = ({
+  item,
+  memberRecords,
+  bankAccountRecords,
+  filterReportRecordsByContext,
+  getContextMembers,
+  getMemberDisplayName,
+  openResultInNewTab,
+  loadTransactionLockStatus,
+  setTransactionLockStatus,
+  transactionLockStatus,
+  selectedCluster,
+  selectedVazhvathram,
+  vazhvathramRecords,
+  reportItems,
+  setPage,
+  openUploadImages,
+  TopBar,
+}) => {
+useEffect(() => {
+  console.log("REPORT PAGE CREATED");
+  return () => console.log("REPORT PAGE REMOVED");
+}, []);
+    const months = [
+      "April", "May", "June", "July", "August", "September",
+      "October", "November", "December", "January", "February", "March",
+    ];
+
+    const [masterReportSelection, setMasterReportSelection] = useState("MA 01 - General Ledger Details");
+    const [masterFromDate, setMasterFromDate] = useState("");
+    const [masterToDate, setMasterToDate] = useState("");
+    const [masterReportResults, setMasterReportResults] = useState([]);
+    const [masterReportLoading, setMasterReportLoading] = useState(false);
+    const [masterReportStatus, setMasterReportStatus] = useState("");
+
+    const [openingBalanceSelection, setOpeningBalanceSelection] = useState(
+      "OB 01 - Member Confirmation - vazhvathram"
+    );
+    const [openingBalanceSubledger, setOpeningBalanceSubledger] = useState(
+      "Poverty Reduction Fund 1"
+    );
+    const [openingBalanceStatus, setOpeningBalanceStatus] = useState("");
+    const [openingBalanceResults, setOpeningBalanceResults] = useState([]);
+    const [openingBalanceLoading, setOpeningBalanceLoading] = useState(false);
+
+    // FINANCIAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
+    const [financialReportSelection, setFinancialReportSelection] = useState("Cash Book - FR01");
+    const [financialMember, setFinancialMember] = useState(() => {
+        return sessionStorage.getItem("financialMember") || "";
+    });
+    const [financialSubLedger, setFinancialSubLedger] = useState("Regular Savings");
+    const [financialBankLoanLedger, setFinancialBankLoanLedger] = useState("SHG Linkage - Bank");
+    const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
+    const [financialBankBranch, setFinancialBankBranch] = useState("");
+    const [financialAcctNo, setFinancialAcctNo] = useState("");
+    useEffect(() => {
+  if (!financialMember) {
+    setFinancialAcctNo("");
+    setFinancialBankBranch("");
+    setFinancialAcctType("Savings Bank AC");
+    return;
+  }
+
+  const selectedMemberRecord = memberRecords.find(
+    (member) =>
+      String(member?.memberCode || "").trim() ===
+      String(financialMember || "").trim()
+  );
+
+  if (!selectedMemberRecord) {
+    setFinancialAcctNo("");
+    setFinancialBankBranch("");
+    setFinancialAcctType("Savings Bank AC");
+    return;
+  }
+
+  const selectedBankAccount = bankAccountRecords.find(
+    (record) =>
+      String(record?.memberId ?? "").trim() ===
+      String(selectedMemberRecord?.id ?? "").trim()
+  );
+
+  if (!selectedBankAccount) {
+    setFinancialAcctNo("");
+    setFinancialBankBranch("");
+    setFinancialAcctType("Savings Bank AC");
+    return;
+  }
+
+  setFinancialAcctNo(
+    String(selectedBankAccount.accountNumber || "")
+  );
+
+  setFinancialBankBranch(
+    selectedBankAccount.branchName || ""
+  );
+
+  setFinancialAcctType(
+    selectedBankAccount.accountType || ""
+  );
+}, [
+  financialMember,
+  memberRecords,
+  bankAccountRecords,
+]);
+    const [financialFromDate, setFinancialFromDate] = useState(() => {
+  return sessionStorage.getItem("financialFromDate") || "";
+});
+
+const [financialToDate, setFinancialToDate] = useState(() => {
+  return sessionStorage.getItem("financialToDate") || "";
+});
+    const [financialReportResults, setFinancialReportResults] = useState([]);
+    const [financialReportLoading, setFinancialReportLoading] = useState(false);
+    const [financialReportStatus, setFinancialReportStatus] = useState("");
+    const selectedFinancialMemberCode = financialMember;
+useEffect(() => {
+  console.log(
+    "FINANCIAL CONTEXT CHANGED:",
+    selectedCluster,
+    selectedVazhvathram
+  );
+}, [selectedCluster, selectedVazhvathram]);
+
+
+    // JOURNAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
+    const [journalReportSelection, setJournalReportSelection] = useState(
+      "JR01 - Complete Journal Report - vazhvathram"
+    );
+    const [journalFromDate, setJournalFromDate] = useState("");
+    const [journalToDate, setJournalToDate] = useState("");
+    const [journalReportResults, setJournalReportResults] = useState([]);
+    const [journalReportLoading, setJournalReportLoading] = useState(false);
+    const [journalReportStatus, setJournalReportStatus] = useState("");
+    const [reportAvailableDates, setReportAvailableDates] = useState([]);
+    const [financialMemberDates, setFinancialMemberDates] = useState([]);
+useEffect(() => {
+  let cancelled = false;
+
+  const loadFinancialMemberDates = async () => {
+    if (!financialMember) {
+      setFinancialMemberDates([]);
+      setFinancialFromDate("");
+      setFinancialToDate("");
+      return;
+    }
+
+    try {
+      const [
+        memberReceipts,
+        memberPayments,
+        memberJournals,
+      ] = await Promise.all([
+        apiRequest("/member-receipts"),
+        apiRequest("/member-payments"),
+        apiRequest("/member-journals"),
+      ]);
+
+      const selectedCode = String(financialMember)
+        .trim()
+        .toLowerCase();
+
+      const records = [
+        ...(Array.isArray(memberReceipts) ? memberReceipts : []),
+        ...(Array.isArray(memberPayments) ? memberPayments : []),
+        ...(Array.isArray(memberJournals) ? memberJournals : []),
+      ];
+
+      const dateSet = new Set();
+
+      records.forEach((record) => {
+        const recordMemberCode = String(
+          record?.memberCode ||
+            record?.member ||
+            record?.memberId ||
+            ""
+        )
+          .trim()
+          .toLowerCase();
+
+        if (recordMemberCode !== selectedCode) {
+          return;
+        }
+
+        const rawDate =
+          record?.receiptDate ||
+          record?.voucherDate ||
+          record?.journalDate ||
+          record?.date ||
+          record?.transactionDate ||
+          record?.entryDate ||
+          "";
+
+        if (!rawDate) {
+          return;
+        }
+
+        const text = String(rawDate).trim();
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+          dateSet.add(text);
+          return;
+        }
+
+        if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
+          const [day, month, year] = text.split("-");
+          dateSet.add(`${year}-${month}-${day}`);
+          return;
+        }
+
+        const parsed = new Date(text);
+
+        if (!Number.isNaN(parsed.getTime())) {
+          const year = parsed.getFullYear();
+          const month = String(
+            parsed.getMonth() + 1
+          ).padStart(2, "0");
+          const day = String(
+            parsed.getDate()
+          ).padStart(2, "0");
+
+          dateSet.add(`${year}-${month}-${day}`);
+        }
+      });
+
+      const dates = Array.from(dateSet)
+  .sort((a, b) => a.localeCompare(b));
+
+      if (!cancelled) {
+        setFinancialMemberDates(dates);
+      }
+    } catch (error) {
+      console.error(
+        "Could not load financial member dates:",
+        error
+      );
+
+      if (!cancelled) {
+        setFinancialMemberDates([]);
+      }
+    }
+  };
+
+  loadFinancialMemberDates();
+
+  return () => {
+    cancelled = true;
+  };
+}, [financialMember]);
+
+    useEffect(() => {
+  let cancelled = false;
+
+  const loadReportAvailableDates = async () => {
+    try {
+      const [
+        memberReceipts,
+        otherReceipts,
+        memberPayments,
+        otherPayments,
+        memberJournals,
+        otherJournals,
+        attendances,
+      ] = await Promise.all([
+        apiRequest("/member-receipts"),
+        apiRequest("/other-receipts"),
+        apiRequest("/member-payments"),
+        apiRequest("/other-payments"),
+        apiRequest("/member-journals"),
+        apiRequest("/other-journals"),
+        apiRequest("/attendances"),
+      ]);
+
+      const allRecords = [
+        ...(Array.isArray(memberReceipts) ? memberReceipts : []),
+        ...(Array.isArray(otherReceipts) ? otherReceipts : []),
+        ...(Array.isArray(memberPayments) ? memberPayments : []),
+        ...(Array.isArray(otherPayments) ? otherPayments : []),
+        ...(Array.isArray(memberJournals) ? memberJournals : []),
+        ...(Array.isArray(otherJournals) ? otherJournals : []),
+        ...(Array.isArray(attendances) ? attendances : []),
+      ];
+
+      const dateSet = new Set();
+
+      allRecords.forEach((record) => {
+        const rawDate =
+          record?.receiptDate ||
+          record?.voucherDate ||
+          record?.journalDate ||
+          record?.meetingDate ||
+          record?.date ||
+          record?.transactionDate ||
+          record?.entryDate ||
+          record?.createdDate ||
+          "";
+
+        if (!rawDate) return;
+
+        const text = String(rawDate).trim();
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+          dateSet.add(text);
+          return;
+        }
+
+        if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
+          const [day, month, year] = text.split("-");
+          dateSet.add(`${year}-${month}-${day}`);
+          return;
+        }
+
+        const parsed = new Date(text);
+
+        if (!Number.isNaN(parsed.getTime())) {
+          const year = parsed.getFullYear();
+          const month = String(parsed.getMonth() + 1).padStart(2, "0");
+          const day = String(parsed.getDate()).padStart(2, "0");
+          dateSet.add(`${year}-${month}-${day}`);
+        }
+      });
+
+      const currentYearStart =
+        CURRENT_FINANCIAL_YEAR.apiStartDate;
+      const currentYearEnd =
+        CURRENT_FINANCIAL_YEAR.apiEndDate;
+
+      const availableDates = Array.from(dateSet)
+        .filter(
+          (date) =>
+            date >= currentYearStart &&
+            date <= currentYearEnd
+        )
+        .sort((a, b) => b.localeCompare(a));
+
+      if (!cancelled) {
+        setReportAvailableDates(availableDates);
+      }
+    } catch (error) {
+      console.error(
+        "Could not load available report dates:",
+        error
+      );
+
+      if (!cancelled) {
+        setReportAvailableDates([]);
+      }
+    }
+  };
+
+    loadReportAvailableDates();
+
+  return () => {
+    cancelled = true;
+  };
+}, [selectedCluster, selectedVazhvathram]);
+    
+    // MIS-SSP DATABASE CONNECTION (additive; original MIS-SSP page is preserved below)
+    const [misSspReportSelection, setMisSspReportSelection] = useState(
+      "MLSSP 01 - List of Members Enrolled during current year"
+    );
+    const [misSspYear, setMisSspYear] = useState("Current Year");
+    const [misSspSubledger, setMisSspSubledger] = useState(
+      "Social Security Programme - Member Life"
+    );
+    const [misSspMonth, setMisSspMonth] = useState("April");
+    const [misSspReportResults, setMisSspReportResults] = useState([]);
+    const [misSspReportLoading, setMisSspReportLoading] = useState(false);
+    const [misSspReportStatus, setMisSspReportStatus] = useState("");
+
+    // MIS KL 01 - Vazhvathram Details
+    const [misReportSelection, setMisReportSelection] = useState(
+      "KL 01 - vazhvathram Details"
+    );
+    const [misReportResults, setMisReportResults] = useState([]);
+    const [misReportLoading, setMisReportLoading] = useState(false);
+    const [misReportStatus, setMisReportStatus] = useState("");
+
+    const [misReportSubledger, setMisReportSubledger] = useState(
+         "Livelihood Loan Support 1"
+     );
+    const [misReportMonth, setMisReportMonth] = useState("April");
+    
+    // VAZHVATHRAM REPORT DATABASE CONNECTION (additive; original page preserved)
+    const [vazReportSelection, setVazReportSelection] = useState("VAZ 01 - Member Details");
+    const [vazFromAmt, setVazFromAmt] = useState("");
+    const [vazToAmt, setVazToAmt] = useState("");
+    const [vazSubLedger, setVazSubLedger] = useState("Livelihood Loan Support 1");
+    const [vazMonth, setVazMonth] = useState("April");
+    const [vazReportResults, setVazReportResults] = useState([]);
+    const [vazReportLoading, setVazReportLoading] = useState(false);
+    const [vazReportStatus, setVazReportStatus] = useState("");
+
+    // ANALYTICS DATABASE CONNECTION (additive; original Analytics page is preserved below)
+    const [analyticsLevel, setAnalyticsLevel] = useState("Federation");
+    const [analyticsForecastHead, setAnalyticsForecastHead] = useState("Regular Savings (1131)");
+    const [analyticsHistoricalData, setAnalyticsHistoricalData] = useState("Last 3 Financial Years");
+    const [analyticsProjectionType, setAnalyticsProjectionType] = useState("Monthly");
+    const [analyticsProjectionPeriod, setAnalyticsProjectionPeriod] = useState("1 Year");
+    const [analyticsTestPeriod, setAnalyticsTestPeriod] = useState("-- Select --");
+    const [analyticsResults, setAnalyticsResults] = useState([]);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
+    const [analyticsStatus, setAnalyticsStatus] = useState("");
+
+    const runAnalyticsReport = async () => {
+      setAnalyticsLoading(true);
+      setAnalyticsStatus("");
+      setAnalyticsResults([]);
+      try {
+        const [members, receipts, payments, journals] = await Promise.all([
+          apiRequest("/members"),
+          apiRequest("/member-receipts"),
+          apiRequest("/member-payments"),
+          apiRequest("/member-journals"),
+        ]);
+        const rows = [
+  ...(Array.isArray(receipts) ? receipts : []).map((r) => ({
+    ...r,
+    source: "Receipt",
+  })),
+  ...(Array.isArray(payments) ? payments : []).map((r) => ({
+    ...r,
+    source: "Payment",
+  })),
+  ...(Array.isArray(journals) ? journals : []).map((r) => ({
+    ...r,
+    source: "Journal",
+  })),
+];
+
+const contextRows = filterReportRecordsByContext(
+  rows,
+  Array.isArray(members) ? members : []
+);
+        const headText = analyticsForecastHead.split(" (")[0].toLowerCase();
+        const filtered = contextRows.filter((r) => {
+          const text = Object.values(r || {}).join(" ").toLowerCase();
+          return headText === "regular savings" ? text.includes("regular") || text.includes("savings") : text.includes(headText);
+        });
+        const numericValues = filtered.map((r) => {
+          const values = Object.entries(r || {}).filter(([k]) => /amount|amt|value|balance|principal/i.test(k));
+          const found = values.map(([,v]) => Number(String(v).replace(/,/g, ""))).find((v) => Number.isFinite(v) && v !== 0);
+          return Number.isFinite(found) ? found : 0;
+        }).filter((v) => v > 0);
+        const total = numericValues.reduce((a,b) => a+b, 0);
+        const average = numericValues.length ? total / numericValues.length : 0;
+        const years = Math.max(1, Number.parseInt(analyticsProjectionPeriod, 10) || 1);
+        const periods = analyticsProjectionType === "Annual" ? years : years * 12;
+        const projected = average * periods;
+        const memberCount = Array.isArray(members) ? members.length : 0;
+        setAnalyticsResults([{
+          level: analyticsLevel,
+          forecastHead: analyticsForecastHead,
+          historicalData: analyticsHistoricalData,
+          projectionType: analyticsProjectionType,
+          projectionPeriod: analyticsProjectionPeriod,
+          members: memberCount,
+          matchedTransactions: filtered.length,
+          historicalTotal: Number(total.toFixed(2)),
+          averageTransaction: Number(average.toFixed(2)),
+          projectedValue: Number(projected.toFixed(2)),
+        }]);
+        setAnalyticsStatus(filtered.length ? `Forecast generated from ${filtered.length} existing database transactions.` : "No matching database transactions found for the selected forecast head.");
+      } catch (error) {
+        setAnalyticsStatus(`Database error: ${error.message}`);
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    };
+
+    // DEMAND SHEET DATABASE CONNECTION (additive; original page preserved)
+    const [demandMeetingDate, setDemandMeetingDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
+    const [demandMemberMode, setDemandMemberMode] = useState("Without Locked Members");
+    const [demandReportResults, setDemandReportResults] = useState([]);
+    const [demandReportLoading, setDemandReportLoading] = useState(false);
+    const [demandReportStatus, setDemandReportStatus] = useState("");
+
+
+    // CONFIRMATION REPORT DATABASE CONNECTION (additive; original page preserved)
+    const [confirmationMeetingDate, setConfirmationMeetingDate] = useState(CURRENT_FINANCIAL_YEAR.confirmationMeetingDate);
+    const [confirmationReportResults, setConfirmationReportResults] = useState([]);
+    const [confirmationReportLoading, setConfirmationReportLoading] = useState(false);
+    const [confirmationReportStatus, setConfirmationReportStatus] = useState("");
+
+
+    // GRADING REPORT DATABASE CONNECTION (additive; original Grading page preserved)
+    const [gradingLevel, setGradingLevel] = useState("Federation");
+    const [gradingMonth, setGradingMonth] = useState("April");
+    const [gradingLanguage, setGradingLanguage] = useState("English");
+    const [gradingReportResults, setGradingReportResults] = useState([]);
+    const [gradingReportLoading, setGradingReportLoading] = useState(false);
+    const [gradingReportStatus, setGradingReportStatus] = useState("");
+
+    // SCHEDULE REPORT DATABASE CONNECTION (additive; original Schedule page preserved)
+    const [scheduleFedBlockCode, setScheduleFedBlockCode] = useState("001");
+    const [scheduleAllSubLedgers, setScheduleAllSubLedgers] = useState(false);
+    const [scheduleGeneralLedger, setScheduleGeneralLedger] = useState("Administrative Expenses - 4410");
+    const [scheduleSubLedger, setScheduleSubLedger] = useState("Bank Charges Not Related to SHG-Bank Linkage - 4415");
+    const [scheduleAsOnDate, setScheduleAsOnDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
+    const [scheduleAllDetails, setScheduleAllDetails] = useState(false);
+    const [scheduleReportResults, setScheduleReportResults] = useState([]);
+    const [scheduleReportLoading, setScheduleReportLoading] = useState(false);
+    const [scheduleReportStatus, setScheduleReportStatus] = useState("");
+
+    // BANK LINK REPORT DATABASE CONNECTION (additive; original Bank Link page preserved)
+    const [bankLinkReportSelection, setBankLinkReportSelection] = useState("BK 01 - Cluster wise Linkage status");
+    const [bankLinkSubledger, setBankLinkSubledger] = useState("SHG");
+    const [bankLinkMonth, setBankLinkMonth] = useState("April");
+    const [bankLinkReportResults, setBankLinkReportResults] = useState([]);
+    const [bankLinkReportLoading, setBankLinkReportLoading] = useState(false);
+    const [bankLinkReportStatus, setBankLinkReportStatus] = useState("");
+
+    const runBankLinkReport = async () => {
+      setBankLinkReportLoading(true);
+      setBankLinkReportStatus("");
+      setBankLinkReportResults([]);
+
+      try {
+        const [membersData, bankDetailsData, branchesData, receiptsData, paymentsData, fixedDepositsData] = await Promise.all([
+          apiRequest("/members"),
+          apiRequest("/bank-details"),
+          apiRequest("/branches"),
+          apiRequest("/member-receipts"),
+          apiRequest("/member-payments"),
+          apiRequest("/fixed-deposits"),
+        ]);
+
+        const members = Array.isArray(membersData) ? membersData : [];
+        const bankDetails = Array.isArray(bankDetailsData) ? bankDetailsData : [];
+        const branches = Array.isArray(branchesData) ? branchesData : [];
+        const receipts = Array.isArray(receiptsData) ? receiptsData : [];
+        const payments = Array.isArray(paymentsData) ? paymentsData : [];
+        const fixedDeposits = Array.isArray(fixedDepositsData) ? fixedDepositsData : [];
+        const selected = String(bankLinkReportSelection || "");
+        const selectedSubledger = String(bankLinkSubledger || "").toLowerCase();
+
+        let rows = [];
+
+if (selected.includes("Fixed Deposit")) {
+  rows = fixedDeposits;
+} else if (
+  selected.includes("Branch wise") ||
+  selected.includes("Branchwise")
+) {
+  rows = branches;
+} else if (
+  selected.includes("Bank Linkage status") ||
+  selected.includes("Linkage Efficiency") ||
+  selected.includes("Interest Outstanding") ||
+  selected.includes("vazhvathrams not linked")
+) {
+  rows = members.filter((record) => {
+    const text = Object.values(record || {})
+      .join(" ")
+      .toLowerCase();
+
+    return selected.includes("vazhvathrams not linked")
+      ? !text.includes("bank")
+      : true;
+  });
+} else if (
+  selected.includes("Disbursement") ||
+  selected.includes("Repayment") ||
+  selected.includes("Demand Collection")
+) {
+  rows = [...receipts, ...payments];
+} else {
+  rows = [
+    ...bankDetails,
+    ...branches,
+    ...receipts,
+    ...payments,
+  ];
+}
+
+// Apply selected Cluster → Vazhvathram context
+rows = filterReportRecordsByContext(
+  rows,
+  members
+);
+
+        if (selectedSubledger && selectedSubledger !== "shg") {
+          rows = rows.filter((record) => Object.values(record || {}).join(" ").toLowerCase().includes(selectedSubledger));
+        }
+
+        setBankLinkReportResults(rows);
+        setBankLinkReportStatus(`${selected} - ${rows.length} database record(s) for ${bankLinkMonth}.`);
+      } catch (error) {
+        console.error("Bank Link report error:", error);
+        setBankLinkReportStatus(error?.message || "Unable to load Bank Link report from database.");
+      } finally {
+        setBankLinkReportLoading(false);
+      }
+    };
+
+    const renderBankLinkReportResults = () => {
+      if (!bankLinkReportResults.length) return null;
+      const keys = Array.from(new Set(bankLinkReportResults.flatMap((record) => Object.keys(record || {})))).filter((key) => key !== "id").slice(0, 10);
+      return (
+        <div style={{ marginTop: "12px", overflowX: "auto" }}>
+          <div className="legacy-report-subtitle">Bank Link Database Results</div>
+          <table className="legacy-table">
+            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+            <tbody>{bankLinkReportResults.map((record, index) => <tr key={record?.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const runMISSSPReport = async () => {
+      setMisSspReportLoading(true);
+      setMisSspReportStatus("");
+      setMisSspReportResults([]);
+
+      try {
+        const [membersData, productsData, receiptsData, paymentsData] = await Promise.all([
+          apiRequest("/members"),
+          apiRequest("/insurance-products"),
+          apiRequest("/member-receipts"),
+          apiRequest("/member-payments"),
+        ]);
+
+        const members = Array.isArray(membersData) ? membersData : [];
+        const products = Array.isArray(productsData) ? productsData : [];
+        const receipts = Array.isArray(receiptsData) ? receiptsData : [];
+        const payments = Array.isArray(paymentsData) ? paymentsData : [];
+        const selected = String(misSspReportSelection || "");
+        const lowerSelected = selected.toLowerCase();
+
+        let productType = "";
+        if (lowerSelected.includes("life")) productType = "life";
+        else if (lowerSelected.includes("health")) productType = "health";
+        else if (lowerSelected.includes("livestock")) productType = "livestock";
+        else if (lowerSelected.includes("crop")) productType = "crop";
+        else if (lowerSelected.includes("all products")) productType = "all";
+
+        const wantsNotEnrolled = lowerSelected.includes("not enrolled");
+        const wantsSpouse = lowerSelected.includes("spouse");
+        const isWiseReport = lowerSelected.startsWith("klssp") || lowerSelected.startsWith("clssp");
+
+        const currentYearStart = new Date(
+         `${CURRENT_FINANCIAL_YEAR.apiStartDate}T00:00:00`
+         );
+
+       const currentYearEnd = new Date(
+         `${CURRENT_FINANCIAL_YEAR.apiEndDate}T23:59:59.999`
+        );
+
+      const previousYearStart = new Date(currentYearStart);
+      previousYearStart.setFullYear(previousYearStart.getFullYear() - 1);
+
+      const previousYearEnd = new Date(currentYearEnd);
+      previousYearEnd.setFullYear(previousYearEnd.getFullYear() - 1);
+
+      const reportYearStart =
+         misSspYear === "Previous Year"
+           ? previousYearStart
+           : currentYearStart;
+
+      const reportYearEnd =
+         misSspYear === "Previous Year"
+           ? previousYearEnd
+           : currentYearEnd;
+
+        const monthNumber = {
+          January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
+          July: 6, August: 7, September: 8, October: 9, November: 10, December: 11,
+        }[misSspMonth];
+
+        const hasRelevantDate = (record) => {
+          const raw = record?.receiptDate || record?.paymentDate || record?.date || record?.createdAt || record?.productDate || "";
+          if (!raw) return true;
+          const d = new Date(raw);
+          if (Number.isNaN(d.getTime())) return true;
+          if (d < reportYearStart || d > reportYearEnd) return false;
+          if (monthNumber !== undefined && d.getMonth() !== monthNumber) return false;
+          return true;
+        };
+
+        const normalizedProducts = products.map((product) => JSON.stringify(product).toLowerCase());
+        const transactionRows = [...receipts, ...payments].filter(hasRelevantDate);
+
+        const getMemberCode = (member) => String(
+          member?.memberCode || member?.code || member?.memberId || member?.id || ""
+        ).trim();
+        const getMemberName = (member) => String(
+          member?.memberName || member?.name || member?.member_name || ""
+        ).trim();
+
+        const matchesType = (text) => {
+          const t = String(text || "").toLowerCase();
+          if (productType === "all") return /life|health|livestock|crop|insurance|social security|mutual/.test(t);
+          if (!productType) return true;
+          return t.includes(productType);
+        };
+
+        const contextMembers = filterReportRecordsByContext(
+  members,
+  members
+);
+
+const memberRows = contextMembers.map((member) => {
+          const code = getMemberCode(member);
+          const name = getMemberName(member);
+          const memberJson = JSON.stringify(member).toLowerCase();
+          const relatedTransactions = transactionRows.filter((record) => {
+            const text = JSON.stringify(record).toLowerCase();
+            const sameMember = (code && text.includes(code.toLowerCase())) || (name && text.includes(name.toLowerCase()));
+            return sameMember && matchesType(text);
+          });
+          const matchingProducts = normalizedProducts.filter(matchesType);
+          const spouseText = `${memberJson} ${relatedTransactions.map((r) => JSON.stringify(r).toLowerCase()).join(" ")}`;
+          const enrolled = relatedTransactions.length > 0 || (matchingProducts.length > 0 && matchesType(memberJson));
+          const spouseEnrolled = wantsSpouse && /spouse|husband|wife/.test(spouseText) && enrolled;
+          const finalEnrolled = wantsSpouse ? spouseEnrolled : enrolled;
+
+          return {
+            memberCode: code,
+            memberName: name,
+            enrolled: finalEnrolled ? "Yes" : "No",
+            report: selected,
+            subledger: misSspSubledger,
+            year: misSspYear,
+            month: misSspMonth,
+          };
+        });
+
+        let rows = memberRows.filter((row) => wantsNotEnrolled ? row.enrolled === "No" : row.enrolled === "Yes");
+
+        if (isWiseReport) {
+          const groupField = lowerSelected.startsWith("clssp") ? "cluster" : "vazhvathram";
+          const grouped = {};
+          rows.forEach((row) => {
+            const original = members.find((member) => getMemberCode(member) === row.memberCode);
+            const value = String(
+              original?.[groupField] || original?.[`${groupField}Name`] || original?.clusterName || original?.vazhvathramName || "Unknown"
+            ).trim() || "Unknown";
+            grouped[value] = (grouped[value] || 0) + 1;
+          });
+          rows = Object.entries(grouped).map(([group, count]) => ({
+            [groupField]: group,
+            memberCount: count,
+            report: selected,
+            year: misSspYear,
+            month: misSspMonth,
+          }));
+        }
+
+        setMisSspReportResults(rows);
+        setMisSspReportStatus(
+          `${selected}: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded from existing PostgreSQL data.`
+        );
+      } catch (error) {
+        console.error("MIS-SSP Report execute error:", error);
+        setMisSspReportResults([]);
+        setMisSspReportStatus(`Unable to load MIS-SSP data. ${error.message}`);
+      } finally {
+        setMisSspReportLoading(false);
+      }
+    };
+
+     const runMISReport = async () => {
+  setMisReportLoading(true);
+  setMisReportStatus("");
+  setMisReportResults([]);
+
+  try {
+    /*
+     * =========================================================
+     * COMMON MIS DATA
+     * =========================================================
+     */
+
+    const safeApiRequest = async (endpoint) => {
+      try {
+        const data = await apiRequest(endpoint);
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.warn(`MIS endpoint unavailable: ${endpoint}`, error);
+        return [];
+      }
+    };
+
+    const [
+      vazhvathrams,
+      clusters,
+      members,
+      bankAccounts,
+      memberReceipts,
+      otherReceipts,
+      memberPayments,
+      otherPayments,
+      memberJournals,
+      otherJournals,
+      attendances,
+      insuranceProducts,
+    ] = await Promise.all([
+      safeApiRequest("/vazhvathrams"),
+      safeApiRequest("/clusters"),
+      safeApiRequest("/members"),
+      safeApiRequest("/bank-accounts"),
+      safeApiRequest("/member-receipts"),
+      safeApiRequest("/other-receipts"),
+      safeApiRequest("/member-payments"),
+      safeApiRequest("/other-payments"),
+      safeApiRequest("/member-journals"),
+      safeApiRequest("/other-journals"),
+      safeApiRequest("/attendances"),
+      safeApiRequest("/insurance-products"),
+    ]);
+
+    /*
+     * =========================================================
+     * COMMON VALUES
+     * =========================================================
+     */
+
+    const selectedReport = String(misReportSelection || "").trim();
+    const selectedSubledger = String(misReportSubledger || "").trim();
+    const selectedMonth = String(misReportMonth || "April").trim();
+
+    const monthNumbers = {
+      January: 1,
+      February: 2,
+      March: 3,
+      April: 4,
+      May: 5,
+      June: 6,
+      July: 7,
+      August: 8,
+      September: 9,
+      October: 10,
+      November: 11,
+      December: 12,
+    };
+
+    const monthNumber = monthNumbers[selectedMonth] || 4;
+
+    const financialYearStartYear = Number(
+      String(
+        CURRENT_FINANCIAL_YEAR?.apiStartDate ||
+          (CURRENT_WEBSITE === "website2"
+            ? "2025-04-01"
+            : "2026-04-01")
+      ).slice(0, 4)
+    );
+
+    const reportYear =
+      monthNumber >= 4
+        ? financialYearStartYear
+        : financialYearStartYear + 1;
+
+    const pad = (value) => String(value).padStart(2, "0");
+
+    const monthStart = new Date(
+      `${reportYear}-${pad(monthNumber)}-01T00:00:00`
+    );
+
+    const monthEnd = new Date(
+      reportYear,
+      monthNumber,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+    const financialYearStart = new Date(
+      `${financialYearStartYear}-04-01T00:00:00`
+    );
+
+    const parseDate = (value) => {
+      if (!value) return null;
+
+      const date = new Date(value);
+
+      return Number.isNaN(date.getTime())
+        ? null
+        : date;
+    };
+
+    const formatDate = (value) => {
+      if (!value) return "";
+
+      const date = parseDate(value);
+
+      if (!date) return String(value);
+
+      return `${pad(date.getDate())}-${pad(
+        date.getMonth() + 1
+      )}-${date.getFullYear()}`;
+    };
+
+    const money = (value) => {
+      const number = Number(value || 0);
+      return Number.isFinite(number) ? number : 0;
+    };
+
+    const getRecordDate = (record) =>
+      record?.receiptDate ||
+      record?.voucherDate ||
+      record?.journalDate ||
+      record?.date ||
+      record?.accountDate ||
+      record?.createdAt ||
+      "";
+
+    const isInSelectedMonth = (record) => {
+      const date = parseDate(getRecordDate(record));
+
+      if (!date) return false;
+
+      return date >= monthStart && date <= monthEnd;
+    };
+
+    const isUptoSelectedMonth = (record) => {
+      const date = parseDate(getRecordDate(record));
+
+      if (!date) return false;
+
+      return (
+        date >= financialYearStart &&
+        date <= monthEnd
+      );
+    };
+
+    const getMemberCode = (member) =>
+      member?.memberCode ||
+      member?.code ||
+      member?.memberId ||
+      member?.id ||
+      "";
+
+    const getMemberName = (member) =>
+      member?.memberName ||
+      member?.name ||
+      "";
+
+    const getRecordMember = (record) => {
+      const code = String(
+        record?.memberCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const name = String(
+        record?.memberName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        members.find((member) => {
+          const memberCode = String(
+            getMemberCode(member)
+          )
+            .trim()
+            .toLowerCase();
+
+          const memberName = String(
+            getMemberName(member)
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            (code &&
+              memberCode &&
+              code === memberCode) ||
+            (name &&
+              memberName &&
+              name === memberName)
+          );
+        }) || null
+      );
+    };
+
+    const memberMatchesVazhvathram = (
+      member,
+      vazhvathram
+    ) => {
+      if (!member || !vazhvathram) return false;
+
+      const memberText = JSON.stringify(
+        member
+      ).toLowerCase();
+
+      const code = String(
+        vazhvathram?.vazhvathramCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const name = String(
+        vazhvathram?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        (code && memberText.includes(code)) ||
+        (name && memberText.includes(name))
+      );
+    };
+
+    const getSelectedVazhvathram = () => {
+      const selected = String(
+        selectedVazhvathram || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      return (
+        vazhvathrams.find((record) => {
+          const code = String(
+            record?.vazhvathramCode || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          const name = String(
+            record?.vazhvathramName || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          return (
+            selected === code ||
+            selected === name
+          );
+        }) || null
+      );
+    };
+
+    const selectedVazhvathramRecord =
+      getSelectedVazhvathram();
+
+    /*
+     * =========================================================
+     * KL 01
+     * VAZHVATHRAM DETAILS
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 01 - vazhvathram Details"
+    ) {
+      const rows = vazhvathrams.map(
+        (record) => {
+          const code =
+            record?.vazhvathramCode || "";
+
+          const name =
+            record?.vazhvathramName || "";
+
+          const relatedMembers =
+            members.filter((member) =>
+              memberMatchesVazhvathram(
+                member,
+                record
+              )
+            );
+
+          const bankAccount =
+            bankAccounts.find((account) => {
+              const text = JSON.stringify(
+                account || {}
+              ).toLowerCase();
+
+              return (
+                (code &&
+                  text.includes(
+                    String(code).toLowerCase()
+                  )) ||
+                (name &&
+                  text.includes(
+                    String(name).toLowerCase()
+                  ))
+              );
+            });
+
+          let ageMonths = "";
+
+          const formation =
+            parseDate(record?.formationDate);
+
+          if (formation) {
+            const today = new Date();
+
+            ageMonths =
+              (today.getFullYear() -
+                formation.getFullYear()) *
+                12 +
+              (today.getMonth() -
+                formation.getMonth());
+
+            if (
+              today.getDate() <
+              formation.getDate()
+            ) {
+              ageMonths -= 1;
+            }
+
+            ageMonths = Math.max(
+              0,
+              ageMonths
+            );
+          }
+
+          const categoryCount =
+            relatedMembers.reduce(
+              (result, member) => {
+                const category = String(
+                  member?.category || ""
+                ).toLowerCase();
+
+                if (category.includes("s1"))
+                  result.s1 += 1;
+                else if (
+                  category.includes("s2")
+                )
+                  result.s2 += 1;
+                else if (
+                  category.includes("s3")
+                )
+                  result.s3 += 1;
+
+                return result;
+              },
+              {
+                s1: 0,
+                s2: 0,
+                s3: 0,
+              }
+            );
+
+          return {
+            "Vazhvathram Code": code,
+            "Vazhvathram Name": name,
+            "Cluster Code": "",
+            "Cluster Name": "",
+            "Federation Name": "",
+            "Panchayat Name": "",
+            "Village Name":
+              record?.villageName || "",
+            "Formation Date":
+              formatDate(
+                record?.formationDate
+              ),
+            "Quality Checked Date":
+              formatDate(
+                record?.qualityCheckedDate
+              ),
+            "Meeting Type":
+              record?.meetingType || "",
+            "Bank A/C Date":
+              formatDate(
+                bankAccount?.accountDate
+              ),
+            "Bank A/C No":
+              bankAccount?.accountNumber ||
+              "",
+            "Total Members":
+              relatedMembers.length,
+            "Age (Mon)": ageMonths,
+            "Member Categorisation":
+              `S1 - ${categoryCount.s1} S2 - ${categoryCount.s2} S3 - ${categoryCount.s3} Total - ${relatedMembers.length}`,
+          };
+        }
+      );
+
+      setMisReportResults(
+  rows.filter((row) => {
+    const clusterMatches =
+      !selectedCluster ||
+      String(row["Cluster Name"] || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(row["Vazhvathram Name"] || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  })
+);
+      setMisReportStatus(
+        `KL 01 generated successfully. ${rows.length} Vazhvathram record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 02
+     * MEMBER DETAILS
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 02 - Member Details"
+    ) {
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Regional Name":
+            member?.regionalMemberName ||
+            "",
+          "Designation":
+            member?.designation || "",
+          "Date":
+            formatDate(member?.date),
+          "Date of Joining":
+            formatDate(
+              member?.dateOfJoining
+            ),
+          "Year of Birth":
+            member?.yearOfBirth || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+          "Category":
+            member?.category || "",
+          "Family Category":
+            member?.familyCategory || "",
+          "Mobile Number":
+            member?.mobileNumber || "",
+          "Regular Savings":
+            money(
+              member?.regularSavings
+            ),
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 02 generated successfully. ${rows.length} member${rows.length === 1 ? "" : "s"} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 03A
+     * DESIGNATION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 03A - Member details-Designation"
+    ) {
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Designation":
+            member?.designation || "",
+          "Date of Joining":
+            formatDate(
+              member?.dateOfJoining
+            ),
+          "Mobile Number":
+            member?.mobileNumber || "",
+          "Category":
+            member?.category || "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 03A generated successfully. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 03B
+     * SOCIAL ECONOMIC CATEGORIZATION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 03B - Member details-Social economic Categorization"
+    ) {
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Social Economic Category":
+            member?.category || "",
+          "Family Category":
+            member?.familyCategory || "",
+          "House Ownership":
+            member?.houseOwnership || "",
+          "Caste":
+            member?.caste || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 03B generated successfully. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 03C
+     * FAMILY CATEGORIZATION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 03C - Member details-Family Categorization"
+    ) {
+      const rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+        (member) => ({
+          "Member Code":
+            getMemberCode(member),
+          "Member Name":
+            getMemberName(member),
+          "Family Category":
+            member?.familyCategory || "",
+          "Husband/Father Name":
+            member?.husbandFatherName || "",
+          "Marital Status":
+            member?.maritalStatus || "",
+          "Members Alive":
+            member?.aliveStatus || "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 03C generated successfully. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 04
+     * VAZHVATHRAM MANAGEMENT
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 04 - vazhvathram Management Information Report"
+    ) {
+      const rows = vazhvathrams
+  .filter(
+    (record) =>
+      (!selectedCluster ||
+        String(record?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(record?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+        (record) => ({
+          "Vazhvathram Code":
+            record?.vazhvathramCode || "",
+          "Vazhvathram Name":
+            record?.vazhvathramName || "",
+          "Regional Name":
+            record?.regionalVazhvathramName ||
+            "",
+          "Formation Date":
+            formatDate(
+              record?.formationDate
+            ),
+          "Quality Checked Date":
+            formatDate(
+              record?.qualityCheckedDate
+            ),
+          "Meeting Type":
+            record?.meetingType || "",
+          "Meeting Date":
+            formatDate(
+              record?.meetingDate
+            ),
+          "Village Name":
+            record?.villageName || "",
+          "Bank Name":
+            record?.bankName || "",
+          "Branch Name":
+            record?.branchName || "",
+          "Service Area Branch":
+            record?.serviceAreaBranch ||
+            "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 04 generated successfully. ${rows.length} Vazhvathram records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 05 FAMILY
+     * LOAN / REPAYMENT REPORTS
+     * =========================================================
+     */
+
+    if (
+      /^KL 05/.test(selectedReport)
+    ) {
+      const monthlyPayments =
+  memberPayments
+    .filter(isInSelectedMonth)
+    .filter((payment) => {
+      const member =
+        getRecordMember(payment);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+      let rows = monthlyPayments.map(
+        (payment) => {
+          const member =
+            getRecordMember(payment);
+
+          return {
+            "Member Code":
+              payment?.memberCode ||
+              getMemberCode(member),
+
+            "Member Name":
+              payment?.memberName ||
+              getMemberName(member),
+
+            "Voucher No":
+              payment?.voucherNo || "",
+
+            "Voucher Date":
+              formatDate(
+                payment?.voucherDate
+              ),
+
+            "Voucher Type":
+              payment?.voucherType || "",
+
+            "Loan Type":
+              payment?.loanType || "",
+
+            "Loan Amount":
+              money(payment?.loanAmount),
+
+            "Instalment Amount":
+              money(
+                payment?.instalmentAmount
+              ),
+
+            "Instalment Type":
+              payment?.instalmentType || "",
+
+            "Purpose":
+              payment?.purpose || "",
+
+            "Sub Purpose":
+              payment?.subPurpose || "",
+
+            "Narration":
+              payment?.narration || "",
+
+            "Total":
+              money(payment?.total),
+          };
+        }
+      );
+
+      if (
+        selectedReport ===
+        "KL 05B - Member without Livelihood Loan Support"
+      ) {
+        rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .filter((member) => {
+            const code =
+              String(
+                getMemberCode(member)
+              ).toLowerCase();
+
+            const hasLoan =
+              memberPayments.some(
+                (payment) =>
+                  String(
+                    payment?.memberCode ||
+                      ""
+                  ).toLowerCase() ===
+                    code &&
+                  money(
+                    payment?.loanAmount
+                  ) > 0
+              );
+
+            return !hasLoan;
+          })
+          .map((member) => ({
+            "Member Code":
+              getMemberCode(member),
+            "Member Name":
+              getMemberName(member),
+            "Regular Savings":
+              money(
+                member?.regularSavings
+              ),
+            "Status":
+              "No Livelihood Loan Support",
+          }));
+      }
+
+      if (
+        selectedReport ===
+        "KL 05C - Member Total Loan O/S"
+      ) {
+        rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+          (member) => {
+            const code = String(
+              getMemberCode(member)
+            )
+              .trim()
+              .toLowerCase();
+
+            const payments =
+              memberPayments.filter(
+                (payment) =>
+                  String(
+                    payment?.memberCode ||
+                      ""
+                  )
+                    .trim()
+                    .toLowerCase() === code
+              );
+
+            const loanAmount =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.loanAmount
+                  ),
+                0
+              );
+
+            const repayment =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.instalmentAmount
+                  ),
+                0
+              );
+
+            return {
+              "Member Code":
+                getMemberCode(member),
+              "Member Name":
+                getMemberName(member),
+              "Total Loan":
+                loanAmount,
+              "Total Repayment":
+                repayment,
+              "Loan O/S":
+                Math.max(
+                  0,
+                  loanAmount - repayment
+                ),
+            };
+          }
+        );
+      }
+
+      if (
+        selectedReport ===
+        "KL 05D - Member Total Loan O/S OD"
+      ) {
+        rows = members
+  .filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  )
+  .map(
+          (member) => {
+            const code = String(
+              getMemberCode(member)
+            )
+              .trim()
+              .toLowerCase();
+
+            const payments =
+              memberPayments.filter(
+                (payment) =>
+                  String(
+                    payment?.memberCode ||
+                      ""
+                  )
+                    .trim()
+                    .toLowerCase() === code
+              );
+
+            const loan =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.loanAmount
+                  ),
+                0
+              );
+
+            const repayment =
+              payments.reduce(
+                (sum, payment) =>
+                  sum +
+                  money(
+                    payment?.instalmentAmount
+                  ),
+                0
+              );
+
+            const outstanding =
+              Math.max(
+                0,
+                loan - repayment
+              );
+
+            return {
+              "Member Code":
+                getMemberCode(member),
+              "Member Name":
+                getMemberName(member),
+              "Loan Amount": loan,
+              "Repayment": repayment,
+              "Outstanding": outstanding,
+              "OD Amount":
+                outstanding > 0
+                  ? outstanding
+                  : 0,
+            };
+          }
+        );
+      }
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 06
+     * REGULAR SAVINGS DEMAND VS COLLECTION
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 06 - Regular Savings - Demand Vs. Collection"
+    ) {
+      const receipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+      const grouped = {};
+
+      receipts.forEach((receipt) => {
+        const code =
+          receipt?.memberCode ||
+          receipt?.memberName ||
+          receipt?.id ||
+          "";
+
+        if (!grouped[code]) {
+          grouped[code] = {
+            "Member Code":
+              receipt?.memberCode || "",
+            "Member Name":
+              receipt?.memberName || "",
+            "Regular Savings Collection": 0,
+          };
+        }
+
+        grouped[code][
+          "Regular Savings Collection"
+        ] += money(
+          receipt?.regularSavings
+        );
+      });
+
+      const rows = Object.values(
+        grouped
+      ).map((row) => ({
+        ...row,
+
+        /*
+         * Demand is not stored as a separate
+         * field in the current Member entity.
+         * Therefore the report does not invent
+         * a demand amount.
+         */
+        "Regular Savings Demand":
+          "",
+
+        Difference: "",
+
+        Month: selectedMonth,
+      }));
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 06 generated successfully for ${selectedMonth}. ${rows.length} member records loaded. Demand remains blank because no separate demand field exists in the current database.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 07
+     * SPECIAL SAVINGS
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 07 - Special Savings Report"
+    ) {
+      const receipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+      const rows = receipts.map(
+        (receipt) => ({
+          "Member Code":
+            receipt?.memberCode || "",
+          "Member Name":
+            receipt?.memberName || "",
+          "Special Savings":
+            money(
+              receipt?.specialSavings
+            ),
+          "Special Savings Amount":
+            money(
+              receipt?.specialSavingsAmount
+            ),
+          "Special Savings More Type":
+            receipt?.specialSavingsMoreType ||
+            "",
+          "Special Savings More Amount":
+            money(
+              receipt?.specialSavingsMoreAmount
+            ),
+          "Month":
+            selectedMonth,
+          "Receipt Date":
+            formatDate(
+              receipt?.receiptDate
+            ),
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 07 generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 08
+     * REGULAR SAVINGS >= 15000
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 08 - Regular Savings Amount >= 15000 Report"
+    ) {
+      const grouped = {};
+
+      memberReceipts
+  .filter(isInSelectedMonth)
+  .filter((receipt) => {
+    const member =
+      getRecordMember(receipt);
+
+    return (
+      member &&
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+    );
+  })
+  .forEach((receipt) => {
+          const code =
+            receipt?.memberCode ||
+            receipt?.memberName ||
+            receipt?.id ||
+            "";
+
+          if (!grouped[code]) {
+            grouped[code] = {
+              "Member Code":
+                receipt?.memberCode ||
+                "",
+              "Member Name":
+                receipt?.memberName ||
+                "",
+              "Regular Savings": 0,
+            };
+          }
+
+          grouped[code][
+            "Regular Savings"
+          ] += money(
+            receipt?.regularSavings
+          );
+        });
+
+      const rows = Object.values(
+        grouped
+      ).filter(
+        (row) =>
+          money(
+            row["Regular Savings"]
+          ) >= 15000
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 08 generated successfully for ${selectedMonth}. ${rows.length} qualifying members found.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 09
+     * REGULAR ALL REPORT
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 09 - Regular All Report"
+    ) {
+      const grouped = {};
+
+      memberReceipts
+  .filter(isInSelectedMonth)
+  .filter((receipt) => {
+    const member =
+      getRecordMember(receipt);
+
+    return (
+      member &&
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+    );
+  })
+  .forEach((receipt) => {
+          const code =
+            receipt?.memberCode ||
+            receipt?.memberName ||
+            receipt?.id ||
+            "";
+
+          if (!grouped[code]) {
+            grouped[code] = {
+              "Member Code":
+                receipt?.memberCode || "",
+              "Member Name":
+                receipt?.memberName || "",
+              "Regular Savings": 0,
+              "Special Savings": 0,
+              "Livelihood Loan Support 1": 0,
+              "Livelihood Loan Support 2": 0,
+              "Housing Loan": 0,
+              "Total": 0,
+            };
+          }
+
+          grouped[code][
+            "Regular Savings"
+          ] += money(
+            receipt?.regularSavings
+          );
+
+          grouped[code][
+            "Special Savings"
+          ] += money(
+            receipt?.specialSavings
+          );
+
+          grouped[code][
+            "Livelihood Loan Support 1"
+          ] += money(
+            receipt?.livelihoodLoanSupport1
+          );
+
+          grouped[code][
+            "Livelihood Loan Support 2"
+          ] += money(
+            receipt?.livelihoodLoanSupport2
+          );
+
+          grouped[code][
+            "Housing Loan"
+          ] += money(
+            receipt?.housingLoan
+          );
+
+          grouped[code]["Total"] +=
+            money(receipt?.total);
+        });
+
+      const rows = Object.values(
+        grouped
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 09 generated successfully for ${selectedMonth}. ${rows.length} members loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 10
+     * SAVINGS + INTEREST MONTHWISE
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 10 - Member wise Savings and Interest - Monthwise"
+    ) {
+      const receipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+      const grouped = {};
+
+      receipts.forEach((receipt) => {
+        const code =
+          receipt?.memberCode ||
+          receipt?.memberName ||
+          receipt?.id ||
+          "";
+
+        if (!grouped[code]) {
+          grouped[code] = {
+            "Member Code":
+              receipt?.memberCode || "",
+            "Member Name":
+              receipt?.memberName || "",
+            "Regular Savings": 0,
+            "Special Savings": 0,
+          };
+        }
+
+        grouped[code][
+          "Regular Savings"
+        ] += money(
+          receipt?.regularSavings
+        );
+
+        grouped[code][
+          "Special Savings"
+        ] += money(
+          receipt?.specialSavings
+        );
+      });
+
+      const rows = Object.values(
+        grouped
+      ).map((row) => ({
+        ...row,
+        Month: selectedMonth,
+        Interest: "",
+      }));
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 10 generated successfully for ${selectedMonth}. Interest is blank because the current database does not expose a separate interest field.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * KL 10A
+     * SPECIAL SAVINGS + INTEREST
+     * =========================================================
+     */
+
+    if (
+      selectedReport ===
+      "KL 10A - Member wise Special Savings and Interest - Monthwise"
+    ) {
+      const receipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((receipt) => {
+      const member =
+        getRecordMember(receipt);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+      const rows = receipts.map(
+        (receipt) => ({
+          "Member Code":
+            receipt?.memberCode || "",
+          "Member Name":
+            receipt?.memberName || "",
+          "Special Savings":
+            money(
+              receipt?.specialSavings
+            ),
+          "Special Savings Amount":
+            money(
+              receipt?.specialSavingsAmount
+            ),
+          Month: selectedMonth,
+          Interest: "",
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `KL 10A generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * CL REPORTS
+     * =========================================================
+     */
+
+    if (
+  selectedReport.startsWith("CL ")
+) {
+  const isFederationReport =
+    selectedReport
+      .toLowerCase()
+      .includes("federation");
+      const monthlyReceipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        isFederationReport ||
+        !selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()
+      );
+    });
+
+const monthlyPayments =
+  memberPayments
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        isFederationReport ||
+        !selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()
+      );
+    });
+
+      const totalSavings =
+        monthlyReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.regularSavings
+            ),
+          0
+        );
+
+      const totalSpecialSavings =
+        monthlyReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.specialSavings
+            ),
+          0
+        );
+
+      const totalLoan =
+        monthlyPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(record?.loanAmount),
+          0
+        );
+
+      const totalRepayment =
+        monthlyPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.instalmentAmount
+            ),
+          0
+        );
+
+      const attended =
+  attendances
+    .filter(isInSelectedMonth)
+    .filter((attendance) => {
+      const member =
+        getRecordMember(attendance);
+
+      return (
+        member &&
+        isFederationReport ||
+        !selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()
+      );
+    }).length;
+
+      const rows = clusters
+  .filter(
+    (cluster) =>
+      isFederationReport ||
+      !selectedCluster ||
+      String(cluster?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim()
+  )
+  .map(
+    (cluster) => ({
+          "Cluster Code":
+            cluster?.clusterCode || "",
+          "Cluster Name":
+            cluster?.clusterName || "",
+          "Regional Name":
+            cluster?.regionalClusterName ||
+            "",
+          "Formation Date":
+            formatDate(
+              cluster?.formationDate
+            ),
+          "Report":
+            selectedReport,
+          "Month":
+            selectedMonth,
+          "Total Members":
+            members.length,
+          "Members Attended":
+            attended,
+          "Regular Savings":
+            totalSavings,
+          "Special Savings":
+            totalSpecialSavings,
+          "Loan Amount":
+            totalLoan,
+          "Loan Repayment":
+            totalRepayment,
+        })
+      );
+
+      setMisReportResults(rows);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}. ${rows.length} cluster records loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * BL REPORTS
+     * =========================================================
+     */
+
+    if (
+      selectedReport.startsWith("BL ")
+    ) {
+      const uptoReceipts =
+  memberReceipts
+    .filter(isUptoSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+const uptoPayments =
+  memberPayments
+    .filter(isUptoSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+const monthlyReceipts =
+  memberReceipts
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+const monthlyPayments =
+  memberPayments
+    .filter(isInSelectedMonth)
+    .filter((record) => {
+      const member =
+        getRecordMember(record);
+
+      return (
+        member &&
+        (!selectedCluster ||
+          String(member?.clusterName || "").trim() ===
+            String(selectedCluster || "").trim()) &&
+        (!selectedVazhvathram ||
+          String(member?.vazhvathramName || "").trim() ===
+            String(selectedVazhvathram || "").trim())
+      );
+    });
+
+      const totalRegularSavings =
+        uptoReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.regularSavings
+            ),
+          0
+        );
+
+      const totalSpecialSavings =
+        uptoReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.specialSavings
+            ),
+          0
+        );
+
+      const totalLoan =
+        uptoPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.loanAmount
+            ),
+          0
+        );
+
+      const totalRepayment =
+        uptoPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(
+              record?.instalmentAmount
+            ),
+          0
+        );
+
+      const monthlyCollection =
+        monthlyReceipts.reduce(
+          (sum, record) =>
+            sum +
+            money(record?.total),
+          0
+        );
+
+      const monthlyPayment =
+        monthlyPayments.reduce(
+          (sum, record) =>
+            sum +
+            money(record?.total),
+          0
+        );
+
+      const report = {
+        "Report":
+          selectedReport,
+        "Month":
+          selectedMonth,
+        "Vazhvathrams":
+  vazhvathrams.filter(
+    (record) =>
+      (!selectedCluster ||
+        String(record?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(record?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  ).length,
+
+"Clusters":
+  clusters.filter(
+    (record) =>
+      !selectedCluster ||
+      String(record?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim()
+  ).length,
+
+"Members":
+  members.filter(
+    (member) =>
+      (!selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim()) &&
+      (!selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim())
+  ).length,
+
+"Bank Accounts":
+  bankAccounts.length,
+        "Regular Savings":
+          totalRegularSavings,
+        "Special Savings":
+          totalSpecialSavings,
+        "Total Loan":
+          totalLoan,
+        "Total Repayment":
+          totalRepayment,
+        "Loan Outstanding":
+          Math.max(
+            0,
+            totalLoan - totalRepayment
+          ),
+        "Monthly Collection":
+          monthlyCollection,
+        "Monthly Payment":
+          monthlyPayment,
+        "Insurance Products":
+          insuranceProducts.length,
+      };
+
+      setMisReportResults([
+        report,
+      ]);
+
+      setMisReportStatus(
+        `${selectedReport} generated successfully for ${selectedMonth}.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * UNKNOWN / FUTURE MIS OPTION
+     * =========================================================
+     *
+     * Do not silently show a fake generic report.
+     * Show a clear message instead.
+     */
+
+    setMisReportResults([]);
+
+    setMisReportStatus(
+      `${selectedReport || "Selected MIS report"} is not yet mapped to a database calculation in this SAVE version.`
+    );
+  } catch (error) {
+    console.error(
+      "MIS report error:",
+      error
+    );
+
+    setMisReportResults([]);
+
+    setMisReportStatus(
+      `Unable to generate MIS report. ${
+        error?.message || error
+      }`
+    );
+  } finally {
+    setMisReportLoading(false);
+  }
+};
+
+    const renderMISSSPReportResults = () => {
+      if (!misSspReportResults.length) return null;
+      const keys = Array.from(
+        new Set(misSspReportResults.flatMap((record) => Object.keys(record || {})))
+      ).filter((key) => key !== "id").slice(0, 10);
+      if (!keys.length) return null;
+      return (
+        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
+          <table className="legacy-table">
+            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+            <tbody>
+              {misSspReportResults.map((record, index) => (
+                <tr key={record.id ?? index}>
+                  {keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const runDemandSheetReport = async () => {
+      setDemandReportLoading(true);
+      setDemandReportStatus("");
+      setDemandReportResults([]);
+      try {
+        const data = await apiRequest("/members");
+        const members = Array.isArray(data) ? data : [];
+        const targetDate = demandMeetingDate ? new Date(`${demandMeetingDate}T00:00:00`) : null;
+        const isLocked = (member) => {
+          const text = JSON.stringify(member || {}).toLowerCase();
+          return /lock|locked/.test(text) || String(member?.locked || member?.isLocked || "").toLowerCase() === "true";
+        };
+        let rows = filterReportRecordsByContext(
+  members,
+  members
+);
+
+rows = rows.filter((member) => {
+  if (demandMemberMode === "With Locked Members") {
+    return true;
+  }
+
+  return !isLocked(member);
+});
+        rows = rows.map((member) => ({
+          memberCode: member?.memberCode || member?.code || member?.memberId || member?.id || "",
+          memberName: member?.memberName || member?.name || "",
+          vazhvathramCode: member?.vazhvathramCode || member?.vazhvathram || "0010101",
+          meetingDate: demandMeetingDate,
+          memberMode: demandMemberMode,
+          status: isLocked(member) ? "Locked" : "Active"
+        }));
+        setDemandReportResults(rows);
+        setDemandReportStatus(
+          `Demand Sheet: ${rows.length} member${rows.length === 1 ? "" : "s"} loaded from existing PostgreSQL data for ${targetDate && !Number.isNaN(targetDate.getTime()) ? demandMeetingDate : "the selected date"}.`
+        );
+      } catch (error) {
+        console.error("Demand Sheet execute error:", error);
+        setDemandReportResults([]);
+        setDemandReportStatus(`Unable to load Demand Sheet data. ${error.message}`);
+      } finally {
+        setDemandReportLoading(false);
+      }
+    };
+
+    const renderDemandSheetResults = () => {
+      if (!demandReportResults.length) return null;
+      const keys = ["memberCode", "memberName", "vazhvathramCode", "meetingDate", "memberMode", "status"];
+      return (
+        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
+          <table className="legacy-table">
+            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+            <tbody>
+              {demandReportResults.map((record, index) => (
+                <tr key={record.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const runConfirmationReport = async () => {
+  setConfirmationReportLoading(true);
+  setConfirmationReportStatus("");
+  setConfirmationReportResults([]);
+
+  try {
+    const [
+      membersData,
+      locksData,
+      vazhvathramsData,
+    ] = await Promise.all([
+      apiRequest("/members"),
+      apiRequest("/auto-journal-locks"),
+      apiRequest("/vazhvathrams"),
+    ]);
+
+    const members = Array.isArray(membersData) ? membersData : [];
+    const locks = Array.isArray(locksData) ? locksData : [];
+    const vazhvathrams = Array.isArray(vazhvathramsData)
+      ? vazhvathramsData
+      : [];
+
+    const targetDate = confirmationMeetingDate
+      ? new Date(`${confirmationMeetingDate}T00:00:00`)
+      : null;
+
+    const monthName =
+      targetDate && !Number.isNaN(targetDate.getTime())
+        ? targetDate.toLocaleString("en-US", {
+            month: "long",
+          })
+        : "";
+
+    const year =
+      targetDate && !Number.isNaN(targetDate.getTime())
+        ? targetDate.getFullYear()
+        : null;
+
+    const getLockStatus = (vazhvathram) => {
+      const vazhvathramCode = String(
+        vazhvathram?.vazhvathramCode || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const vazhvathramName = String(
+        vazhvathram?.vazhvathramName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const locked = locks.some((lock) => {
+        const lockMonth = String(lock?.month || "")
+          .trim()
+          .toLowerCase();
+
+        const lockDate = String(
+          lock?.lockedDate || lock?.createdAt || ""
+        );
+
+        const lockYear = lockDate
+          ? new Date(lockDate).getFullYear()
+          : null;
+
+        const lockCode = String(
+          lock?.vazhvathramCode || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const lockName = String(
+          lock?.vazhvathramName || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const sameGroup =
+          !lockCode ||
+          !vazhvathramCode ||
+          lockCode === vazhvathramCode ||
+          (!!lockName &&
+            !!vazhvathramName &&
+            lockName === vazhvathramName);
+
+        return (
+          sameGroup &&
+          lockMonth === monthName.toLowerCase() &&
+          (!year || !lockYear || lockYear === year)
+        );
+      });
+
+      return locked
+        ? "Ready for Confirmation"
+        : "Auto Journal Not Locked";
+    };
+
+    const rows = [];
+
+    vazhvathrams.forEach((vazhvathram) => {
+      const vazhvathramCode = String(
+        vazhvathram?.vazhvathramCode || ""
+      ).trim();
+
+      const vazhvathramName =
+        vazhvathram?.vazhvathramName || "";
+
+      const membersForGroup = members.filter((member) => {
+        const memberVazCode = String(
+          member?.vazhvathramCode ||
+            member?.vazhvathram ||
+            ""
+        ).trim();
+
+        const memberCode = String(
+          member?.memberCode ||
+            member?.code ||
+            member?.memberId ||
+            member?.id ||
+            ""
+        ).trim();
+
+        if (
+          memberVazCode &&
+          vazhvathramCode
+        ) {
+          return (
+            memberVazCode.toLowerCase() ===
+            vazhvathramCode.toLowerCase()
+          );
+        }
+
+        if (vazhvathramCode && memberCode) {
+          return memberCode.startsWith(vazhvathramCode);
+        }
+
+        return false;
+      });
+
+      const confirmationStatus =
+        getLockStatus(vazhvathram);
+
+      if (membersForGroup.length === 0) {
+        rows.push({
+          vazhvathramCode,
+          vazhvathramName,
+          regionalVazhvathramName:
+            vazhvathram?.regionalVazhvathramName || "",
+          formationDate:
+            vazhvathram?.formationDate || "",
+          qualityCheckedDate:
+            vazhvathram?.qualityCheckedDate || "",
+          meetingType:
+            vazhvathram?.meetingType || "",
+          meetingDate:
+            vazhvathram?.meetingDate || "",
+          formedBy:
+            vazhvathram?.formedBy || "",
+          villageName:
+            vazhvathram?.villageName || "",
+          bankName:
+            vazhvathram?.bankName || "",
+          branchName:
+            vazhvathram?.branchName || "",
+          serviceAreaBranch:
+            vazhvathram?.serviceAreaBranch || "",
+          memberCode: "",
+          memberName: "",
+          memberRegionalName: "",
+          memberMobile: "",
+          memberCategory: "",
+          memberCaste: "",
+          selectedMeetingDate: confirmationMeetingDate,
+          confirmationStatus,
+        });
+
+        return;
+      }
+
+      membersForGroup.forEach((member) => {
+        rows.push({
+          vazhvathramCode,
+          vazhvathramName,
+          regionalVazhvathramName:
+            vazhvathram?.regionalVazhvathramName || "",
+          formationDate:
+            vazhvathram?.formationDate || "",
+          qualityCheckedDate:
+            vazhvathram?.qualityCheckedDate || "",
+          meetingType:
+            vazhvathram?.meetingType || "",
+          meetingDate:
+            vazhvathram?.meetingDate || "",
+          formedBy:
+            vazhvathram?.formedBy || "",
+          villageName:
+            vazhvathram?.villageName || "",
+          bankName:
+            vazhvathram?.bankName || "",
+          branchName:
+            vazhvathram?.branchName || "",
+          serviceAreaBranch:
+            vazhvathram?.serviceAreaBranch || "",
+
+          memberCode:
+            member?.memberCode ||
+            member?.code ||
+            member?.memberId ||
+            member?.id ||
+            "",
+
+          memberName:
+            member?.memberName ||
+            member?.name ||
+            member?.member_name ||
+            "",
+
+          memberRegionalName:
+            member?.regionalMemberName || "",
+
+          memberMobile:
+            member?.mobileNumber || "",
+
+          memberCategory:
+            member?.category || "",
+
+          memberCaste:
+            member?.caste || "",
+
+          selectedMeetingDate:
+            confirmationMeetingDate,
+
+          confirmationStatus,
+        });
+      });
+    });
+
+    setConfirmationReportResults(rows);
+
+    setConfirmationReportStatus(
+      rows.length
+        ? `Confirmation data loaded for ${monthName || "the selected date"} ${year || ""}. ${rows.length} record${rows.length === 1 ? "" : "s"} found.`
+        : "No Vazhvathram or Member records found in the database."
+    );
+  } catch (error) {
+    console.error(
+      "Confirmation Report execute error:",
+      error
+    );
+
+    setConfirmationReportResults([]);
+
+    setConfirmationReportStatus(
+      `Unable to load Confirmation data. ${error.message}`
+    );
+  } finally {
+    setConfirmationReportLoading(false);
+  }
+};
+
+const renderConfirmationReportResults = () => {
+  if (!confirmationReportResults.length) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        overflowX: "auto",
+        border: "1px solid #777",
+        background: "#fff",
+      }}
+    >
+      <table
+        className="legacy-table"
+        style={{
+          minWidth: "2200px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <thead>
+          <tr>
+            <th>Vazhvathram Code</th>
+            <th>Vazhvathram Name</th>
+            <th>Regional Vazhvathram Name</th>
+            <th>Formation Date</th>
+            <th>Quality Checked Date</th>
+            <th>Meeting Type</th>
+            <th>Meeting Date / Day</th>
+            <th>Formed By</th>
+            <th>Village Name</th>
+            <th>Bank Name</th>
+            <th>Branch Name</th>
+            <th>Service Area Branch</th>
+
+            <th>Member Code</th>
+            <th>Member Name</th>
+            <th>Regional Member Name</th>
+            <th>Mobile Number</th>
+            <th>Category</th>
+            <th>Caste</th>
+
+            <th>Selected Meeting Date</th>
+            <th>Confirmation Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {confirmationReportResults.map((record, index) => (
+            <tr key={record.id ?? index}>
+              <td>{record.vazhvathramCode}</td>
+              <td>{record.vazhvathramName}</td>
+              <td>{record.regionalVazhvathramName}</td>
+              <td>{record.formationDate}</td>
+              <td>{record.qualityCheckedDate}</td>
+              <td>{record.meetingType}</td>
+              <td>{record.meetingDate}</td>
+              <td>{record.formedBy}</td>
+              <td>{record.villageName}</td>
+              <td>{record.bankName}</td>
+              <td>{record.branchName}</td>
+              <td>{record.serviceAreaBranch}</td>
+
+              <td>{record.memberCode}</td>
+              <td>{getMemberDisplayName(record.memberCode,record.memberName )}</td>
+              <td>{record.memberRegionalName}</td>
+              <td>{record.memberMobile}</td>
+              <td>{record.memberCategory}</td>
+              <td>{record.memberCaste}</td>
+
+              <td>{record.selectedMeetingDate}</td>
+              <td>{record.confirmationStatus}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+    const runScheduleReport = async () => {
+      setScheduleReportLoading(true);
+      setScheduleReportStatus("");
+      setScheduleReportResults([]);
+
+      try {
+        const [
+  receiptsData,
+  paymentsData,
+  memberJournalsData,
+  otherJournalsData,
+  membersData,
+] = await Promise.all([
+  apiRequest("/member-receipts"),
+  apiRequest("/member-payments"),
+  apiRequest("/member-journals"),
+  apiRequest("/other-journals"),
+  apiRequest("/members"),
+]);
+
+        const sources = [
+          ...(Array.isArray(receiptsData) ? receiptsData : []).map((row) => ({ ...row, _source: "Member Receipt" })),
+          ...(Array.isArray(paymentsData) ? paymentsData : []).map((row) => ({ ...row, _source: "Member Payment" })),
+          ...(Array.isArray(memberJournalsData) ? memberJournalsData : []).map((row) => ({ ...row, _source: "Member Journal" })),
+          ...(Array.isArray(otherJournalsData) ? otherJournalsData : []).map((row) => ({ ...row, _source: "Other Journal" })),
+        ];
+    const members = Array.isArray(membersData)
+  ? membersData
+  : [];
+
+const contextSources = filterReportRecordsByContext(
+  sources,
+  members
+);
+
+        const selectedLedger = String(scheduleGeneralLedger || "").toLowerCase();
+        const selectedSubLedger = String(scheduleSubLedger || "").toLowerCase();
+        const targetDate = scheduleAsOnDate ? new Date(`${scheduleAsOnDate}T23:59:59`) : null;
+
+        const rows = contextSources.filter((row) => {
+          const text = Object.entries(row)
+            .filter(([key]) => !String(key).startsWith("_"))
+            .map(([, value]) => String(value ?? ""))
+            .join(" ")
+            .toLowerCase();
+
+          const ledgerMatch = !selectedLedger || text.includes(selectedLedger) || text.includes(selectedLedger.replace(/\s+-\s+\d+$/, ""));
+          const subLedgerMatch = scheduleAllSubLedgers || !selectedSubLedger || text.includes(selectedSubLedger) || text.includes(selectedSubLedger.replace(/\s+-\s+\d+$/, ""));
+
+          const rawDate = row.date || row.receiptDate || row.paymentDate || row.journalDate || row.transactionDate || row.entryDate || row.createdDate;
+          if (!targetDate || !rawDate) return ledgerMatch && subLedgerMatch;
+          const rowDate = new Date(rawDate);
+          if (Number.isNaN(rowDate.getTime())) return ledgerMatch && subLedgerMatch;
+          return rowDate <= targetDate && ledgerMatch && subLedgerMatch;
+        });
+
+        const finalRows = scheduleAllDetails ? rows : rows.slice(0, 100);
+        setScheduleReportResults(finalRows);
+        setScheduleReportStatus(
+          `${finalRows.length} matching transaction${finalRows.length === 1 ? "" : "s"} loaded from existing PostgreSQL data as on ${scheduleAsOnDate || "the selected date"}.`
+        );
+      } catch (error) {
+        setScheduleReportStatus(error?.message || "Unable to load Schedule report data.");
+      } finally {
+        setScheduleReportLoading(false);
+      }
+    };
+
+    const renderScheduleReportResults = () => {
+      if (scheduleReportLoading || !scheduleReportResults.length) return null;
+      const keys = Array.from(
+        new Set(scheduleReportResults.flatMap((row) => Object.keys(row).filter((key) => !String(key).startsWith("_"))))
+      ).slice(0, 10);
+      return (
+        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
+          <table className="legacy-table">
+            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+            <tbody>
+              {scheduleReportResults.map((record, index) => (
+                <tr key={record.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const runGradingReport = async () => {
+      setGradingReportLoading(true);
+      setGradingReportStatus("");
+      setGradingReportResults([]);
+      try {
+        const [membersData, receiptsData, paymentsData, journalsData] = await Promise.all([
+          apiRequest("/members"),
+          apiRequest("/member-receipts"),
+          apiRequest("/member-payments"),
+          apiRequest("/member-journals"),
+        ]);
+        const members = Array.isArray(membersData) ? membersData : [];
+        const receipts = Array.isArray(receiptsData) ? receiptsData : [];
+        const payments = Array.isArray(paymentsData) ? paymentsData : [];
+        const journals = Array.isArray(journalsData) ? journalsData : [];
+        const contextMembers = filterReportRecordsByContext(
+  members,
+  members
+);
+
+const contextReceipts = filterReportRecordsByContext(
+  receipts,
+  members
+);
+
+const contextPayments = filterReportRecordsByContext(
+  payments,
+  members
+);
+
+const contextJournals = filterReportRecordsByContext(
+  journals,
+  members
+);
+        const transactionCount =
+  contextReceipts.length +
+  contextPayments.length +
+  contextJournals.length;
+        const lockedCount = contextMembers.filter(
+  (m) => Boolean(
+    m.locked ??
+    m.isLocked ??
+    m.memberLocked
+  )
+).length;
+        const activeCount = members.filter((m) => String(m.status ?? "").toLowerCase().includes("active") || m.active === true).length;
+        const totalSavings = [
+  ...contextReceipts,
+  ...contextPayments,
+].reduce((sum, row) => {
+          const value = Number(row.amount ?? row.receiptAmount ?? row.paymentAmount ?? 0);
+          return sum + (Number.isFinite(value) ? value : 0);
+        }, 0);
+        setGradingReportResults([{
+          level: gradingLevel, month: gradingMonth, language: gradingLanguage,
+          totalMembers: members.length, activeMembers: activeCount, lockedMembers: lockedCount,
+          transactionsReviewed: transactionCount, transactionAmountTotal: totalSavings.toFixed(2),
+        }]);
+        setGradingReportStatus(`PEARLS data loaded from existing PostgreSQL records for ${gradingLevel} - ${gradingMonth}.`);
+      } catch (error) {
+        setGradingReportStatus(error?.message || "Unable to load Grading report data.");
+      } finally {
+        setGradingReportLoading(false);
+      }
+    };
+
+    const renderGradingReportResults = () => {
+      if (gradingReportLoading || !gradingReportResults.length) return null;
+      const keys = Object.keys(gradingReportResults[0]);
+      return (
+        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
+          <table className="legacy-table"><thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+            <tbody>{gradingReportResults.map((record, index) => <tr key={index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const Button = ({ children = "Execute", onClick }) => (
+  <button
+    type="button"
+    onClick={
+      onClick ||
+      (() => {
+        if (item === "Financial" && children === "Execute") {
+          openResultInNewTab({
+            page: "financial",
+            type: "all",
+        });
+        } else if (item === "Journals" && children === "Execute") {
+          openResultInNewTab({
+            page: "journals",
+            type: "all",
+          });
+        } else if (item === "MIS-SSP" && children === "Execute") {
+          openResultInNewTab({
+            page: "misSsp",
+            type: "all",
+          });
+        } else if (item === "MIS" && children === "Execute") {
+          openResultInNewTab({
+            page: "mis",
+            type: "all",
+          });
+        } else if (item === "Dem. Sheet" && children === "Execute") {
+          openResultInNewTab({
+            page: "demandSheet",
+            type: "all",
+          });
+        } else if (item === "Confirmation" && children === "Execute") {
+          openResultInNewTab({
+              page: "confirmation",
+              type: "all",
+           });
+        } else if (item === "Schedule" && children === "Execute") {
+          openResultInNewTab({
+            page: "schedule",
+            type: "all",
+          });
+        } else if (item === "Grading" && children === "Generate Rating") {
+          openResultInNewTab({
+            page: "grading",
+            type: "all",
+          });
+        } else {
+          alert(`${item}: ${children}`);
+        }
+      })
+    }
+  >
+    {children}
+  </button>
+);
+
+    const ListBox = ({ options, size = 8, multiple = false, value, onChange }) => (
+      <select className="legacy-report-list" size={size} multiple={multiple} value={value} onChange={onChange} defaultValue={value === undefined ? (multiple ? [] : undefined) : undefined}>
+        {!multiple && options.map((option) => <option key={option}>{option}</option>)}
+        {multiple && options.map((option) => <option key={option} value={option}>{option}</option>)}
+      </select>
+    );
+
+    const runMasterReport = async () => {
+      const endpointByMasterReport = {
+        "MA 04 - Cluster Details": "/clusters",
+        "MA 05 - vazhvathram Details": "/vazhvathrams",
+        "MA 06 - Member Details": "/members",
+        "MA 07 - Member Details - Active": "/members",
+        "MA 08 - Member Address": "/members",
+        "MA 09 - Cluster EC Leaders Details": "/staff-details",
+        "MA 10 - Federation EC Leaders Details": "/staff-details",
+        "MA 11 - Iyyakam Leaders Details": "/staff-details",
+        "MA 12 - Bank Details": "/bank-details",
+        "MA 13 - Branch Details": "/branches",
+        "MA 17 - Panchayat Union Details": "/pan-unions",
+        "MA 18 - Panchayat Details": "/panchayats",
+        "MA 19 - Village Details": "/villages",
+        "MA 22 - Removed Member Details": "/members",
+        "MA 23 - Locked MemBer Details": "/members",
+      };
+
+      const endpoint = endpointByMasterReport[masterReportSelection];
+      setMasterReportLoading(true);
+      setMasterReportStatus("");
+
+      try {
+        if (!endpoint) {
+          setMasterReportResults([]);
+          setMasterReportStatus(
+            `${masterReportSelection} does not have a matching database table in the current project yet.`
+          );
+          return;
+        }
+
+const data = await apiRequest(endpoint);
+let rows = Array.isArray(data) ? data : [];
+
+// Apply selected Cluster → Vazhvathram context
+const memberMasterReports = [
+  "MA 06 - Member Details",
+  "MA 07 - Member Details - Active",
+  "MA 08 - Member Address",
+  "MA 22 - Removed Member Details",
+  "MA 23 - Locked MemBer Details",
+];
+
+if (memberMasterReports.includes(masterReportSelection)) {
+  rows = filterReportRecordsByContext(rows, rows);
+}
+
+        if (masterReportSelection === "MA 07 - Member Details - Active") {
+          rows = rows.filter((record) => {
+            const status = String(
+              record.memberAliveStatus || record.status || record.memberStatus || ""
+            ).toLowerCase();
+            return !status || status === "alive" || status === "active" || status === "working";
+          });
+        }
+
+        setMasterReportResults(rows);
+        setMasterReportStatus(
+          `${masterReportSelection}: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded from database.`
+        );
+      } catch (error) {
+        console.error("Master Report execute error:", error);
+        setMasterReportResults([]);
+        setMasterReportStatus(`Unable to load Master Report data. ${error.message}`);
+      } finally {
+        setMasterReportLoading(false);
+      }
+    };
+
+    const renderMasterReportResults = () => {
+      if (!masterReportResults.length) return null;
+      const keys = Array.from(
+        new Set(masterReportResults.flatMap((record) => Object.keys(record || {})))
+      ).filter((key) => key !== "id").slice(0, 10);
+
+      if (!keys.length) return null;
+
+      return (
+        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
+          <table className="legacy-table">
+            <thead>
+              <tr>
+                {keys.map((key) => <th key={key}>{key}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {masterReportResults.map((record, index) => (
+                <tr key={record.id ?? index}>
+                  {keys.map((key) => (
+                    <td key={key}>{String(record?.[key] ?? "")}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const MonthBox = ({ size = 5 }) => <ListBox options={months} size={size} />;
+
+    const runJournalReport = async () => {
+  setJournalReportLoading(true);
+  setJournalReportStatus("");
+  setJournalReportResults([]);
+
+  try {
+    /*
+     * =========================================================
+     * JOURNAL REPORT - COMMON DATA
+     * =========================================================
+     */
+
+   const [
+  memberJournalsData,
+  otherJournalsData,
+  memberData,
+] = await Promise.all([
+  apiRequest("/member-journals"),
+  apiRequest("/other-journals"),
+  apiRequest("/members"),
+]);
+
+const memberJournals = Array.isArray(
+  memberJournalsData
+)
+  ? memberJournalsData
+  : [];
+
+const otherJournals = Array.isArray(
+  otherJournalsData
+)
+  ? otherJournalsData
+  : [];
+
+const members = Array.isArray(memberData)
+  ? memberData
+  : [];
+    const memberBelongsToSelectedContext = (record) => {
+  const memberCode =
+    record?.memberCode ||
+    record?.member?.memberCode ||
+    record?.member ||
+    "";
+
+  const member = members.find(
+    (item) =>
+      String(item?.memberCode || "")
+        .trim()
+        .toLowerCase() ===
+      String(memberCode)
+        .trim()
+        .toLowerCase()
+  );
+
+  if (!member) {
+    return false;
+  }
+
+  const clusterMatches =
+    !selectedCluster ||
+    String(member?.clusterName || "").trim() ===
+      String(selectedCluster || "").trim();
+
+  const vazhvathramMatches =
+    !selectedVazhvathram ||
+    String(member?.vazhvathramName || "").trim() ===
+      String(selectedVazhvathram || "").trim();
+
+  return (
+    clusterMatches &&
+    vazhvathramMatches
+  );
+};
+
+    /*
+     * =========================================================
+     * DATE HELPER
+     * =========================================================
+     */
+
+    const getJournalDate = (record) =>
+      record?.date ||
+      record?.journalDate ||
+      record?.jrDate ||
+      record?.createdDate ||
+      record?.createdAt ||
+      "";
+
+    const parseJournalDate = (value) => {
+      if (!value) return null;
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+
+      return date;
+    };
+
+    const fromDate = journalFromDate
+      ? new Date(`${journalFromDate}T00:00:00`)
+      : null;
+
+    const toDate = journalToDate
+      ? new Date(`${journalToDate}T23:59:59.999`)
+      : null;
+
+    const isInDateRange = (record) => {
+      const rawDate = getJournalDate(record);
+
+      /*
+       * Keep records without a usable date instead of
+       * silently deleting database records.
+       */
+      if (!rawDate) {
+        return true;
+      }
+
+      const parsed = parseJournalDate(rawDate);
+
+      if (!parsed) {
+        return true;
+      }
+
+      if (fromDate && parsed < fromDate) {
+        return false;
+      }
+
+      if (toDate && parsed > toDate) {
+        return false;
+      }
+
+      return true;
+    };
+
+    /*
+     * =========================================================
+     * NORMALIZE MEMBER JOURNALS
+     * =========================================================
+     */
+
+    const memberRows = memberJournals.map(
+      (record) => ({
+        ...record,
+        "Journal Source":
+          "Member Journal",
+        "Journal Number":
+          record?.jrNo ||
+          record?.journalNumber ||
+          record?.id ||
+          "",
+        "Journal Date":
+          getJournalDate(record),
+        "Member Code":
+          record?.memberCode ||
+          record?.member?.memberCode ||
+          "",
+        "Member Name":
+          record?.memberName ||
+          record?.member?.memberName ||
+          "",
+        "General Ledger":
+          record?.genLedger ||
+          "",
+        "Narration":
+          record?.narration ||
+          "",
+        "Credit Total":
+          Number(
+            record?.creditTotal || 0
+          ),
+        "Debit Total":
+          Number(
+            record?.debitTotal || 0
+          ),
+      })
+    );
+
+    /*
+     * =========================================================
+     * NORMALIZE OTHER JOURNALS
+     * =========================================================
+     */
+
+    const otherRows = otherJournals.map(
+      (record) => ({
+        ...record,
+        "Journal Source":
+          "Other Journal",
+        "Journal Number":
+          record?.journalNumber ||
+          record?.jrNo ||
+          record?.id ||
+          "",
+        "Journal Date":
+          getJournalDate(record),
+        "Member Code": "",
+        "Member Name": "",
+        "General Ledger":
+          record?.generalLedger ||
+          "",
+        "Narration":
+          record?.narration ||
+          "",
+        "Credit Total":
+          Number(
+            record?.creditTotal || 0
+          ),
+        "Debit Total":
+          Number(
+            record?.debitTotal || 0
+          ),
+      })
+    );
+
+    /*
+     * =========================================================
+     * DATE FILTER
+     * =========================================================
+     */
+const filteredMemberRows = memberRows.filter(
+  memberBelongsToSelectedContext
+);
+
+const allRows = [
+  ...filteredMemberRows,
+  ...otherRows,
+].filter(isInDateRange);
+
+    /*
+     * Sort oldest -> newest.
+     */
+    allRows.sort((a, b) => {
+      const dateA =
+        parseJournalDate(
+          a["Journal Date"]
+        );
+
+      const dateB =
+        parseJournalDate(
+          b["Journal Date"]
+        );
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return dateA - dateB;
+    });
+
+    /*
+     * =========================================================
+     * JR01 - COMPLETE JOURNAL - VAZHVATHRAM
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR01 - Complete Journal Report - vazhvathram"
+    ) {
+      setJournalReportResults(
+        allRows.map((record) => ({
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        }))
+      );
+
+      setJournalReportStatus(
+        `JR01 - Complete Journal Report - vazhvathram: ${allRows.length} record${allRows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR02 - MANUAL JOURNAL - VAZHVATHRAM
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR02 - Manual Journal Report - vazhvathram"
+    ) {
+      const rows = allRows
+          .filter(
+            (record) =>
+              record["Journal Source"] ===
+                 "Member Journal" ||
+              record["Journal Source"] ===
+                  "Other Journal"
+         )
+         .map(
+        (record) => ({
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR02 - Manual Journal Report - vazhvathram: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR03 - AUTO JOURNAL - VAZHVATHRAM
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR03 - Auto Journal Report - vazhvathram"
+    ) {
+      const rows = allRows
+  .filter(
+    (record) =>
+      record["Journal Source"] ===
+        "Member Journal" ||
+      record["Journal Source"] ===
+        "Other Journal"
+  )
+  .map(
+        (record) => ({
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR03 - Auto Journal Report - vazhvathram: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR04 - COMPLETE JOURNAL - CLUSTER
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR04 - Complete Journal Report - Cluster"
+    ) {
+      const rows = allRows
+  .filter((record) => {
+    if (
+      record["Journal Source"] ===
+      "Member Journal"
+    ) {
+      return record["Member Code"] &&
+        memberBelongsToSelectedContext(record);
+    }
+
+    return true;
+  })
+  .map(
+        (record) => ({
+          "Report Level":
+            "Cluster",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR04 - Complete Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR05 - MANUAL JOURNAL - CLUSTER
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR05 - Manual Journal Report - Cluster"
+    ) {
+      const rows = allRows
+  .filter((record) => {
+    if (
+      record["Journal Source"] ===
+      "Member Journal"
+    ) {
+      return (
+        record["Member Code"] &&
+        memberBelongsToSelectedContext(record)
+      );
+    }
+
+    return true;
+  })
+  .map(
+        (record) => ({
+          "Report Level":
+            "Cluster",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR05 - Manual Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR06 - AUTO JOURNAL - CLUSTER
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR06 - Auto Journal Report - Cluster"
+    ) {
+      const rows = allRows
+  .filter((record) => {
+    if (
+      record["Journal Source"] ===
+      "Member Journal"
+    ) {
+      return (
+        record["Member Code"] &&
+        memberBelongsToSelectedContext(record)
+      );
+    }
+
+    return true;
+  })
+  .map(
+        (record) => ({
+          "Report Level":
+            "Cluster",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR06 - Auto Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR07 - COMPLETE JOURNAL - FEDERATION
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR07 - Complete Journal Report - Federation"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Federation",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR07 - Complete Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR08 - MANUAL JOURNAL - FEDERATION
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR08 - Manual Journal Report - Federation"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Federation",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR08 - Manual Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * JR09 - AUTO JOURNAL - FEDERATION
+     * =========================================================
+     */
+
+    if (
+      journalReportSelection ===
+      "JR09 - Auto Journal Report - Federation"
+    ) {
+      const rows = allRows.map(
+        (record) => ({
+          "Report Level":
+            "Federation",
+          "Journal Source":
+            record["Journal Source"],
+          "Journal Number":
+            record["Journal Number"],
+          "Journal Date":
+            record["Journal Date"],
+          "Member Code":
+            record["Member Code"],
+          "Member Name":
+            record["Member Name"],
+          "General Ledger":
+            record["General Ledger"],
+          "Narration":
+            record["Narration"],
+          "Credit Total":
+            record["Credit Total"],
+          "Debit Total":
+            record["Debit Total"],
+        })
+      );
+
+      setJournalReportResults(rows);
+
+      setJournalReportStatus(
+        `JR09 - Auto Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
+      );
+
+      return;
+    }
+
+    /*
+     * =========================================================
+     * UNKNOWN REPORT
+     * =========================================================
+     */
+
+    setJournalReportStatus(
+      `${journalReportSelection} is not a recognized Journal Report option.`
+    );
+  } catch (error) {
+    console.error(
+      "Journal Report execute error:",
+      error
+    );
+
+    setJournalReportResults([]);
+
+    setJournalReportStatus(
+      `Unable to load Journal Report data. ${
+        error?.message || error
+      }`
+    );
+  } finally {
+    setJournalReportLoading(false);
+  }
+};
+    
+    const renderJournalReportResults = () => {
+      if (!journalReportResults.length) return null;
+
+      const keys = Array.from(
+        new Set(journalReportResults.flatMap((record) => Object.keys(record || {})))
+      )
+        .filter((key) => key !== "id" && key !== "rowsJson")
+        .slice(0, 10);
+
+      if (!keys.length) return null;
+
+      return (
+        <div
+          style={{
+            marginTop: "14px",
+            overflowX: "auto",
+            border: "1px solid #777",
+            background: "#fff",
+          }}
+        >
+          <table className="legacy-table">
+            <thead>
+              <tr>
+                {keys.map((key) => <th key={key}>{key}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {journalReportResults.map((record, index) => (
+                <tr key={record.id ?? index}>
+                  {keys.map((key) => (
+                    <td key={key}>
+                      {typeof record?.[key] === "object"
+                        ? JSON.stringify(record?.[key] ?? "")
+                        : String(record?.[key] ?? "")}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    const journalReportDbBody = (
+      <div className="legacy-report-panel">
+        <div className="legacy-report-subtitle">Journal Report Database</div>
+
+        <div className="legacy-report-row">
+          <strong>Report</strong>
+          <select
+            value={journalReportSelection}
+            onChange={(event) => {
+              setJournalReportSelection(event.target.value);
+              setJournalReportStatus("");
+              setJournalReportResults([]);
+            }}
+          >
+            {[
+              "JR01 - Complete Journal Report - vazhvathram",
+              "JR02 - Manual Journal Report - vazhvathram",
+              "JR03 - Auto Journal Report - vazhvathram",
+              "JR04 - Complete Journal Report - Cluster",
+              "JR05 - Manual Journal Report - Cluster",
+              "JR06 - Auto Journal Report - Cluster",
+              "JR07 - Complete Journal Report - Federation",
+              "JR08 - Manual Journal Report - Federation",
+              "JR09 - Auto Journal Report - Federation",
+            ].map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="legacy-report-two-col">
+          <div className="legacy-report-row">
+            <strong>From Date</strong>
+            <input
+              type="date"
+              value={journalFromDate}
+              onChange={(event) => setJournalFromDate(event.target.value)}
+            />
+          </div>
+          <div className="legacy-report-row">
+            <strong>To Date</strong>
+            <input
+              type="date"
+              value={journalToDate}
+              onChange={(event) => setJournalToDate(event.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="legacy-report-actions">
+          <Button
+            onClick={() =>
+              openResultInNewTab({
+                page: "journals",
+                type: "all",
+              })
+            }
+            >
+            Execute
+          </Button>
+        </div>
+
+        {journalReportStatus && (
+          <div
+            style={{
+              marginTop: "10px",
+              padding: "8px",
+              border: "1px solid #777",
+              background: "#f4f4f4",
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+          >
+            {journalReportStatus}
+          </div>
+        )}
+
+        {renderJournalReportResults()}
+      </div>
+    );
+
+
+    const reportData = {
+      "Master": {
+        title: "MASTER REPORT",
+        options: [
+          "MA 01 - General Ledger Details", "MA 02 - Sub Ledger Details",
+          "MA 03 - Federation/Block Details", "MA 04 - Cluster Details",
+          "MA 05 - vazhvathram Details", "MA 06 - Member Details",
+          "MA 07 - Member Details - Active", "MA 08 - Member Address",
+          "MA 09 - Cluster EC Leaders Details", "MA 10 - Federation EC Leaders Details",
+          "MA 11 - Iyyakam Leaders Details", "MA 12 - Bank Details",
+          "MA 13 - Branch Details", "MA 14 - Agewise vazhvathram Details (Cluster)",
+          "MA 15 - Agewise vazhvathram Details (Year)", "MA 16 - vazhvathram Leaders",
+          "MA 17 - Panchayat Union Details", "MA 18 - Panchayat Details",
+          "MA 19 - Village Details", "MA 20 - Removed Cluster Details",
+          "MA 21 - Removed vazhvathram Details", "MA 22 - Removed Member Details",
+          "MA 23 - Locked MemBer Details",
+        ],
+      },
+      "Opening Bal.": {
+        title: "Opening Balance Reports",
+        options: [
+          "OB 01 - Member Confirmation - vazhvathram", "OB 02 - Balance Sheet - vazhvathram",
+          "OB 03 - Bank Loan - vazhvathram", "OB 04 - Income and Expenditure - vazhvathram",
+          "OB 05 - Balance Sheet Consolidation - vazhvathram", "OB 06 - Balance Sheet Consolidation - Cluster",
+          "OB 07 - Income & Expenditure Consolidation - vazhvathram", "OB 08 - Income & Expenditure Consolidation - Cluster",
+          "OB 09 - Balance Sheet Asset & Liability Difference", "OB 09A - Difference in Bank Balance in Balance sheet and branch wise balances",
+          "OB 10 - Member Conf. and Bal. Sheet Difference", "OB 11 - Programme Support For Poverty Reduction - Bank List",
+          "OB 12 - Programme Support For Poverty Reduction - Federation List", "OB 13 - Member Poverty Reduction Fund Repayment Performance",
+          "OB 14 - Check SB A/c - 1", "OB 15 - Check SB A/c - 2" , "OB 16 - Check SB A/c - 3", 
+        ],
+      },
+      "Financial": {
+        title: "FINANCIAL REPORT",
+        options: [
+          "Cash Book - FR01", "Bank Book - Acct No. wise - FR02A", "Receipts & Payments - FR03",
+          "Income & Expenditure - FR04", "Balance Sheet - FR05", "Trial Balance - FR06",
+          "Member Ledger - FR07", "Member Ledger (All Heads) - Previous Year - FR08",
+          "Member Ledger (All Heads) - FR09", "Bank Loan Ledger - FR10 - New",
+          "Audit Front Page - FR11", "Homeless Entries",
+        ],
+      },
+      "Journals": {
+        title: "JOURNAL REPORT",
+        options: [
+          "JR01 - Complete Journal Report - vazhvathram", "JR02 - Manual Journal Report - vazhvathram",
+          "JR03 - Auto Journal Report - vazhvathram", "JR04 - Complete Journal Report - Cluster",
+          "JR05 - Manual Journal Report - Cluster", "JR06 - Auto Journal Report - Cluster",
+          "JR07 - Complete Journal Report - Federation", "JR08 - Manual Journal Report - Federation",
+          "JR09 - Auto Journal Report - Federation",
+        ],
+      },
+      "MIS": {
+        title: "MIS REPORT",
+        options: [
+          "KL 01 - vazhvathram Details", "KL 02 - Member Details", "KL 03A - Member details-Designation",
+          "KL 03B - Member details-Social economic Categorization", "KL 03C - Member details-Family Categorization",
+          "KL 04 - vazhvathram Management Information Report", "KL 05 - Member Livelihood Loan Support Repayment performance",
+          "KL 05RH - Member Livelihood Loan Support Repayment performance - Repayment Holiday",
+          "KL 05A - Member Livelihood Loan Support Repayment performance for all", "KL 05B - Member without Livelihood Loan Support",
+          "KL 05C - Member Total Loan O/S", "KL 05D - Member Livelihood Loan Support Repayment performance - OD",
+          "KL 06 - Regular Savings - Demand Vs. Collection", "KL 07 - Special Savings Report",
+          "KL 08 - Regular Savings Amount >= 15000 Report","KL 09 - Regular All Report",
+          "KL 10 - Member wise Savings and Interest - Monthwise", "KL 10A - Member wise Special Savings and Interest - Monthwise",
+          "CL 01 - vazhvathram Registration Details - Cluster", "CL 01A - vazhvathram Registration details - Federation",
+          "CL 03 - Status of New & Dropped Members - Cluster", "CL 03A - Status of New & Dropped Members - Federation",
+          "CL 04 - Status of Members Attlended and Saved - Cluster", "CL 04A - Status of Members Attlended and Saved - Federation",
+          "CL 05 - Status of Regular Savings - Cluster", "CL 05A - Status of Regular Savings - Federation",
+          "CL 06 - Status of Special Savings - Cluster", "CL 06A - Status of Special Savings - Federation",
+          "CL 07 - Status of Profit & Loss - Cluster", "CL 07A - Status of Profit & Loss - Federation",
+          "CL 08 - Purposewise Loan Consolidation - For the Month - Cluster", "CL 08F - Purposewise Loan Consolidation - For the Month - Federation",
+          "CL 8A - Purposewise Loan Consolidation - Upto the Month - Cluster", "CL 8AF - Purposewise Loan Consolidation - Upto the Month - Federation",
+          "CL 8B - Sub Purposewise Loan Consolidation - For the Month", "CL 8C - Sub Purposewise Loan Consolidation - Upto this Month",
+          "CL 09 - Member Livelihood Loan Support Repayment Performance - Cluster", "CL 09A - Member Livelihood Loan Support Repayment Performance - Federation",
+          "CL 09H - Member Livelihood Loan Support Repayment Performance - Considering Repayment Holiday - Cluster","CL 09AH - Member Livelihood Loan Support Repayment performance - Considering Repayment Holiday - Federation",
+          "CL 11-Status of Programme Expenses Collection - Cluster","CL 11A-Status of Programme Expenses Collection - Federation",
+          "CL 12-Cluster Summary Report Page 1 - Cluster","CL 12-Cluster Summary Report Page 1 - Federation",
+          "CL 12-Cluster Summary Report Page 2 - Cluster","CL 12-Cluster Summary Report Page 2 - Federation",
+          "CL 12-Cluster Summary Report Page 3 - Cluster","CL 12-Cluster Summary Report Page 3 - Federation",
+          "CL 14-Non Savers","CL 16-Receipts Vouchers Collection and Verification - Cluster",
+          "CL 16-Receipts Vouchers Collection and Verification - Federation","BL 01-vazhvathram Registration details - Federation",
+          "BL 02-Cluster details","BL 04-Status of New & Dissolved Groups",
+          "BL 05-Status of New & Dropped Members","BL 06 Status of members attended and members saved",
+          "BL 07-Status of Regular Savings","BL. 08 Status of Special Savings",
+          "BL 09-Status of Profit & Loss","BL 10 - Purposewise Loan Consolidation For the Month",
+          "BL 10A-Purposewise Loan Consolidation-Upto the Month","BL 108-Sub Purposewise Loan Consolidation For the Month",
+          "BL 10C-Sub Purposewise Loan Consolidation Upto the Month","BL 11 Member Livelihood Loan Support Repayment performance",
+          "BL 11 Member Livelihood Loan Support", "Repayment performance Considering Repayment Holiday",
+          "BL 13-Status of Programme Expenses Collection","BL 14-Block Summary Report Page 1",
+          "BL 14-Block Summary Report Page 2","BL 14-Block Summary Report Page 3","BL 16 Non Savers","BL 17-Life Insurance Uncovered members",
+          "BL 18-Health Insurance Uncovered members","BL 19-List of Members taken Sanitation and Water Loan Products",
+          "BL20-NO. of Groups completed Data Entry with in 5 days of Group Meeting",
+        ],
+      },
+      "MIS-SSP": {
+        title: "MIS REPORT - SSP",
+        options: [
+          "MLSSP 01 - List of Members Enrolled during current year", "MLSSP 02 - List of Members Not Enrolled during current year",
+          "MLSSP 03 - List of Members Enrolled in any one of the Life Product",
+          "MLSSP 04 - List of Members Not Enrolled in any one of the Life Product",
+          "MLSSP 05 - List of Members whose Spouses are Enrolled in any one of the Life Product",
+          "MLSSP 06 - List of Members whose Spouses are Not Enrolled in any one of the Life Product",
+          "MLSSP 07 - List of Members Enrolled in any one of the Health Product",
+          "MLSSP 08 - List of Members Not Enrolled in any one of the Health Product",
+          "MLSSP 09 - List of Members Enrolled in any one of the Livestock Product",
+          "MLSSP 10 - List of Members Not Enrolled in any one of the Livestock Product",
+          "MLSSP 11 - List of Members Enrolled in any one of the Crop Product",
+          "MLSSP 12 - List of Members Not Enrolled in any one of the Crop Product",
+          "MLSSP 13 - List of Members Enrolled in any one of All Products",
+          "MLSSP 14 - List of Members Not Enrolled in any one of All Products",
+          "KLSSP 01 - No. of Members Enrolled - vazhvathram Wise",
+          "KLSSP 02 - No. of Members Not Enrolled - Kalanjian Wise",
+          "KLSSP 03 - No. of Members Enrolled in any one of the Life Product - vazhvathram Wise",
+          "KLSSP 04 - No of Members Not Enrolled in any one of the Life Product - vazhvathram Wise",
+          "KLSSP 05 - No. of Members whose Spouses are Enrolled in any one of the Life Product - vazhvathram Wise",
+          "KLSSP 06 - No of Members whose Spouses are Not Enrolled in any one of the Life Product - Kalaniiam Wise",
+          "KLSSP 07 - No. of Members Enrolled in any one of the Health Product - vazhvathram Wise",
+          "KLSSP 08 - No. of Members Not Enrolled in any one of the Health Product - vazhvathram Wise",
+          "KLSSP 09 - No. of Members Enrolled in any one of the Livestock Product - vazhvathram Wise",
+          "KLSSP 10 - No. of Members Not Enrolled in any one of the Livestock Product - vazhvathram Wise",
+          "KLSSP 11 - No. of Members Enrolled in any one of the Crop Product - vazhvathram Wise",
+          "KLSSP 12 - No. of Members Not Enrolled in any one of the Crop Product - vazhvathram Wise",
+          "KLSSP 13 - No. of Members Enrolled in any one of All Products - vazhvathram Wise",
+          "KLSSP 14 - No of Members Not Enrolled in any one of All Products - vazhvathram Wise",
+          "CLSSP 01 - No. of Members Enrolled - Cluster Wise",
+          "CLSSP 02 - No of Members Not Enrolled - Cluster Wise",
+          "CLSSP 03 - No. of Members Enrolled in any one of the Life Product - Cluster Wise",
+          "CLSSP 04 - No. of Members Not Enrolled in any one of the Life Product -  Cluster Wise",
+          "CLSSP 05 - No of Members whose Spouses are Enrolled in any one of the Life Product - Cluster Wise",
+          "CLSSP 06 - No. of Members whose Spouses are Not Enrolled in any one of the Life Product - Cluster Wise",
+          "CLSSP 07 - No. of Members Enrolled in any one of the Health Product - Cluster Wise",
+          "CLSSP 08 - No. of Members Not Enrolled in any one of the Health Product - Cluster Wise",
+          "CLSSP 09 - No. of Members Enrolled in any one of the Livestock Product - Cluster Wise",
+          "CLSSP 10 - No. of Members Not Enrolled in any one of the Livestock Product - Cluster Wise",
+          "CLSSP 11 - No. of Members Enrolled in any one of the Crop Product - Cluster Wise",
+          "CLSSP 12 - No. of Members Not Enrolled in any one of the Crop Product - Cluster Wise",
+          "CLSSP 13 - No. of Members Enrolled in any one of All Products - Cluster Wise",
+          "CLSSP 14 - No. of Members Not Enrolled in any one of All Products - Cluster Wise"
+        ],
+      },
+      "Bank Link.": {
+        title: "Bank Linkage Reports",
+        options: [
+          "BK 01 - Cluster wise Linkage status", "BK 02 - Branch wise Linkage status", "BK 03 - Bank Linkage Status for the month",
+          "BK 04 - Clusterwise Demand Collection Balance (DCB)", "BK 05 - Groupwise Demand Collection Balance (DCB)",
+          "BK 06 - Monthwise Repayment Status", "BK 07 - Monthwise Disbursement & Repayment Status - With Additional Parameters",
+          "BK 07A - Monthwise Disbursement & Repayment Status", "BK 07B - Monthwise Disbursement & Repayment Status - With Additional Parameters - Including Groups not having Bank OS",
+          "BK 08 - Cluster Monthwise Disbursement Status", "BK 09 - Group Monthwise Disbursement Status",
+          "BK 10 - Branchwise Disbursement Status", "BK 11 - vazhvathrams not linked with Bank",
+          "BK 12 - Linkage Efficiency Status", "BK 13 - Interest Outstanding Status",
+          "BK 14 - Fixed Deposit List","BK 15 - Fixed Deposit Maturity List for the Month",
+          "BK 16 - Fixed Deposit Maturity List for the Month", 
+        ],
+      },
+      "vazhvathram": {
+        title: "Monthwise vazhvathram Reports",
+        options: [
+          "KR 01 - Receipts & Payments", "KR 02 - Income & Expenditure", "KR 03 - Balance Sheet",
+          "KR 04A - Monthwise Member Livelihood Loan - Repayment-Group Level",
+          "KR 04B - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Group Level",
+          "KR 04C - Monthwise Member Livelihood Loan - Repayment-Cluster Level",
+          "KR 04D - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Cluster Level",
+          "KR 04E - Monthwise Member Livelihood Loan - Repayment-Fed Level",
+          "KR 04F - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Fed Level",
+          "KR 07 - Loans Availed by Members - Past Loans",
+          "KR 08 - List of Members who have saved for the range Entered in From Amt and To Amt",
+          "KR 09 - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Fed Level - For the Amt Greater than - Entered in To Amt Field",
+        ],
+      },
+      "Cluster": {
+        title: "Other Cluster Reports",
+        options: [
+          "CR 01 - Data Entry Status Report", "CR 02 - Data Entry Status Report All", "CR 03 - Cash in Hand - vazhvathram",
+          "CR 04 - Cash at Bank - vazhvathram", "CR 04SBAC - Cash at Bank - vazhvathram - SB A/C",
+          "CR 04LNAC - Cash at Bank - vazhvathram - LOAN A/C", "CR 04A - Cash at Bank, Branchwise - vazhvathram",
+          "CR 04ASB - Cash at Bank, Branchwise - vazhvathram - SB A/C", "CR 04ALN - Cash at Bank, Branchwise - vazhvathram - LOAN A/C",
+          "CR 05 - Receipts & Payments Consolidation - vazhvathram", "CR 06 - Receipts & Payments Consolidation - Month",
+          "CR 07 - Income & Expenditure Consolidation - vazhvathram", "CR 08 - Income & Expenditure Consolidation - Month",
+          "CR 08A - Journal Transactions - vazhvathram", "CR 08B - Journal Transactions - Month", "CR 09 - Balance Sheet Consolidation - vazhvathram",
+          "CR 09-Balance Sheet Consolidation - vazhvathram","CR 10-Balance Sheet Consolidation - Month","CR 11-Prog. Sup. O/S with Bank & Federation - vazhvathram",
+          "CR 12-Prog Sup. Repayment to Bank & Federation - vazhvathram","CR 13-Poverty Reduction Fund Issued Details - Member",
+          "CR 14-Insurance Paid Details - Member",
+          "CR 15-Receipts & Payments Consolidation upto - vazhvathram","CR 16-Income & Expenditure Consolidation upto - vazhvathram",
+        ],
+      },
+      "Block": {
+        title: "Other Block Reports",
+        options: [
+          "BR 01 - Data Entry Status Report - vazhvathram", "BR 01A - Groups Not Locked",
+          "BR 02 - Receipts & Payments Consolidation - Cluster", "BR 03 - Receipts & Payments Consolidation - Month",
+          "BR 04 - Income & Expenditure Consolidation - Cluster", "BR 05 - Income & Expenditure Consolidation - Month",
+          "BR 05A - Journal Transactions Consolidation - Cluster", "BR 05B - Journal Transactions Consolidation - Month",
+          "BR 06 - Balance Sheet Consolidation - Cluster", "BR 07 - Balance Sheet Consolidation - Month",
+          "BR 08 - Prog. Sup. O/S with Bank & Fed. - vazhvathram", "BR 09 - Prog. Sup. Repayment to Bank & Fed. - vazhvathram",
+          "BR 10 - Poverty Reduction Fund Issued Details - Members", "BR 10A - Poverty Reduction Fund Issued Details As On - Members",
+          "BR 11 - Insurance Paid Details - Members", "BR 11A - Insurance - Collaboration Prog. Receivable / Payables - At Group Level",
+          "BR 11B-Mutuals Products/Nalam Receivable / Payables - At Group Level","BR 12-Savings Repaid Details - Members",
+          "BR 12 A-Savings Details for the month- Memberwise","BR 13-Groups Having No. of Members Greater than",
+          "BR 16-Members with no Transactions","BR 16A-Grps with no Transactions","BR 17- Receipts & Payments Consolidation upto - Cluster",
+          "BR 18-Income & Expenditure Consolidation upto - Cluster","BR 19-Members Not saved Continuously",
+          "BR 19A-Table Format Members Not saved Continuously","BR 19B-List of Members added Every month: Give the List Associates for Action.","BR 20-Members Not saved Intermittently",
+          "BR 20A-Table Format Members Not saved Intermittently","BR 21-Groups Not conducted meeting continuously",
+          "BR 21A-Table Format Groups that Not conducted meeting continuously","BR 21B-List of Groups Added Every Month - Take the List for Action",
+          "BR 22-Groups Not conducted meeting Intermittently","BR 22A-Table Format Groups Not conducted meeting Intermittently",
+          "BR 23 List of Members enrolled in Insurance","BR 23A List of Members enrolled in Insurance",
+          "BR 24 List of Members who have saved more than Rs 1000 in a single Meeting","BR 25 Auto Journal Passed details",
+          "BR 26 Multiple Benefits Survey - Entry Status","BR 27-Donations paid by Group",
+          "BR 28-Donations Recerved by Federation - Receiptwise.","BR 28A-Donations Received by Federation",
+          "BR 29-No. of Receipts during the month","BR 30 Loans Repaid by Member more than Rs. 10000",
+          "BR 31 Cash Deposited into Bank","BR 32 Village wise Groups Promoted",
+        ],
+      },
+    };
+
+    const base = reportData[item] || { title: item.toUpperCase(), options: ["KR 01-Receipts & Payments","KR 02-Income & Expenditure","KR 03-Balance Sheet","KR 04A-Monthwise Member Livelihood Loan - Repayment-Group Level","KR 04B-Monthwise Member Livelihood Loan (All Loans LH1, LH2, LH3) - Repayment-Group Level","KR 04C-Monthwise Member Livelihood Loan - Repayment-Cluster Level","KR 04D-Monthwise Member Livelihood Loan (All Loans LH1, LH2, LH3) - Repayment-Cluster Level","KR 04E-Monthwise Member Livelihood Loan - Repayment-Fed Level","KR 04F-Monthwise Member Livelihood Loan(All Loans LH1, LH2, LH3) - Repayment-Fed Level","KR 07-Loans Availed by Members - Past Loans","KR 08 List of Members who have saved for the range Entered in From Amt and To Amt","KR 09-Monthwise Member Livelihood Loan (All Loans LH1, LH2, LH3) - Repayment-Fed Level - For the Amt Greater than - Entered in To Amt Field",] };
+
+    const legacyCard = (children, className = "") => (
+      <div className={`legacy-report-card ${className}`}>
+        <div className="legacy-report-title">{base.title}</div>
+        {children}
+        {item === "Financial" && financialReportStatus && (
+          <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
+            {financialReportLoading ? "Loading..." : financialReportStatus}
+          </div>
+        )}
+{item === "Financial" && (
+  <>
+    {renderFinancialReportResults()}
+  </>
+)}
+      </div>
+    );
+
+const dates = (
+<>
+  <div className="legacy-report-row">
+    <strong>From Date</strong>
+
+    <select
+      value={financialFromDate}
+   onChange={(event) => {
+  const selectedDate = event.target.value;
+
+  console.log("FROM DATE SELECTED:", selectedDate);
+
+  setFinancialFromDate(selectedDate);
+
+  // A new From Date means To Date must be selected again
+  setFinancialToDate("");
+  sessionStorage.setItem("financialFromDate", selectedDate);
+  sessionStorage.removeItem("financialToDate");
+}}
+    >
+      <option value="">Select Date</option>
+
+      {financialMemberDates.map((date) => (
+        <option key={`from-${date}`} value={date}>
+          {date}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="legacy-report-row">
+    <strong>To Date</strong>
+
+    <select
+      value={financialToDate}
+      onChange={(event) => {
+        const selectedDate = event.target.value;
+
+        setFinancialToDate(selectedDate);
+        sessionStorage.setItem("financialToDate", selectedDate);
+        setFinancialReportStatus("");
+        setFinancialReportResults([]);
+      }}
+    >
+      <option value="">Select Date</option>
+
+      {financialMemberDates
+  .filter(
+    (date) =>
+      !financialFromDate || date >= financialFromDate
+  )
+  .map((date) => (
+    <option key={`to-${date}`} value={date}>
+      {date}
+    </option>
+  ))}
+    </select>
+  </div>
+</>
+  
+);
+
+    const parseFinancialDate = (value) => {
+      const text = String(value || "").trim();
+      if (!text) return null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) { const [y,m,d]=text.split("-").map(Number); return new Date(y,m-1,d); }
+      if (/^\d{2}-\d{2}-\d{4}$/.test(text)) { const [d,m,y]=text.split("-").map(Number); return new Date(y,m-1,d); }
+      const parsed=new Date(text); return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+    const getFinancialRecordDate = (record) => record?.receiptDate || record?.voucherDate || record?.journalDate || record?.date || record?.fdDate || record?.accountDate || record?.createdAt || "";
+    const filterFinancialDateRange = (rows) => {
+      const from=parseFinancialDate(financialFromDate), to=parseFinancialDate(financialToDate);
+      if (!from && !to) return rows; if (to) to.setHours(23,59,59,999);
+      return rows.filter(record => { const date=parseFinancialDate(getFinancialRecordDate(record)); if(!date) return true; return (!from || date>=from) && (!to || date<=to); });
+    };
+    const loadFinancialEndpoint = async (endpoint) => { const data=await apiRequest(endpoint); return Array.isArray(data) ? data : []; };
+    const runFinancialReport = async () => {
+      setFinancialReportLoading(true); setFinancialReportStatus(""); setFinancialReportResults([]);
+const fromDate = parseFinancialDate(financialFromDate);
+const toDate = parseFinancialDate(financialToDate);
+
+if (fromDate && toDate && fromDate > toDate) {
+  setFinancialReportStatus(
+    "From Date cannot be later than To Date."
+  );
+  setFinancialReportLoading(false);
+  return;
+}
+      try {
+        let rows=[]; let sourceLabel="";
+       if (financialReportSelection === "Cash Book - FR01") {
+  const [
+    mr,
+    or,
+    mp,
+    op,
+    mj,
+    oj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/other-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const memberBelongsToSelectedContext = (record) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode || ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberReceipts =
+    mr.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberPayments =
+    mp.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberJournals =
+    mj.filter((record) => {
+      const member = members.find(
+        (item) =>
+          String(item?.memberCode || "")
+            .trim()
+            .toLowerCase() ===
+          String(record?.member || "")
+            .trim()
+            .toLowerCase()
+      );
+
+      if (!member) {
+        return false;
+      }
+
+      const clusterMatches =
+        !selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim();
+
+      const vazhvathramMatches =
+        !selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim();
+
+      return (
+        clusterMatches &&
+        vazhvathramMatches
+      );
+    });
+
+  rows = [
+    ...filteredMemberReceipts.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Receipt",
+      })
+    ),
+
+    ...or.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Receipt",
+      })
+    ),
+
+    ...filteredMemberPayments.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Payment",
+      })
+    ),
+
+    ...op.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Payment",
+      })
+    ),
+
+    ...filteredMemberJournals.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Journal",
+      })
+    ),
+
+    ...oj.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Journal",
+      })
+    ),
+  ];
+
+  sourceLabel =
+    "existing receipt, payment and journal tables";
+}
+        else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
+         const [mr, or, mp, op, bankAccounts, memberData] =
+  await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/bank-accounts"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+const members = Array.isArray(memberData)
+  ? memberData
+  : [];
+const bankAccountRows = Array.isArray(bankAccounts)
+  ? bankAccounts
+  : [];
+
+const findMemberBankAccount = (record) => {
+  const memberCode = String(record?.memberCode || "")
+    .trim()
+    .toLowerCase();
+
+  const memberName = String(record?.memberName || "")
+    .trim()
+    .toLowerCase();
+
+  return bankAccountRows.find((account) => {
+    const accountMemberCode = String(
+      account?.memberCode || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const accountMemberName = String(
+      account?.memberName || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      (memberCode &&
+        accountMemberCode &&
+        memberCode === accountMemberCode) ||
+      (memberName &&
+        accountMemberName &&
+        memberName === accountMemberName)
+    );
+  });
+};
+const receiptRows = [
+  ...mr
+    .filter((r) => {
+      const member = members.find(
+        (item) =>
+          String(item?.memberCode || "")
+            .trim()
+            .toLowerCase() ===
+          String(r?.memberCode || "")
+            .trim()
+            .toLowerCase()
+      );
+
+      if (!member) {
+        return false;
+      }
+
+      const clusterMatches =
+        !selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim();
+
+      const vazhvathramMatches =
+        !selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim();
+
+      return (
+        clusterMatches &&
+        vazhvathramMatches
+      );
+    })
+    .map((r) => {
+      const bankAccount =
+        findMemberBankAccount(r);
+
+      return {
+        ...r,
+        transactionType: "Receipt",
+        accountCode:
+          bankAccount?.accountNumber ||
+          r.accountNo ||
+          r.accountType ||
+          "",
+        accountName:
+          r.memberName ||
+          bankAccount?.memberName ||
+          "Member Receipt",
+        transactionDate:
+          r.receiptDate || "",
+        receiptAmount:
+          Number(r.total || 0),
+        paymentAmount: 0,
+      };
+    }),
+
+
+  ...or.map((r) => ({
+    ...r,
+    transactionType: "Receipt",
+    accountCode: r.accountNo || r.accountType || "",
+    accountName:
+      r.receiptType ||
+      r.subLedger ||
+      "Other Receipt",
+    transactionDate: r.receiptDate || "",
+    receiptAmount: Number(r.total || r.amount || 0),
+    paymentAmount: 0,
+  })),
+];
+
+const paymentRows = [
+  ...mp
+    .filter((r) => {
+      const member = members.find(
+        (item) =>
+          String(item?.memberCode || "")
+            .trim()
+            .toLowerCase() ===
+          String(r?.memberCode || "")
+            .trim()
+            .toLowerCase()
+      );
+
+      if (!member) {
+        return false;
+      }
+
+      const clusterMatches =
+        !selectedCluster ||
+        String(member?.clusterName || "").trim() ===
+          String(selectedCluster || "").trim();
+
+      const vazhvathramMatches =
+        !selectedVazhvathram ||
+        String(member?.vazhvathramName || "").trim() ===
+          String(selectedVazhvathram || "").trim();
+
+      return (
+        clusterMatches &&
+        vazhvathramMatches
+      );
+    })
+    .map((r) => {
+    const bankAccount = findMemberBankAccount(r);
+
+    return {
+      ...r,
+      transactionType: "Payment",
+      accountCode:
+        bankAccount?.accountNumber ||
+        r.accountNo ||
+        r.accountType ||
+        "",
+      accountName:
+        r.memberName ||
+        bankAccount?.memberName ||
+        "Member Payment",
+      transactionDate: r.voucherDate || "",
+      receiptAmount: 0,
+      paymentAmount: Number(
+  r.total ||
+  [
+    r.savings,
+    r.savingsIncentive,
+    r.bulletSavings,
+    r.socialSecurityAmount,
+    r.specialSavingsAmount,
+    r.specialSavingsMoreAmount,
+    r.specialSavingsIncentive,
+    r.loanAmount,
+    r.instalmentAmount,
+  ].reduce(
+    (sum, value) => sum + (parseFloat(value) || 0),
+    0
+  )
+),
+    };
+  }),
+
+  ...op.map((r) => ({
+    ...r,
+    transactionType: "Payment",
+    accountCode: r.accountNo || r.accountType || "",
+    accountName:
+      r.voucherType ||
+      r.accountType ||
+      "Other Payment",
+    transactionDate: r.voucherDate || "",
+    receiptAmount: 0,
+    paymentAmount: Number(r.total || r.amount || 0),
+  })),
+];
+
+rows = [...receiptRows, ...paymentRows];
+
+sourceLabel =
+  "existing receipt, payment and bank account tables";}
+        else if (
+  financialReportSelection ===
+  "Receipts & Payments - FR03"
+) {
+  const [
+    mr,
+    or,
+    mp,
+    op,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(record?.memberCode || "")
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberReceipts =
+    mr.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberPayments =
+    mp.filter(
+      memberBelongsToSelectedContext
+    );
+
+  rows = [
+    ...filteredMemberReceipts.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Receipt",
+      })
+    ),
+
+    ...or.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Receipt",
+      })
+    ),
+
+    ...filteredMemberPayments.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Payment",
+      })
+    ),
+
+    ...op.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Payment",
+      })
+    ),
+  ];
+
+  sourceLabel =
+    "existing receipt and payment tables";
+          } else if (financialReportSelection ==="Income & Expenditure - FR04") 
+        {const [
+  mj,
+  oj,
+  mr,
+  or,
+  mp,
+  op,
+  memberData,
+] = await Promise.all([
+  loadFinancialEndpoint("/member-journals"),
+  loadFinancialEndpoint("/other-journals"),
+  loadFinancialEndpoint("/member-receipts"),
+  loadFinancialEndpoint("/other-receipts"),
+  loadFinancialEndpoint("/member-payments"),
+  loadFinancialEndpoint("/other-payments"),
+  loadFinancialEndpoint("/members"),
+]);
+
+const members = Array.isArray(memberData)
+  ? memberData
+  : [];
+
+const memberBelongsToSelectedContext = (
+  record
+) => {
+  const member = members.find(
+    (item) =>
+      String(item?.memberCode || "")
+        .trim()
+        .toLowerCase() ===
+      String(
+        record?.memberCode ||
+        record?.member ||
+        ""
+      )
+        .trim()
+        .toLowerCase()
+  );
+
+  if (!member) {
+    return false;
+  }
+
+  const clusterMatches =
+    !selectedCluster ||
+    String(member?.clusterName || "").trim() ===
+      String(selectedCluster || "").trim();
+
+  const vazhvathramMatches =
+    !selectedVazhvathram ||
+    String(member?.vazhvathramName || "").trim() ===
+      String(selectedVazhvathram || "").trim();
+
+  return (
+    clusterMatches &&
+    vazhvathramMatches
+  );
+};
+
+const filteredMemberJournals =
+  mj.filter(memberBelongsToSelectedContext);
+
+const filteredMemberReceipts =
+  mr.filter(memberBelongsToSelectedContext);
+
+const filteredMemberPayments =
+  mp.filter(memberBelongsToSelectedContext);          
+        rows = [
+  ...filteredMemberJournals.map(
+    (r) => ({
+      ...r,
+      transactionType:
+        "Member Journal",
+    })
+  ),
+
+  ...oj.map(
+    (r) => ({
+      ...r,
+      transactionType:
+        "Other Journal",
+    })
+  ),
+
+  ...filteredMemberReceipts.map(
+    (r) => ({
+      ...r,
+      transactionType:
+        "Member Receipt",
+    })
+  ),
+
+  ...or.map(
+    (r) => ({
+      ...r,
+      transactionType:
+        "Other Receipt",
+    })
+  ),
+
+  ...filteredMemberPayments.map(
+    (r) => ({
+      ...r,
+      transactionType:
+        "Member Payment",
+    })
+  ),
+
+  ...op.map(
+    (r) => ({
+      ...r,
+      transactionType:
+        "Other Payment",
+    })
+  ),
+];       sourceLabel="existing journal, receipt and payment tables";
+                 } else if (
+          financialReportSelection ===
+          "Balance Sheet - FR05"
+        ) {
+          const [
+            mj,
+            oj,
+            mr,
+            or,
+            mp,
+            op,
+            memberData,
+          ] = await Promise.all([
+            loadFinancialEndpoint("/member-journals"),
+            loadFinancialEndpoint("/other-journals"),
+            loadFinancialEndpoint("/member-receipts"),
+            loadFinancialEndpoint("/other-receipts"),
+            loadFinancialEndpoint("/member-payments"),
+            loadFinancialEndpoint("/other-payments"),
+            loadFinancialEndpoint("/members"),
+          ]);
+
+          const members = Array.isArray(memberData)
+            ? memberData
+            : [];
+
+          const memberBelongsToSelectedContext = (
+            record
+          ) => {
+            const member = members.find(
+              (item) =>
+                String(item?.memberCode || "")
+                  .trim()
+                  .toLowerCase() ===
+                String(
+                  record?.memberCode ||
+                  record?.member ||
+                  ""
+                )
+                  .trim()
+                  .toLowerCase()
+            );
+
+            if (!member) {
+              return false;
+            }
+
+            const clusterMatches =
+              !selectedCluster ||
+              String(member?.clusterName || "").trim() ===
+                String(selectedCluster || "").trim();
+
+            const vazhvathramMatches =
+              !selectedVazhvathram ||
+              String(member?.vazhvathramName || "").trim() ===
+                String(selectedVazhvathram || "").trim();
+
+            return (
+              clusterMatches &&
+              vazhvathramMatches
+            );
+          };
+
+          const filteredMemberJournals =
+            mj.filter(memberBelongsToSelectedContext);
+
+          const filteredMemberReceipts =
+            mr.filter(memberBelongsToSelectedContext);
+
+          const filteredMemberPayments =
+            mp.filter(memberBelongsToSelectedContext);
+
+          rows = [
+            ...filteredMemberJournals.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Member Journal",
+              })
+            ),
+
+            ...oj.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Other Journal",
+              })
+            ),
+
+            ...filteredMemberReceipts.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Member Receipt",
+              })
+            ),
+
+            ...or.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Other Receipt",
+              })
+            ),
+
+            ...filteredMemberPayments.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Member Payment",
+              })
+            ),
+
+            ...op.map(
+              (r) => ({
+                ...r,
+                transactionType:
+                  "Other Payment",
+              })
+            ),
+          ];
+
+          sourceLabel =
+            "existing journal, receipt and payment tables";
+          } else if (
+  financialReportSelection ===
+  "Trial Balance - FR06"
+) {
+  const [
+    mj,
+    oj,
+    mr,
+    or,
+    mp,
+    op,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/other-journals"),
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberJournals =
+    mj.filter(memberBelongsToSelectedContext);
+
+  const filteredMemberReceipts =
+    mr.filter(memberBelongsToSelectedContext);
+
+  const filteredMemberPayments =
+    mp.filter(memberBelongsToSelectedContext);
+
+  rows = [
+    ...filteredMemberJournals.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Journal",
+      })
+    ),
+
+    ...oj.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Journal",
+      })
+    ),
+
+    ...filteredMemberReceipts.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Receipt",
+      })
+    ),
+
+    ...or.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Receipt",
+      })
+    ),
+
+    ...filteredMemberPayments.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Member Payment",
+      })
+    ),
+
+    ...op.map(
+      (r) => ({
+        ...r,
+        transactionType:
+          "Other Payment",
+      })
+    ),
+  ];
+
+  sourceLabel =
+    "existing journal, receipt and payment tables";
+        } else if (
+  financialReportSelection ===
+  "Member Ledger - FR07"
+) {
+  const [
+    mr,
+    mp,
+    mj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q = financialMember
+    .trim()
+    .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  rows = [
+    ...mr.map(
+      (r) => ({
+        ...r,
+        transactionType: "Receipt",
+      })
+    ),
+
+    ...mp.map(
+      (r) => ({
+        ...r,
+        transactionType: "Payment",
+      })
+    ),
+
+    ...mj.map(
+      (r) => ({
+        ...r,
+        transactionType: "Journal",
+      })
+    ),
+  ]
+    .filter(memberBelongsToSelectedContext)
+    .filter(
+      (r) =>
+        !q ||
+        [
+          r.memberCode,
+          r.memberName,
+          r.member,
+        ].some(
+          (v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(q)
+        )
+    );
+
+  sourceLabel =
+    "existing member receipt, payment and journal tables";
+        } else if (
+  financialReportSelection ===
+  "Member Ledger (All Heads) - Previous Year - FR08"
+) {
+  const [
+    mr,
+    mp,
+    mj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q = financialMember
+    .trim()
+    .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  rows = [
+    ...mr.map(
+      (r) => ({
+        ...r,
+        transactionType: "Receipt",
+      })
+    ),
+
+    ...mp.map(
+      (r) => ({
+        ...r,
+        transactionType: "Payment",
+      })
+    ),
+
+    ...mj.map(
+      (r) => ({
+        ...r,
+        transactionType: "Journal",
+      })
+    ),
+  ]
+    .filter(memberBelongsToSelectedContext)
+    .filter(
+      (r) =>
+        !q ||
+        [
+          r.memberCode,
+          r.memberName,
+          r.member,
+        ].some(
+          (v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(q)
+        )
+    );
+
+  sourceLabel =
+    "existing member receipt, payment and journal tables";
+          } else if (
+  financialReportSelection ===
+  "Member Ledger (All Heads) - FR09"
+) {
+  const [
+    mr,
+    mp,
+    mj,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/member-journals"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q = financialMember
+    .trim()
+    .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  rows = [
+    ...mr.map(
+      (r) => ({
+        ...r,
+        transactionType: "Receipt",
+      })
+    ),
+
+    ...mp.map(
+      (r) => ({
+        ...r,
+        transactionType: "Payment",
+      })
+    ),
+
+    ...mj.map(
+      (r) => ({
+        ...r,
+        transactionType: "Journal",
+      })
+    ),
+  ]
+    .filter(memberBelongsToSelectedContext)
+    .filter(
+      (r) =>
+        !q ||
+        [
+          r.memberCode,
+          r.memberName,
+          r.member,
+        ].some(
+          (v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(q)
+        )
+    );
+  sourceLabel =
+    "existing member receipt, payment and journal tables";
+        } else if (
+  financialReportSelection ===
+  "Bank Loan Ledger - FR10 - New"
+) {
+  const [
+    mp,
+    op,
+    mr,
+    or,
+    memberData,
+  ] = await Promise.all([
+    loadFinancialEndpoint("/member-payments"),
+    loadFinancialEndpoint("/other-payments"),
+    loadFinancialEndpoint("/member-receipts"),
+    loadFinancialEndpoint("/other-receipts"),
+    loadFinancialEndpoint("/members"),
+  ]);
+
+  const members = Array.isArray(memberData)
+    ? memberData
+    : [];
+
+  const q =
+    financialBankLoanLedger
+      .trim()
+      .toLowerCase();
+
+  const memberBelongsToSelectedContext = (
+    record
+  ) => {
+    const member = members.find(
+      (item) =>
+        String(item?.memberCode || "")
+          .trim()
+          .toLowerCase() ===
+        String(
+          record?.memberCode ||
+          record?.member ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      String(member?.clusterName || "").trim() ===
+        String(selectedCluster || "").trim();
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      String(member?.vazhvathramName || "").trim() ===
+        String(selectedVazhvathram || "").trim();
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  const filteredMemberPayments =
+    mp.filter(
+      memberBelongsToSelectedContext
+    );
+
+  const filteredMemberReceipts =
+    mr.filter(
+      memberBelongsToSelectedContext
+    );
+
+  rows = [
+    ...filteredMemberPayments,
+    ...op,
+    ...filteredMemberReceipts,
+    ...or,
+  ].filter(
+    (r) =>
+      !q ||
+      JSON.stringify(r)
+        .toLowerCase()
+        .includes(q)
+  );
+
+  sourceLabel =
+    "existing receipt and payment tables";
+          
+        } else if (financialReportSelection === "Audit Front Page - FR11") { rows=await loadFinancialEndpoint("/auditors"); sourceLabel="existing auditor details table"; }
+        else if (financialReportSelection === "Homeless Entries") { setFinancialReportStatus("Homeless Entries: no dedicated database table exists in the current project, so no data was invented."); return; }
+        rows=filterFinancialDateRange(rows); setFinancialReportResults(rows); setFinancialReportStatus(`${financialReportSelection}: ${rows.length} record${rows.length===1?"":"s"} loaded from ${sourceLabel}.`);
+      } catch(error) { console.error("Financial Report execute error:",error); setFinancialReportResults([]); setFinancialReportStatus(`Unable to load Financial Report data. ${error.message}`); } finally { setFinancialReportLoading(false); }
+    };
+
+    const [cashBookLockChecking, setCashBookLockChecking] = useState(false);
+
+const getCashBookLockMonth = (dateValue) => {
+  if (!dateValue) return "";
+
+  const date = new Date(`${dateValue}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString("en-US", {
+    month: "long",
+  });
+};
+
+useEffect(() => {
+  if (
+    financialReportSelection !== "Cash Book - FR01" ||
+    !financialFromDate
+  ) {
+    setTransactionLockStatus(null);
+    setCashBookLockChecking(false);
+    return;
+  }
+
+  const month = getCashBookLockMonth(financialFromDate);
+
+  if (!month) {
+    setTransactionLockStatus(null);
+    setCashBookLockChecking(false);
+    return;
+  }
+
+  const checkCashBookLock = async () => {
+    try {
+      setCashBookLockChecking(true);
+      await loadTransactionLockStatus(month);
+    } finally {
+      setCashBookLockChecking(false);
+    }
+  };
+
+  checkCashBookLock();
+}, [financialReportSelection, financialFromDate]);
+const selectedFinancialMember = memberRecords.find(
+  (member) =>
+    String(member?.memberCode || "").trim().toLowerCase() ===
+    String(financialMember || "").trim().toLowerCase()
+);
+
+    const renderFinancialReportResults = () => {
+  if (!financialReportResults.length) return null;
+
+  const getValue = (record, names) => {
+    for (const name of names) {
+      const value = record?.[name];
+      if (value !== undefined && value !== null && String(value).trim() !== "") {
+        return value;
+      }
+    }
+    return "";
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const text = String(value);
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+      const [y, m, d] = text.substring(0, 10).split("-");
+      return `${d}-${m}-${y}`;
+    }
+
+    return text;
+  };
+
+  const reportTitle = financialReportSelection || "Financial Report";
+  /*
+   * CASH BOOK - FR01
+   * Displayed in the same report-style structure as the reference.
+   */
+  if (financialReportSelection === "Cash Book - FR01") {
+    const receipts = financialReportResults.filter((r) =>
+      ["Member Receipt", "Other Receipt"].includes(r.transactionType)
+    );
+
+    const payments = financialReportResults.filter((r) =>
+      ["Member Payment", "Other Payment"].includes(r.transactionType)
+    );
+
+    const journals = financialReportResults.filter((r) =>
+      ["Member Journal", "Other Journal"].includes(r.transactionType)
+    );
+
+    const getMemberName = (r) =>
+      getValue(r, [
+        "memberName",
+        "member",
+        "member_name",
+        "memberCode",
+        "name",
+        "particulars",
+      ]);
+
+const getPaymentParticular = (r) => {
+  if (
+    r.transactionType === "Member Payment" ||
+    r.transactionType === "Payment"
+  ) {
+    const values = [
+      r.purpose,
+      r.loanType,
+      r.subPurpose,
+      r.particulars,
+      r.memberName,
+      r.member,
+      r.memberCode,
+    ];
+
+    return (
+      values.find(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          String(value).trim() !== "" &&
+          String(value).trim().toLowerCase() !== "select"
+      ) || ""
+    );
+  }
+
+  return getValue(r, [
+    "particulars",
+    "name",
+    "memberName",
+    "member",
+    "memberCode",
+  ]);
+};
+
+    
+
+    const getReceiptNo = (r) =>
+      getValue(r, [
+        "receiptNo",
+        "receiptNumber",
+        "recNo",
+        "recNumber",
+        "voucherNo",
+      ]);
+      const getAmount = (r) => {
+  if (
+    r.transactionType === "Member Receipt"
+  ) {
+    return [
+      r.regularSavings,
+      r.bulletSavings,
+      r.specialSavingsAmount,
+      r.specialSavingsMoreAmount,
+      r.livelihoodLoanSupport1,
+      r.serviceCost1,
+      r.livelihoodLoanSupport2,
+      r.serviceCost2,
+      r.housingLoan,
+      r.housingServiceCost,
+    ].reduce(
+      (sum, value) => sum + (parseFloat(value) || 0),
+      0
+    );
+  }
+
+  if (
+    r.transactionType === "Member Payment" ||
+    r.transactionType === "Payment"
+  ) {
+    const directAmount = getValue(r, [
+      "amount",
+      "total",
+      "paymentAmount",
+    ]);
+
+    if (directAmount !== "") {
+      return directAmount;
+    }
+
+    return [
+      r.savings,
+      r.savingsIncentive,
+      r.bulletSavings,
+      r.socialSecurityAmount,
+      r.specialSavingsAmount,
+      r.specialSavingsMoreAmount,
+      r.specialSavingsIncentive,
+      r.loanAmount,
+      r.instalmentAmount,
+    ].reduce(
+      (sum, value) => sum + (parseFloat(value) || 0),
+      0
+    );
+  }
+
+  return getValue(r, [
+    "amount",
+    "total",
+    "receiptAmount",
+    "paymentAmount",
+  ]);
+};
+     
+    const getDate = (r) =>
+      formatDate(
+        getValue(r, [
+          "receiptDate",
+          "voucherDate",
+          "journalDate",
+          "date",
+        ])
+      );
+
+   const totalAmount = (rows) =>
+  rows.reduce((sum, r) => {
+    const value = Number(getAmount(r));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+    const savingsTotal = totalAmount(receipts);
+
+const donationTotal = receipts.reduce((sum, r) => {
+  const value = Number(
+    getValue(r, [
+      "donation",
+    ])
+  );
+
+  return sum + (Number.isFinite(value) ? value : 0);
+}, 0);
+
+const overallReceiptTotal =
+  savingsTotal + donationTotal;
+    const openingCash = 0;
+
+const closingCash =
+  openingCash + overallReceiptTotal - totalAmount(payments);
+
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          border: "1px solid #777",
+          background: "#fff",
+          overflowX: "auto",
+          padding: "10px",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "18px",
+            marginBottom: "8px",
+          }}
+        >
+          Cash Book From {financialFromDate} To {financialToDate}
+        </div>
+        {financialFromDate && (
+  <div
+    style={{
+      textAlign: "center",
+      fontWeight: "bold",
+      marginBottom: "12px",
+      fontSize: "16px",
+    }}
+  >
+    {cashBookLockChecking
+      ? "Checking Lock Status..."
+      : `${getCashBookLockMonth(financialFromDate)}: ${
+          transactionLockStatus
+            ? "🔒 Locked"
+            : "🔓 Not Locked"
+        }`}
+  </div>
+)}
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            marginBottom: "14px",
+          }}
+        >
+          Receipts
+        </div>
+
+        <table
+          className="legacy-table"
+          style={{
+            width: "100%",
+            minWidth: "0",
+            tableLayout: "auto",
+            borderCollapse: "collapse",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <thead>
+  <tr>
+    <th rowSpan="2">Member / Particulars</th>
+    <th rowSpan="2">Rec. No.</th>
+    <th rowSpan="2">Date</th>
+
+    <th colSpan="3">Savings</th>
+
+    <th colSpan="2">Livelihood Loan Support 1</th>
+
+    <th colSpan="2">Livelihood Loan Support 2</th>
+    <th colSpan="4">A/C</th>
+    <th rowSpan="2">Total</th>
+  </tr>
+
+  <tr>
+    <th>Regular</th>
+    <th>Special</th>
+    <th>Prepaid / More</th>
+
+    <th>Principal</th>
+    <th>Service Cost</th>
+
+    <th>Principal</th>
+    <th>Service Cost</th>
+
+    <th>A/C No. 1</th>
+    <th>Amount 1</th>
+    <th>A/C No. 2</th>
+    <th>Amount 2</th>
+  </tr>
+</thead>
+
+          <tbody>
+            {receipts.map((r, index) => (
+              <tr key={r.id ?? `receipt-${index}`}>
+  <td>{getMemberName(r)}</td>
+
+  <td>{getReceiptNo(r)}</td>
+
+  <td>{getDate(r)}</td>
+
+  {/* Savings */}
+  <td>
+    {getValue(r, [
+      "regularSavings",
+      "regularSaving",
+      "regSavings",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "specialSavingsAmount",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "specialSavingsMoreAmount",
+    ])}
+  </td>
+
+  {/* Livelihood Loan Support 1 */}
+  <td>
+    {getValue(r, [
+      "livelihoodLoanSupport1",
+      "livelihoodSupport1",
+      "livelihood1",
+      "loanSupport1",
+    ])}
+  </td>
+
+  <td>
+    {getValue(r, [
+      "serviceCost1",
+    ])}
+  </td>
+
+  {/* Livelihood Loan Support 2 */}
+  <td>
+    {getValue(r, [
+      "livelihoodLoanSupport2",
+      "livelihoodSupport2",
+      "livelihood2",
+      "loanSupport2",
+    ])}
+  </td>
+   <td>
+  {getValue(r, [
+    "serviceCost2",
+  ])}
+</td>
+
+<td>
+  {getValue(r, [
+    "accountNo",
+  ])}
+</td>
+
+<td>
+  {getValue(r, [
+    "amount",
+    "accountAmount",
+  ])}
+</td>
+     <td>
+     </td>
+
+     <td>
+     </td>
+
+<td>
+  {Number(getAmount(r) || 0) +
+    Number(getValue(r, ["donation"]) || 0)}
+</td>
+ 
+</tr>
+            ))}
+            <tr>
+              <td colSpan="14" style={{
+                fontWeight: "bold",
+                 textAlign: "right",
+              }}
+           >
+            Total
+        </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {overallReceiptTotal}
+  </td>
+</tr>
+
+            
+          </tbody>
+        </table>
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            margin: "18px 0 10px",
+          }}
+        >
+          Payments
+        </div>
+
+        <table
+          className="legacy-table"
+          style={{
+            width: "100%",
+            minWidth: "700px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <thead>
+            <tr>
+              <th>Member / Particulars</th>
+              <th>Rec. No.</th>
+              <th>Vr. No.</th>
+              <th>Vr. Date</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {payments.map((r, index) => (
+              <tr key={r.id ?? `payment-${index}`}>
+                <td>{getPaymentParticular(r) || "Cash"}</td>
+                <td>{getReceiptNo(r)}</td>
+                <td>
+                  {getValue(r, [
+                    "voucherNo",
+                    "vrNo",
+                    "paymentVoucherNo",
+                  ])}
+                </td>
+                <td>{getDate(r)}</td>
+                <td>{getAmount(r)}</td>
+              </tr>
+            ))}
+           <tr>
+  <td
+    colSpan="4"
+    style={{
+      fontWeight: "bold",
+      textAlign: "right",
+    }}
+  >
+    Total
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {overallReceiptTotal}
+  </td>
+</tr>
+          </tbody>
+        </table>
+
+        {journals.length > 0 && (
+          <>
+            <div
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                margin: "18px 0 10px",
+              }}
+            >
+              Journals
+            </div>
+
+            <table
+              className="legacy-table"
+              style={{
+                width: "100%",
+                minWidth: "700px",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th>Member / Particulars</th>
+                  <th>Journal No.</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {journals.map((r, index) => (
+                  <tr key={r.id ?? `journal-${index}`}>
+                    <td>{getMemberName(r)}</td>
+                    <td>
+                      {getValue(r, [
+                        "journalNo",
+                        "voucherNo",
+                        "jrNo",
+                      ])}
+                    </td>
+                    <td>{getDate(r)}</td>
+                    <td>{getAmount(r)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+        <div
+          style={{
+          marginTop: "18px",
+          borderTop: "1px solid #777",
+          paddingTop: "10px",
+          fontWeight: "bold",
+          }}
+          >
+          <div>
+            Opening Cash
+            <span style={{ float: "right" }}>
+              {openingCash}
+            </span>
+          </div>
+          <div style={{ marginTop: "8px" }}>
+            Cash in Hand
+            <span style={{ float: "right" }}>
+              {closingCash}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+        /*
+   * BANK BOOK - FR02A
+   * Account-number-wise Receipts & Payments report.
+   */
+  if (
+    financialReportSelection ===
+    "Bank Book - Acct No. wise - FR02A"
+  ) {
+    const bankRows = financialReportResults;
+
+    const accountRows = bankRows.reduce((result, record) => {
+      const accountCode =
+        String(
+          record?.accountCode ||
+          record?.accountNo ||
+          record?.accountType ||
+          ""
+        ).trim();
+
+      const accountName =
+        String(
+          record?.accountName ||
+          record?.memberName ||
+          record?.receiptType ||
+          record?.voucherType ||
+          record?.subLedger ||
+          record?.accountType ||
+          "Bank Account"
+        ).trim();
+
+      const key = `${accountCode}|||${accountName}`;
+
+      if (!result[key]) {
+        result[key] = {
+          accountCode,
+          accountName,
+          receipts: 0,
+          payments: 0,
+        };
+      }
+
+      const receiptAmount = Number(record?.receiptAmount || 0);
+      const paymentAmount = Number(record?.paymentAmount || 0);
+
+      if (Number.isFinite(receiptAmount)) {
+        result[key].receipts += receiptAmount;
+      }
+
+      if (Number.isFinite(paymentAmount)) {
+        result[key].payments += paymentAmount;
+      }
+
+      return result;
+    }, {});
+
+    const reportRows = Object.values(accountRows);
+
+    const totalReceipts = reportRows.reduce(
+      (sum, row) => sum + row.receipts,
+      0
+    );
+
+    const totalPayments = reportRows.reduce(
+      (sum, row) => sum + row.payments,
+      0
+    );
+
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          border: "1px solid #777",
+          background: "#fff",
+          overflowX: "auto",
+          padding: "10px",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "18px",
+            marginBottom: "8px",
+          }}
+        >
+          Bank Book - Acct No. wise - FR02A
+        </div>
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            marginBottom: "14px",
+          }}
+        >
+          From {financialFromDate} To {financialToDate}
+        </div>
+
+        <table
+          className="legacy-table"
+          style={{
+            width: "100%",
+            minWidth: "700px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <thead>
+            <tr>
+              <th>A/C Code</th>
+              <th>A/C Name</th>
+              <th>Receipts</th>
+              <th>Payments</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {reportRows.map((row, index) => (
+              <tr key={`${row.accountCode}-${row.accountName}-${index}`}>
+                <td>{row.accountCode}</td>
+                <td>{row.accountName}</td>
+                <td>{row.receipts.toFixed(2)}</td>
+                <td>{row.payments.toFixed(2)}</td>
+              </tr>
+            ))}
+
+            <tr>
+              <td
+                colSpan="2"
+                style={{ fontWeight: "bold", textAlign: "right" }}
+              >
+                Total
+              </td>
+
+              <td style={{ fontWeight: "bold" }}>
+                {totalReceipts.toFixed(2)}
+              </td>
+
+              <td style={{ fontWeight: "bold" }}>
+                {totalPayments.toFixed(2)}
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                colSpan="2"
+                style={{ fontWeight: "bold", textAlign: "right" }}
+              >
+                Difference
+              </td>
+
+              <td
+                colSpan="2"
+                style={{ fontWeight: "bold", textAlign: "center" }}
+              >
+                {(totalReceipts - totalPayments).toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  /*
+   * ALL OTHER FINANCIAL REPORTS
+   * Every selected report will display its complete available
+   * PostgreSQL data instead of the old generic broken layout.
+   */
+  const rows = financialReportResults;
+
+  const preferredKeys = [
+    "memberCode",
+    "memberName",
+    "member",
+    "name",
+    "receiptNo",
+    "receiptNumber",
+    "voucherNo",
+    "journalNo",
+    "receiptDate",
+    "voucherDate",
+    "journalDate",
+    "date",
+    "accountNo",
+    "accountType",
+    "amount",
+    "total",
+    "transactionType",
+    "source",
+  ];
+
+  const allKeys = Array.from(
+    new Set(
+      rows.flatMap((record) => Object.keys(record || {}))
+    )
+  ).filter((key) => key !== "id");
+
+  const keys = [
+    ...preferredKeys.filter((key) => allKeys.includes(key)),
+    ...allKeys.filter((key) => !preferredKeys.includes(key)),
+  ];
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        border: "1px solid #777",
+        background: "#fff",
+        overflowX: "auto",
+        padding: "10px",
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          fontSize: "18px",
+          marginBottom: "10px",
+        }}
+      >
+        {reportTitle}
+      </div>
+
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          marginBottom: "14px",
+        }}
+      >
+        From {financialFromDate} To {financialToDate}
+      </div>
+
+      <table
+        className="legacy-table"
+        style={{
+          width: "100%",
+          minWidth: "900px",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr>
+            {keys.map((key) => (
+              <th key={key}>
+                {key
+                  .replace(/([A-Z])/g, " $1")
+                  .replace(/^./, (letter) => letter.toUpperCase())}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((record, index) => (
+            <tr key={record.id ?? index}>
+              {keys.map((key) => (
+                <td key={key}>
+                  {key.toLowerCase().includes("date")
+                    ? formatDate(record?.[key])
+                    : String(record?.[key] ?? "")}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+    let body;
+
+    if (item === "Master") {
+      body = (
+        <>
+          <div className="legacy-report-title">{base.title}</div>
+          <select
+            className="legacy-report-list"
+            size={20}
+            value={masterReportSelection}
+            onChange={(event) => setMasterReportSelection(event.target.value)}
+          >
+            {base.options.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <div className="legacy-report-row">
+  <strong>From Date</strong>
+  <select
+    value={masterFromDate}
+    onChange={(event) => {
+      setMasterFromDate(event.target.value);
+      setMasterReportStatus("");
+      setMasterReportResults([]);
+    }}
+  >
+    <option value="">Select Date</option>
+    {reportAvailableDates.map((date) => (
+      <option key={`master-from-${date}`} value={date}>
+        {date}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="legacy-report-row">
+  <strong>To Date</strong>
+  <select
+    value={masterToDate}
+    onChange={(event) => {
+      setMasterToDate(event.target.value);
+      setMasterReportStatus("");
+      setMasterReportResults([]);
+    }}
+  >
+    <option value="">Select Date</option>
+    {reportAvailableDates.map((date) => (
+      <option key={`master-to-${date}`} value={date}>
+        {date}
+      </option>
+    ))}
+  </select>
+</div>    
+          <div className="legacy-report-actions">
+             <Button
+               onClick={() =>
+                 openResultInNewTab({
+                   page: "masterReport",
+                   type: "all",
+                 })
+               }
+               >
+               Execute
+             </Button>
+          </div>
+          {masterReportStatus && (
+            <div style={{ padding: "8px", fontWeight: "bold", textAlign: "center" }}>
+              {masterReportStatus}
+            </div>
+          )}
+          {renderMasterReportResults()}
+        </>
+      );
+    } else if (item === "Opening Bal.") {
+      const openingBalanceSubledgers = [
+        "Poverty Reduction Fund 1",
+        "Poverty Reduction Fund 2",
+        "Poverty Reduction Fund 3",
+        "Housing Upgradation",
+        "Other Activity",
+      ];
+
+            const runOpeningBalanceReport = async () => {
+        setOpeningBalanceLoading(true);
+        setOpeningBalanceStatus("");
+        setOpeningBalanceResults([]);
+
+        try {
+          /*
+           * =========================================================
+           * OPENING BALANCE - COMMON DATABASE ENGINE
+           * =========================================================
+           * Load all existing PostgreSQL source tables once.
+           * Individual OB reports will use these records below.
+           */
+
+          const [
+            membersData,
+            vazhvathramsData,
+            clustersData,
+            groupsData,
+            bankAccountsData,
+            memberReceiptsData,
+            memberPaymentsData,
+            memberJournalsData,
+            otherReceiptsData,
+            otherPaymentsData,
+            otherJournalsData,
+            fixedDepositsData,
+            debtsData,
+            savingsData,
+            livelihoodsData,
+            housingsData,
+            sbAccountStatusesData,
+            sbAccountApprovalsData,
+            bankDetailsData,
+          ] = await Promise.all([
+            apiRequest("/members"),
+            apiRequest("/vazhvathrams"),
+            apiRequest("/clusters"),
+            apiRequest("/groups"),
+            apiRequest("/bank-accounts"),
+            apiRequest("/member-receipts"),
+            apiRequest("/member-payments"),
+            apiRequest("/member-journals"),
+            apiRequest("/other-receipts"),
+            apiRequest("/other-payments"),
+            apiRequest("/other-journals"),
+            apiRequest("/fixed-deposits"),
+            apiRequest("/debts"),
+            apiRequest("/savings"),
+            apiRequest("/livelihoods"),
+            apiRequest("/housings"),
+            apiRequest("/sb-account-statuses"),
+            apiRequest("/sb-account-approvals"),
+            apiRequest("/bank-details"),
+          ]);
+
+          const members = Array.isArray(membersData)
+            ? membersData
+            : [];
+
+          const vazhvathrams = Array.isArray(vazhvathramsData)
+            ? vazhvathramsData
+            : [];
+
+          const clusters = Array.isArray(clustersData)
+            ? clustersData
+            : [];
+
+          const groups = Array.isArray(groupsData)
+            ? groupsData
+            : [];
+
+          const bankAccounts = Array.isArray(bankAccountsData)
+            ? bankAccountsData
+            : [];
+
+          const memberReceipts = Array.isArray(memberReceiptsData)
+            ? memberReceiptsData
+            : [];
+
+          const memberPayments = Array.isArray(memberPaymentsData)
+            ? memberPaymentsData
+            : [];
+
+          const memberJournals = Array.isArray(memberJournalsData)
+            ? memberJournalsData
+            : [];
+
+          const otherReceipts = Array.isArray(otherReceiptsData)
+            ? otherReceiptsData
+            : [];
+
+          const otherPayments = Array.isArray(otherPaymentsData)
+            ? otherPaymentsData
+            : [];
+
+          const otherJournals = Array.isArray(otherJournalsData)
+            ? otherJournalsData
+            : [];
+
+          const fixedDeposits = Array.isArray(fixedDepositsData)
+            ? fixedDepositsData
+            : [];
+
+          const debts = Array.isArray(debtsData)
+            ? debtsData
+            : [];
+
+          const savings = Array.isArray(savingsData)
+            ? savingsData
+            : [];
+
+          const livelihoods = Array.isArray(livelihoodsData)
+            ? livelihoodsData
+            : [];
+
+          const housings = Array.isArray(housingsData)
+            ? housingsData
+            : [];
+
+          const sbAccountStatuses = Array.isArray(
+            sbAccountStatusesData
+          )
+            ? sbAccountStatusesData
+            : [];
+
+          const sbAccountApprovals = Array.isArray(
+            sbAccountApprovalsData
+          )
+            ? sbAccountApprovalsData
+            : [];
+
+          const bankDetails = Array.isArray(bankDetailsData)
+            ? bankDetailsData
+            : [];
+
+          /*
+           * =========================================================
+           * COMMON HELPERS
+           * =========================================================
+           */
+
+          const textValue = (value) =>
+            value === null || value === undefined
+              ? ""
+              : String(value).trim();
+
+          const numberValue = (value) => {
+            if (
+              value === null ||
+              value === undefined ||
+              value === ""
+            ) {
+              return 0;
+            }
+
+            const number = Number(
+              String(value).replace(/,/g, "")
+            );
+
+            return Number.isFinite(number) ? number : 0;
+          };
+
+          const firstValue = (record, fields) => {
+            for (const field of fields) {
+              if (
+                record &&
+                record[field] !== undefined &&
+                record[field] !== null &&
+                String(record[field]).trim() !== ""
+              ) {
+                return record[field];
+              }
+            }
+
+            return "";
+          };
+
+          const memberCode = (record) =>
+            textValue(
+              firstValue(record, [
+                "memberCode",
+                "code",
+                "memberNo",
+                "memberNumber",
+              ])
+            );
+
+          const memberName = (record) =>
+            textValue(
+              firstValue(record, [
+                "memberName",
+                "name",
+                "member",
+              ])
+            );
+
+          const groupName = (record) =>
+            textValue(
+              firstValue(record, [
+                "groupName",
+                "group",
+                "vazhvathramName",
+              ])
+            );
+
+          const vazhvathramName = (record) =>
+            textValue(
+              firstValue(record, [
+                "vazhvathramName",
+                "vazhvathram",
+                "clusterName",
+              ])
+            );
+
+          const clusterName = (record) =>
+            textValue(
+              firstValue(record, [
+                "clusterName",
+                "cluster",
+              ])
+            );
+
+          const recordDate = (record) =>
+            textValue(
+              firstValue(record, [
+                "date",
+                "transactionDate",
+                "receiptDate",
+                "paymentDate",
+                "journalDate",
+                "accountDate",
+                "createdDate",
+              ])
+            );
+
+          const debitAmount = (record) =>
+            numberValue(
+              firstValue(record, [
+                "debit",
+                "debitAmount",
+                "amountDebit",
+              ])
+            );
+
+          const creditAmount = (record) =>
+            numberValue(
+              firstValue(record, [
+                "credit",
+                "creditAmount",
+                "amountCredit",
+              ])
+            );
+
+          const amountValue = (record) =>
+            numberValue(
+              firstValue(record, [
+                "amount",
+                "balance",
+                "openingBalance",
+                "loanAmount",
+                "presentLoanOutstanding",
+              ])
+            );
+
+          /*
+           * =========================================================
+           * COMMON TRANSACTION COLLECTION
+           * =========================================================
+           */
+
+          const allMemberTransactions = [
+            ...memberReceipts.map((record) => ({
+              ...record,
+              transactionType: "Member Receipt",
+            })),
+
+            ...memberPayments.map((record) => ({
+              ...record,
+              transactionType: "Member Payment",
+            })),
+
+            ...memberJournals.map((record) => ({
+              ...record,
+              transactionType: "Member Journal",
+            })),
+          ];
+
+          const allOtherTransactions = [
+            ...otherReceipts.map((record) => ({
+              ...record,
+              transactionType: "Other Receipt",
+            })),
+
+            ...otherPayments.map((record) => ({
+              ...record,
+              transactionType: "Other Payment",
+            })),
+
+            ...otherJournals.map((record) => ({
+              ...record,
+              transactionType: "Other Journal",
+            })),
+          ];
+
+          const allTransactions = [
+            ...allMemberTransactions,
+            ...allOtherTransactions,
+          ];
+
+          /*
+           * =========================================================
+           * SOURCE SUMMARY
+           * =========================================================
+           */
+
+          console.log(
+            "Opening Balance PostgreSQL source data:",
+            {
+              members: members.length,
+              vazhvathrams: vazhvathrams.length,
+              clusters: clusters.length,
+              groups: groups.length,
+              bankAccounts: bankAccounts.length,
+              memberReceipts: memberReceipts.length,
+              memberPayments: memberPayments.length,
+              membersData: members,
+              memberReceiptsData: memberReceipts,
+              memberJournals: memberJournals.length,
+              otherReceipts: otherReceipts.length,
+              otherPayments: otherPayments.length,
+              otherJournals: otherJournals.length,
+              fixedDeposits: fixedDeposits.length,
+              debts: debts.length,
+              savings: savings.length,
+              livelihoods: livelihoods.length,
+              housings: housings.length,
+              sbAccountStatuses: sbAccountStatuses.length,
+              sbAccountApprovals: sbAccountApprovals.length,
+              bankDetails: bankDetails.length,
+              allTransactions: allTransactions.length,
+            }
+          );
+
+          /*
+           * =========================================================
+           * TEMPORARY COMMON RESULT
+           * =========================================================
+           * The individual OB-01 ... OB-16 report builders will be
+           * added in the next part.
+           */
+           let rows = [];
+
+if (
+  openingBalanceSelection ===
+  "OB 01 - Member Confirmation - vazhvathram"
+) {
+  const normalize = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const findGroupForMember = (member) => {
+    const code = normalize(memberCode(member));
+    const name = normalize(memberName(member));
+
+    if (!code && !name) {
+      return null;
+    }
+
+    // First try direct fields in the member record.
+    const directGroup =
+      member?.groupName ||
+      member?.group ||
+      member?.groupCode ||
+      member?.groupId ||
+      "";
+
+    if (String(directGroup).trim()) {
+      const directText = normalize(directGroup);
+
+      const matched = groups.find((group) => {
+        const groupCode = normalize(
+          group?.groupCode ||
+          group?.code ||
+          group?.groupId ||
+          group?.id
+        );
+
+        const groupNameValue = normalize(
+          group?.groupName ||
+          group?.name
+        );
+
+        return (
+          directText === groupCode ||
+          directText === groupNameValue
+        );
+      });
+
+      if (matched) {
+        return matched;
+      }
+    }
+
+    // Try matching the member code/name against the complete
+    // PostgreSQL group record.
+    const matchedByRecord = groups.find((group) => {
+      const groupText = JSON.stringify(
+        group || {}
+      ).toLowerCase();
+
+      return (
+        (code && groupText.includes(code)) ||
+        (name && groupText.includes(name))
+      );
+    });
+
+    if (matchedByRecord) {
+      return matchedByRecord;
+    }
+
+    // The member codes in this project follow the pattern
+    // 0010101, 0010102, etc. Use the first 5 characters
+    // as the group reference when groupCode is available.
+    const possibleGroupCode =
+      code.length >= 5
+        ? code.substring(0, 5)
+        : "";
+
+    if (possibleGroupCode) {
+      const matchedByCode = groups.find((group) => {
+        const groupCode = normalize(
+          group?.groupCode ||
+          group?.code ||
+          group?.groupId
+        );
+
+        return groupCode === possibleGroupCode;
+      });
+
+      if (matchedByCode) {
+        return matchedByCode;
+      }
+    }
+
+    return null;
+  };
+
+  rows = members.map((record) => {
+    const matchedGroup =
+      findGroupForMember(record);
+
+    const group =
+      matchedGroup?.groupName ||
+      matchedGroup?.name ||
+      matchedGroup?.groupCode ||
+      "";
+
+    const vazhvathram =
+      record?.vazhvathramName ||
+      record?.vazhvathram ||
+      record?.vazhvathramCode ||
+      matchedGroup?.vazhvathramName ||
+      matchedGroup?.vazhvathram ||
+      matchedGroup?.vazhvathramCode ||
+      selectedVazhvathram ||
+      "";
+
+    return {
+      "Member Code": memberCode(record),
+      "Member Name": memberName(record),
+      "Group": group,
+      "vazhvathram": vazhvathram,
+    };
+  });
+  } else if (
+  openingBalanceSelection ===
+  "OB 02 - Balance Sheet - vazhvathram"
+) {
+  // =========================================================
+  // OB 02 - BALANCE SHEET - VAZHVATHRAM
+  // DATABASE DRIVEN
+  // =========================================================
+
+  const normalizeOB02 = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const numberOB02 = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
+
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  };
+
+  const selectedVazText =
+    normalizeOB02(selectedVazhvathram);
+
+  const selectedVazRecord =
+      vazhvathramRecords.find((record) => {
+      const code = normalizeOB02(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB02(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazText ||
+        name === selectedVazText
+      );
+    }) || null;
+
+  const vazCode =
+    selectedVazRecord?.vazhvathramCode ||
+    selectedVazRecord?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+  selectedVazRecord?.vazhvathramName ||
+  selectedVazRecord?.name ||
+  selectedVazhvathram ||
+  "";
+
+  const belongsToVazOB02 = (record) => {
+    const text = normalizeOB02(
+      JSON.stringify(record || {})
+    );
+
+    if (!selectedVazText) {
+      return true;
+    }
+
+    return (
+      text.includes(selectedVazText) ||
+      (vazCode &&
+        text.includes(
+          normalizeOB02(vazCode)
+        )) ||
+      (vazName &&
+        text.includes(
+          normalizeOB02(vazName)
+        ))
+    );
+  };
+
+  const financialRecords = [
+    ...(Array.isArray(memberReceipts)
+      ? memberReceipts
+      : []),
+    ...(Array.isArray(memberPayments)
+      ? memberPayments
+      : []),
+    ...(Array.isArray(otherReceipts)
+      ? otherReceipts
+      : []),
+    ...(Array.isArray(otherPayments)
+      ? otherPayments
+      : []),
+    ...(Array.isArray(memberJournals)
+      ? memberJournals
+      : []),
+    ...(Array.isArray(otherJournals)
+      ? otherJournals
+      : []),
+    ...(Array.isArray(bankAccounts)
+      ? bankAccounts
+      : []),
+    ...(Array.isArray(fixedDeposits)
+      ? fixedDeposits
+      : []),
+  ].filter(belongsToVazOB02);
+
+  const accountNameOB02 = (record) => {
+    const values = [
+      record?.generalLedger,
+      record?.genLedger,
+      record?.generalLedgerName,
+      record?.accountName,
+      record?.ledgerName,
+      record?.subLedger,
+      record?.subledger,
+      record?.subLedgerMain,
+      record?.subLed1,
+      record?.subLed2,
+      record?.subLed3,
+      record?.subLed4,
+      record?.subLed5,
+      record?.subLed6,
+      record?.particulars,
+      record?.description,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  const accountCodeOB02 = (record) => {
+    const values = [
+      record?.generalLedgerCode,
+      record?.genLedgerCode,
+      record?.accountCode,
+      record?.ledgerCode,
+      record?.subLedgerCode,
+      record?.subledgerCode,
+      record?.code,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  const amountOB02 = (record) => {
+    const values = [
+      record?.amount,
+      record?.total,
+      record?.amountMain,
+      record?.amount1,
+      record?.amount2,
+      record?.amount3,
+      record?.amount4,
+      record?.amount5,
+      record?.amount6,
+      record?.receiptAmount,
+      record?.paymentAmount,
+      record?.fdAmount,
+      record?.balance,
+      record?.openingBalance,
+      record?.currentBalance,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        item !== ""
+    );
+
+    return numberOB02(value);
+  };
+
+  const typeOB02 = (record) =>
+    normalizeOB02(
+      record?.debitCredit ||
+      record?.type ||
+      record?.type1 ||
+      record?.transactionType ||
+      ""
+    );
+
+  const ledgerMapOB02 = new Map();
+
+  financialRecords.forEach((record) => {
+    const name = accountNameOB02(record);
+
+    if (!name) {
+      return;
+    }
+
+    const code = accountCodeOB02(record);
+
+    const key =
+      `${code}|${name}`.toLowerCase();
+
+    const existing =
+      ledgerMapOB02.get(key) || {
+        code,
+        name,
+        debit: 0,
+        credit: 0,
+        balance: 0,
+      };
+
+    const amount =
+      amountOB02(record);
+
+    const type =
+      typeOB02(record);
+
+    if (
+      type.includes("credit") ||
+      type === "cr"
+    ) {
+      existing.credit += amount;
+    } else {
+      existing.debit += amount;
+    }
+
+    existing.balance =
+      existing.debit -
+      existing.credit;
+
+    ledgerMapOB02.set(
+      key,
+      existing
+    );
+  });
+
+  const ledgerRowsOB02 =
+    Array.from(
+      ledgerMapOB02.values()
+    );
+
+  const liabilityRows =
+    ledgerRowsOB02.filter(
+      (row) => row.balance < 0
+    );
+
+  const assetRows =
+    ledgerRowsOB02.filter(
+      (row) => row.balance >= 0
+    );
+
+  const maxRows = Math.max(
+    liabilityRows.length,
+    assetRows.length
+  );
+
+  rows = Array.from(
+    { length: maxRows },
+    (_, index) => {
+      const liability =
+        liabilityRows[index];
+
+      const asset =
+        assetRows[index];
+
+      return {
+        vazhvathramCode: vazCode,
+        vazhvathramName: vazName,
+
+        liabilityCode:
+          liability?.code || "",
+
+        liabilityName:
+          liability?.name || "",
+
+        liabilityAmount:
+          liability
+            ? Math.abs(liability.balance)
+            : 0,
+
+        assetCode:
+          asset?.code || "",
+
+        assetName:
+          asset?.name || "",
+
+        assetAmount:
+          asset
+            ? asset.balance
+            : 0,
+      };
+    }
+  );
+
+  const liabilityTotal =
+    liabilityRows.reduce(
+      (total, row) =>
+        total + Math.abs(row.balance),
+      0
+    );
+
+  const assetTotal =
+    assetRows.reduce(
+      (total, row) =>
+        total + row.balance,
+      0
+    );
+
+  rows.push({
+    vazhvathramCode: vazCode,
+    vazhvathramName: vazName,
+
+    liabilityCode: "",
+    liabilityName: "Total",
+    liabilityAmount: liabilityTotal,
+
+    assetCode: "",
+    assetName: "Total",
+    assetAmount: assetTotal,
+  });
+
+  setOpeningBalanceResults(rows);
+
+  setOpeningBalanceStatus(
+    `OB 02 - Balance Sheet - vazhvathram: ${ledgerRowsOB02.length} database account records loaded.`
+  );
+  
+} else if (
+  openingBalanceSelection ===
+  "OB 03 - Bank Loan - vazhvathram"
+) {
+  // =========================================================
+  // OB 03 - BANK LOAN - VAZHVATHRAM
+  // =========================================================
+
+  const normalizeOB03 = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const numberOB03 = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
+
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  };
+
+  // ---------------------------------------------------------
+  // SELECTED VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const selectedVazText =
+    normalizeOB03(selectedVazhvathram);
+
+  const selectedVazRecord =
+  vazhvathramRecords.find((record) => {
+      const code = normalizeOB03(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB03(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazText ||
+        name === selectedVazText
+      );
+    }) || null;
+
+  const vazCode =
+    selectedVazRecord?.vazhvathramCode ||
+    selectedVazRecord?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVazRecord?.vazhvathramName ||
+    selectedVazRecord?.name ||
+    "";
+
+  // ---------------------------------------------------------
+  // FIND MEMBER FOR EACH RECEIPT
+  // ---------------------------------------------------------
+
+  const findMemberOB03 = (receipt) => {
+    const receiptMemberCode =
+      normalizeOB03(
+        receipt?.memberCode
+      );
+
+    const receiptMemberName =
+      normalizeOB03(
+        receipt?.memberName
+      );
+
+    return (
+      members.find((member) => {
+        const memberCode =
+          normalizeOB03(
+            member?.memberCode ||
+            member?.code ||
+            member?.memberId ||
+            member?.id
+          );
+
+        const memberName =
+          normalizeOB03(
+            member?.memberName ||
+            member?.name
+          );
+
+        return (
+          (receiptMemberCode &&
+            memberCode ===
+              receiptMemberCode) ||
+          (!receiptMemberCode &&
+            receiptMemberName &&
+            memberName ===
+              receiptMemberName)
+        );
+      }) || null
+    );
+  };
+
+  // ---------------------------------------------------------
+  // CHECK WHETHER MEMBER BELONGS TO SELECTED VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const memberBelongsToVazOB03 =
+    (member) => {
+      if (!member) {
+        return false;
+      }
+
+      const memberVazCode =
+        normalizeOB03(
+          member?.vazhvathramCode ||
+          member?.vazhvathram
+        );
+
+      const memberVazName =
+        normalizeOB03(
+          member?.vazhvathramName ||
+          member?.vazhvathramName
+        );
+
+      const selectedCode =
+        normalizeOB03(vazCode);
+
+      const selectedName =
+        normalizeOB03(vazName);
+
+      if (
+        memberVazCode &&
+        selectedCode
+      ) {
+        return (
+          memberVazCode ===
+          selectedCode
+        );
+      }
+
+      if (
+        memberVazName &&
+        selectedName
+      ) {
+        return (
+          memberVazName ===
+          selectedName
+        );
+      }
+
+      return false;
+    };
+
+  // ---------------------------------------------------------
+  // READ MEMBER RECEIPTS
+  // ---------------------------------------------------------
+
+  const loanRowsOB03 = [];
+
+  const receiptsOB03 =
+    Array.isArray(memberReceipts)
+      ? memberReceipts
+      : [];
+
+  receiptsOB03.forEach(
+    (receipt) => {
+      const member =
+        findMemberOB03(receipt);
+
+      if (
+        !memberBelongsToVazOB03(
+          member
+        )
+      ) {
+        return;
+      }
+
+      // -----------------------------------------------------
+      // LIVELIHOOD LOAN SUPPORT 1
+      // -----------------------------------------------------
+
+      const loan1 =
+        numberOB03(
+          receipt?.livelihoodLoanSupport1
+        );
+
+      if (loan1 > 0) {
+        loanRowsOB03.push({
+          "S.No":
+            loanRowsOB03.length + 1,
+
+          "Vazhvathram Code":
+            vazCode,
+
+          "Vazhvathram Name":
+            vazName,
+
+          "Member Code":
+            receipt?.memberCode ||
+            member?.memberCode ||
+            "",
+
+          "Member Name":
+            receipt?.memberName ||
+            member?.memberName ||
+            "",
+
+          "Loan Type":
+            "Livelihood Loan Support 1",
+
+          "Loan Date":
+            receipt?.receiptDate ||
+            "",
+
+          "Loan Amount":
+            loan1.toFixed(2),
+
+          "Receipt No":
+            receipt?.receiptNo ||
+            "",
+
+          "Account No":
+            receipt?.accountNo ||
+            "",
+
+          "Branch":
+            receipt?.branch ||
+            "",
+        });
+      }
+
+      // -----------------------------------------------------
+      // LIVELIHOOD LOAN SUPPORT 2
+      // -----------------------------------------------------
+
+      const loan2 =
+        numberOB03(
+          receipt?.livelihoodLoanSupport2
+        );
+
+      if (loan2 > 0) {
+        loanRowsOB03.push({
+          "S.No":
+            loanRowsOB03.length + 1,
+
+          "Vazhvathram Code":
+            vazCode,
+
+          "Vazhvathram Name":
+            vazName,
+
+          "Member Code":
+            receipt?.memberCode ||
+            member?.memberCode ||
+            "",
+
+          "Member Name":
+            receipt?.memberName ||
+            member?.memberName ||
+            "",
+
+          "Loan Type":
+            "Livelihood Loan Support 2",
+
+          "Loan Date":
+            receipt?.receiptDate ||
+            "",
+
+          "Loan Amount":
+            loan2.toFixed(2),
+
+          "Receipt No":
+            receipt?.receiptNo ||
+            "",
+
+          "Account No":
+            receipt?.accountNo ||
+            "",
+
+          "Branch":
+            receipt?.branch ||
+            "",
+        });
+      }
+
+      // -----------------------------------------------------
+      // HOUSING LOAN
+      // -----------------------------------------------------
+
+      const housingLoan =
+        numberOB03(
+          receipt?.housingLoan
+        );
+
+      if (housingLoan > 0) {
+        loanRowsOB03.push({
+          "S.No":
+            loanRowsOB03.length + 1,
+
+          "Vazhvathram Code":
+            vazCode,
+
+          "Vazhvathram Name":
+            vazName,
+
+          "Member Code":
+            receipt?.memberCode ||
+            member?.memberCode ||
+            "",
+
+          "Member Name":
+            receipt?.memberName ||
+            member?.memberName ||
+            "",
+
+          "Loan Type":
+            "Housing Loan",
+
+          "Loan Date":
+            receipt?.receiptDate ||
+            "",
+
+          "Loan Amount":
+            housingLoan.toFixed(2),
+
+          "Receipt No":
+            receipt?.receiptNo ||
+            "",
+
+          "Account No":
+            receipt?.accountNo ||
+            "",
+
+          "Branch":
+            receipt?.branch ||
+            "",
+        });
+      }
+    }
+  );
+
+  // ---------------------------------------------------------
+  // RESULT
+  // ---------------------------------------------------------
+
+  rows = loanRowsOB03;
+
+  setOpeningBalanceResults(
+    rows
+  );
+
+  setOpeningBalanceStatus(
+    `OB 03 - Bank Loan - vazhvathram: ${
+      rows.length
+    } loan record${
+      rows.length === 1
+        ? ""
+        : "s"
+    } loaded from PostgreSQL.`
+  );} else if (
+  openingBalanceSelection ===
+  "OB 04 - Income and Expenditure - vazhvathram"
+) {
+  // =========================================================
+  // OB 04 - INCOME & EXPENDITURE ACCOUNT
+  // =========================================================
+
+  const normalizeOB = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const selectedVazCode =
+    normalizeOB(selectedVazhvathram);
+
+  const selectedVaz = vazhvathrams.find(
+    (record) => {
+      const code = normalizeOB(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazCode ||
+        name === selectedVazCode
+      );
+    }
+  );
+
+  const vazCode =
+    selectedVaz?.vazhvathramCode ||
+    selectedVaz?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+    selectedVaz?.vazhvathramName ||
+    selectedVaz?.name ||
+    "";
+
+  const belongsToVaz = (record) => {
+  const text =
+    JSON.stringify(record || {})
+      .toLowerCase();
+
+  const code =
+    normalizeOB(vazCode);
+
+  const name =
+    normalizeOB(vazName);
+
+  return (
+    !code ||
+    text.includes(code) ||
+    (name && text.includes(name))
+  );
+};
+
+// ---------------------------------------------------------
+// MEMBER TRANSACTIONS — use Member → Cluster/Vazhvathram
+// relationship instead of searching the whole JSON text.
+// ---------------------------------------------------------
+const memberBelongsToVaz = (record) => {
+  const memberCode = String(
+    record?.memberCode ||
+    record?.member ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!memberCode) {
+    return false;
+  }
+
+  const member = members.find(
+    (item) =>
+      String(item?.memberCode || "")
+        .trim()
+        .toLowerCase() === memberCode
+  );
+
+  if (!member) {
+    return false;
+  }
+
+  const clusterMatches =
+    !selectedCluster ||
+    String(member?.clusterName || "").trim() ===
+      String(selectedCluster || "").trim();
+
+  const vazhvathramMatches =
+    !selectedVazhvathram ||
+    String(member?.vazhvathramName || "").trim() ===
+      String(selectedVazhvathram || "").trim();
+
+  return (
+    clusterMatches &&
+    vazhvathramMatches
+  );
+};
+
+  const incomeRecords = [
+  ...memberReceipts.filter(memberBelongsToVaz),
+  ...otherReceipts.filter(belongsToVaz),
+];
+
+const expenditureRecords = [
+  ...memberPayments.filter(memberBelongsToVaz),
+  ...otherPayments.filter(belongsToVaz),
+];
+
+  const incomeRows =
+    incomeRecords.map(
+      (record) => ({
+        expenditure: "",
+        expenditureAmount: "",
+        income:
+          firstValue(
+            record?.particulars,
+            record?.description,
+            record?.accountName,
+            record?.subLedger,
+            record?.subledger
+          ),
+        incomeAmount:
+          numberValue(
+            record?.total ||
+            record?.amount ||
+            record?.receiptAmount
+          ),
+      })
+    );
+
+  const expenditureRows =
+    expenditureRecords.map(
+      (record) => ({
+        expenditure:
+          firstValue(
+            record?.particulars,
+            record?.description,
+            record?.accountName,
+            record?.subLedger,
+            record?.subledger
+          ),
+        expenditureAmount:
+          numberValue(
+            record?.total ||
+            record?.amount ||
+            record?.paymentAmount
+          ),
+        income: "",
+        incomeAmount: "",
+      })
+    );
+
+  const maxRows = Math.max(
+    incomeRows.length,
+    expenditureRows.length
+  );
+
+    rows = Array.from(
+    { length: maxRows },
+    (_, index) => ({
+      expenditure:
+        expenditureRows[index]
+          ?.expenditure || "",
+
+      expenditureAmount:
+        expenditureRows[index]
+          ?.expenditureAmount || 0,
+
+      income:
+        incomeRows[index]
+          ?.income || "",
+
+      incomeAmount:
+        incomeRows[index]
+          ?.incomeAmount || 0,
+    })
+  );
+
+} else if (
+  openingBalanceSelection ===
+  "OB 05 - Balance Sheet Consolidation - vazhvathram"
+) {
+  // =========================================================
+  // OB 05 - BALANCE SHEET CONSOLIDATION - VAZHVATHRAM
+  // =========================================================
+
+  const normalizeOB05 = (value) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const numberOB05 = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
+
+    const number = Number(
+      String(value)
+        .replace(/,/g, "")
+        .replace(/[₹$]/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  };
+
+  // ---------------------------------------------------------
+  // SELECTED VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const selectedVazText =
+    normalizeOB05(selectedVazhvathram);
+
+  const selectedVazRecord =
+    vazhvathrams.find((record) => {
+      const code = normalizeOB05(
+        record?.vazhvathramCode ||
+        record?.code ||
+        record?.id
+      );
+
+      const name = normalizeOB05(
+        record?.vazhvathramName ||
+        record?.name
+      );
+
+      return (
+        code === selectedVazText ||
+        name === selectedVazText
+      );
+    }) || null;
+
+  const vazCode =
+    selectedVazRecord?.vazhvathramCode ||
+    selectedVazRecord?.code ||
+    selectedVazhvathram ||
+    "";
+
+  const vazName =
+  selectedVazRecord?.vazhvathramName ||
+  selectedVazRecord?.name ||
+  selectedVazhvathram ||
+  "";
+
+  // ---------------------------------------------------------
+  // MEMBER → SELECTED CLUSTER / VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const memberBelongsToSelectedVazOB05 = (record) => {
+    const memberCode = normalizeOB05(
+      record?.memberCode ||
+      record?.member
+    );
+
+    if (!memberCode) {
+      return false;
+    }
+
+    const member = members.find(
+      (item) =>
+        normalizeOB05(
+          item?.memberCode
+        ) === memberCode
+    );
+
+    if (!member) {
+      return false;
+    }
+
+    const clusterMatches =
+      !selectedCluster ||
+      normalizeOB05(
+        member?.clusterName
+      ) ===
+        normalizeOB05(
+          selectedCluster
+        );
+
+    const vazhvathramMatches =
+      !selectedVazhvathram ||
+      normalizeOB05(
+        member?.vazhvathramName
+      ) ===
+        normalizeOB05(
+          selectedVazhvathram
+        );
+
+    return (
+      clusterMatches &&
+      vazhvathramMatches
+    );
+  };
+
+  // ---------------------------------------------------------
+  // OTHER TRANSACTIONS → SELECTED VAZHVATHRAM
+  // ---------------------------------------------------------
+
+  const otherBelongsToSelectedVazOB05 = (record) => {
+    const text = normalizeOB05(
+      JSON.stringify(record || {})
+    );
+
+    if (!selectedVazText) {
+      return true;
+    }
+
+    return (
+      text.includes(selectedVazText) ||
+      (
+        vazCode &&
+        text.includes(
+          normalizeOB05(vazCode)
+        )
+      ) ||
+      (
+        vazName &&
+        text.includes(
+          normalizeOB05(vazName)
+        )
+      )
+    );
+  };
+
+  // ---------------------------------------------------------
+  // CONSOLIDATED FINANCIAL RECORDS
+  // ---------------------------------------------------------
+
+  const financialRecordsOB05 = [
+    ...(Array.isArray(memberReceipts)
+      ? memberReceipts.filter(
+          memberBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(memberPayments)
+      ? memberPayments.filter(
+          memberBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(memberJournals)
+      ? memberJournals.filter(
+          memberBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(otherReceipts)
+      ? otherReceipts.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(otherPayments)
+      ? otherPayments.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(otherJournals)
+      ? otherJournals.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(bankAccounts)
+      ? bankAccounts.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+
+    ...(Array.isArray(fixedDeposits)
+      ? fixedDeposits.filter(
+          otherBelongsToSelectedVazOB05
+        )
+      : []),
+  ];
+
+  // ---------------------------------------------------------
+  // ACCOUNT NAME
+  // ---------------------------------------------------------
+
+  const accountNameOB05 = (record) => {
+    const values = [
+      record?.generalLedger,
+      record?.genLedger,
+      record?.generalLedgerName,
+      record?.accountName,
+      record?.ledgerName,
+      record?.subLedger,
+      record?.subledger,
+      record?.subLedgerMain,
+      record?.subLed1,
+      record?.subLed2,
+      record?.subLed3,
+      record?.subLed4,
+      record?.subLed5,
+      record?.subLed6,
+      record?.particulars,
+      record?.description,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  // ---------------------------------------------------------
+  // ACCOUNT CODE
+  // ---------------------------------------------------------
+
+  const accountCodeOB05 = (record) => {
+    const values = [
+      record?.generalLedgerCode,
+      record?.genLedgerCode,
+      record?.accountCode,
+      record?.ledgerCode,
+      record?.subLedgerCode,
+      record?.subledgerCode,
+      record?.code,
+    ];
+
+    const value = values.find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+    return String(value || "").trim();
+  };
+
+  // ---------------------------------------------------------
+  // AMOUNT
+  // ---------------------------------------------------------
+      const amountOB05 = (record) => {
+  // Member Journal can contain multiple debit/credit amounts.
+  const journalAmounts = [
+    record?.amt1,
+    record?.amt2,
+    record?.amt3,
+    record?.amt4,
+    record?.amt5,
+    record?.amt6,
+  ];
+
+  const hasJournalAmount = journalAmounts.some(
+    (value) =>
+      value !== null &&
+      value !== undefined &&
+      String(value).trim() !== ""
+  );
+
+  if (hasJournalAmount) {
+    return journalAmounts.reduce(
+      (total, value) =>
+        total + numberOB05(value),
+      0
+    );
+  }
+
+  // Prefer the transaction's total when it exists.
+  const totalValue =
+    record?.total !== null &&
+    record?.total !== undefined &&
+    String(record?.total).trim() !== ""
+      ? record.total
+      : null;
+
+  if (totalValue !== null) {
+    return numberOB05(totalValue);
+  }
+
+  // Other possible amount fields.
+  const values = [
+    record?.amount,
+    record?.amountMain,
+    record?.receiptAmount,
+    record?.paymentAmount,
+    record?.fdAmount,
+    record?.balance,
+    record?.openingBalance,
+    record?.currentBalance,
+  ];
+
+  const value = values.find(
+    (item) =>
+      item !== null &&
+      item !== undefined &&
+      String(item).trim() !== ""
+  );
+
+  return numberOB05(value);
+};
+
+  // ---------------------------------------------------------
+  // DEBIT / CREDIT
+  // ---------------------------------------------------------
+
+  const typeOB05 = (record) =>
+    normalizeOB05(
+      record?.debitCredit ||
+      record?.type ||
+      record?.type1 ||
+      record?.transactionType ||
+      ""
+    );
+
+  // ---------------------------------------------------------
+  // CONSOLIDATE SAME LEDGERS
+  // ---------------------------------------------------------
+
+  const ledgerMapOB05 = new Map();
+
+  financialRecordsOB05.forEach((record) => {
+    const name =
+      accountNameOB05(record);
+
+    if (!name) {
+      return;
+    }
+
+    const code =
+      accountCodeOB05(record);
+
+    const key =
+      `${code}|${name}`.toLowerCase();
+
+    const existing =
+      ledgerMapOB05.get(key) || {
+        code,
+        name,
+        debit: 0,
+        credit: 0,
+        balance: 0,
+      };
+
+    const amount =
+      amountOB05(record);
+
+    const type =
+      typeOB05(record);
+
+    if (
+      type.includes("credit") ||
+      type === "cr"
+    ) {
+      existing.credit += amount;
+    } else {
+      existing.debit += amount;
+    }
+
+    existing.balance =
+      existing.debit -
+      existing.credit;
+
+    ledgerMapOB05.set(
+      key,
+      existing
+    );
+  });
+
+  const ledgerRowsOB05 =
+    Array.from(
+      ledgerMapOB05.values()
+    );
+
+  // ---------------------------------------------------------
+  // LIABILITIES / ASSETS
+  // ---------------------------------------------------------
+
+  const liabilityRowsOB05 =
+    ledgerRowsOB05.filter(
+      (row) => row.balance < 0
+    );
+
+  const assetRowsOB05 =
+    ledgerRowsOB05.filter(
+      (row) => row.balance >= 0
+    );
+
+  const maxRowsOB05 =
+    Math.max(
+      liabilityRowsOB05.length,
+      assetRowsOB05.length
+    );
+
+  rows = Array.from(
+    { length: maxRowsOB05 },
+    (_, index) => {
+      const liability =
+        liabilityRowsOB05[index];
+
+      const asset =
+        assetRowsOB05[index];
+
+      return {
+        vazhvathramCode:
+          vazCode,
+
+        vazhvathramName:
+          vazName,
+
+        liabilityCode:
+          liability?.code || "",
+
+        liabilityName:
+          liability?.name || "",
+
+        liabilityAmount:
+          liability
+            ? Math.abs(
+                liability.balance
+              )
+            : 0,
+
+        assetCode:
+          asset?.code || "",
+
+        assetName:
+          asset?.name || "",
+
+        assetAmount:
+          asset
+            ? asset.balance
+            : 0,
+      };
+    }
+  );
+
+  const liabilityTotalOB05 =
+    liabilityRowsOB05.reduce(
+      (total, row) =>
+        total +
+        Math.abs(row.balance),
+      0
+    );
+
+  const assetTotalOB05 =
+    assetRowsOB05.reduce(
+      (total, row) =>
+        total + row.balance,
+      0
+    );
+
+  rows.push({
+    vazhvathramCode:
+      vazCode,
+
+    vazhvathramName:
+      vazName,
+
+    liabilityCode: "",
+    liabilityName: "Total",
+    liabilityAmount:
+      liabilityTotalOB05,
+
+    assetCode: "",
+    assetName: "Total",
+    assetAmount:
+      assetTotalOB05,
+  });
+
+} else {
+  rows = [];
+}
+          
+          setOpeningBalanceResults(rows);
+
+          setOpeningBalanceStatus(
+            `${openingBalanceSelection}: ${rows.length} record${
+              rows.length === 1 ? "" : "s"
+            } loaded from PostgreSQL.`
+          );
+        } catch (error) {
+          console.error(
+            "Opening Balance report error:",
+            error
+          );
+
+          setOpeningBalanceResults([]);
+
+          setOpeningBalanceStatus(
+            `Unable to load Opening Balance data. ${
+              error?.message || error
+            }`
+          );
+        } finally {
+          setOpeningBalanceLoading(false);
+        }
+      };
+
+      const renderOpeningBalanceResults = () => {
+  if (!openingBalanceResults.length) {
+    return null;
+  }
+
+  const records = openingBalanceResults;
+
+  /*
+   * ============================================================
+   * OB 02 - BALANCE SHEET
+   * ============================================================
+   */
+
+  if (
+  openingBalanceSelection ===
+    "OB 02 - Balance Sheet - vazhvathram" ||
+  openingBalanceSelection ===
+    "OB 05 - Balance Sheet Consolidation - vazhvathram"
+) {
+    const record = records[0] || {};
+
+    const amount = (value) => {
+      const number = Number(value);
+
+      if (!Number.isFinite(number)) {
+        return "0";
+      }
+
+      return number.toFixed(0);
+    };
+
+    const financialYearEnd = "31-03-2026";
+
+    const vazCode =
+      record.vazhvathramCode ||
+      record.vazCode ||
+      "";
+
+    const vazName =
+      record.vazhvathramName ||
+      record.vazName ||
+      selectedVazhvathram ||
+     "";
+
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          background: "#fff",
+          padding: "18px",
+          overflowX: "auto",
+          fontFamily: "Times New Roman, serif",
+        }}
+      >
+
+        {/* REPORT TITLE */}
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "20px",
+            lineHeight: "1.25",
+            marginBottom: "2px",
+          }}
+        >
+          {openingBalanceSelection ===
+             "OB 05 - Balance Sheet Consolidation - vazhvathram"
+              ? "OB 05 - Balance Sheet Consolidation as on"
+              : "OB 02 - Balance Sheet as on"}{" "}
+              {financialYearEnd}
+        </div>
+
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "20px",
+            marginBottom: "18px",
+          }}
+        >
+          vazhvathram : {vazCode}-{vazName}
+        </div>
+
+
+        {/* BALANCE SHEET */}
+
+        <table
+          style={{
+            margin: "0 auto",
+            borderCollapse: "collapse",
+            fontSize: "16px",
+            minWidth: "390px",
+          }}
+        >
+          <thead>
+            <tr>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Liabilities
+              </th>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Rs.
+              </th>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Assets
+              </th>
+
+              <th
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Rs.
+              </th>
+
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {/* ROW 1 */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.liability1Code
+                  ? `${record.liability1Code} - ${record.liability1Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.liability1Amount)}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.asset1Code
+                  ? `${record.asset1Code} - ${record.asset1Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.asset1Amount)}
+              </td>
+
+            </tr>
+
+
+            {/* ROW 2 */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.liability2Code
+                  ? `${record.liability2Code} - ${record.liability2Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.liability2Amount)}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.asset2Code
+                  ? `${record.asset2Code} - ${record.asset2Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.asset2Amount)}
+              </td>
+
+            </tr>
+
+
+            {/* ROW 3 */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                }}
+              >
+                {record.asset3Code
+                  ? `${record.asset3Code} - ${record.asset3Name || ""}`
+                  : ""}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                }}
+              >
+                {amount(record.asset3Amount)}
+              </td>
+
+            </tr>
+
+
+            {/* TOTAL */}
+
+            <tr>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  fontWeight: "bold",
+                }}
+              >
+                Total
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {amount(record.liabilityTotal)}
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  fontWeight: "bold",
+                }}
+              >
+                Total
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #777",
+                  padding: "4px 8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {amount(record.assetTotal)}
+              </td>
+
+            </tr>
+
+          </tbody>
+        </table>
+
+      </div>
+    );
+  }
+
+
+  /*
+   * ============================================================
+   * OTHER OPENING BALANCE REPORTS
+   * ============================================================
+   */
+
+  const keys = Array.from(
+    new Set(
+      records.flatMap(
+        (record) => Object.keys(record || {})
+      )
+    )
+  ).filter((key) => key !== "id");
+
+  if (!keys.length) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        border: "1px solid #777",
+        background: "#fff",
+        overflowX: "auto",
+        padding: "10px",
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          fontSize: "18px",
+          marginBottom: "10px",
+        }}
+      >
+        {openingBalanceSelection}
+      </div>
+
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          marginBottom: "14px",
+        }}
+      >
+        Subledger: {openingBalanceSubledger}
+      </div>
+
+      <table
+        className="legacy-table"
+        style={{
+          width: "100%",
+          minWidth: "900px",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr>
+            {keys.map((key) => (
+              <th key={key}>
+                {key
+                  .replace(
+                    /([A-Z])/g,
+                    " $1"
+                  )
+                  .replace(
+                    /^./,
+                    (letter) =>
+                      letter.toUpperCase()
+                  )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {records.map(
+            (record, index) => (
+              <tr
+                key={
+                  record.id ??
+                  index
+                }
+              >
+                {keys.map(
+                  (key) => (
+                    <td key={key}>
+                      {String(
+                        record?.[key] ??
+                        ""
+                      )}
+                    </td>
+                  )
+                )}
+              </tr>
+            )
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+      
+      body = legacyCard(
+        <>
+          <select
+            className="legacy-report-list"
+            size={12}
+            value={openingBalanceSelection}
+            onChange={(event) => {
+              setOpeningBalanceSelection(event.target.value);
+              setOpeningBalanceStatus("");
+            }}
+          >
+            {base.options.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+
+          <div className="legacy-report-section-label">Subledger</div>
+          <div className="legacy-report-center">
+            <select
+              className="legacy-report-list"
+              size={5}
+              value={openingBalanceSubledger}
+              onChange={(event) => {
+                setOpeningBalanceSubledger(event.target.value);
+                setOpeningBalanceStatus("");
+              }}
+            >
+              {openingBalanceSubledgers.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "openingBalance",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
+          {openingBalanceStatus && (
+            <div
+              style={{
+                marginTop: "10px",
+                padding: "8px",
+                border: "1px solid #777",
+                background: "#f4f4f4",
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              {openingBalanceStatus}
+            </div>
+          )}
+                    {renderOpeningBalanceResults()}
+        </>
+      );
+    } else if (item === "Financial") {
+      body = legacyCard(
+  <>
+    <div className="legacy-report-panel">
+      <div className="legacy-report-subtitle">
+        For Member Ledger
+      </div>
+
+      <div className="legacy-fields">
+<label>
+  Member
+  <select
+    value={financialMember}
+  onChange={(e) => {
+  const selectedMemberCode = e.target.value;
+
+  setFinancialMember(selectedMemberCode);
+sessionStorage.setItem("financialMember", selectedMemberCode);
+
+setFinancialFromDate("");
+setFinancialToDate("");
+
+setFinancialReportStatus("");
+setFinancialReportResults([]);
+  }}
+  >
+    <option value="">Select Member</option>
+
+{[
+  ...getContextMembers(),
+  ...(financialMember &&
+  !getContextMembers().some(
+    (member) =>
+      String(member.memberCode || "").trim() ===
+      String(financialMember || "").trim()
+  )
+    ? memberRecords.filter(
+        (member) =>
+          String(member.memberCode || "").trim() ===
+          String(financialMember || "").trim()
+      )
+    : []),
+].map((member) => (
+  <option
+    key={member.memberCode}
+    value={member.memberCode}
+  >
+    {member.memberCode} - {member.memberName || member.name || ""}
+  </option>
+))}
+  </select>
+</label>
+
+        <label>
+          Sub Ledger
+          <select>
+            <option>Regular Savings</option>
+            <option>Special Savings</option>
+            <option>Bullet Savings</option>
+            <option>Livelihood Loan Support 1</option>
+            <option>Livelihood Loan Support 2</option>
+            <option>Housing Loan</option>
+          </select>
+        </label>
+
+        <label>
+          Bank Loan Ledger
+          <select>
+            <option>SHG Linkage - Bank</option>
+            <option>Sahaya Loan - Covid Reponse - Bank</option>
+            <option>ROC - Bank</option>
+            <option>SGSY RF - Bank</option>
+            <option>Housing Loan - HOPE</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="legacy-report-subtitle">
+        For Bank Book
+      </div>
+
+      <div className="legacy-fields">
+        <label>
+          Acct Type
+          <select>
+            <option>Savings Bank AC</option>
+            <option>Loan A/C</option>
+          </select>
+        </label>
+
+        <label>
+          Bank and Branch
+          <select></select>
+        </label>
+
+        <label>
+          Acct No
+          <select>
+            <option>5243664550</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <ListBox
+      options={base.options}
+      size={9}
+      value={financialReportSelection}
+      onChange={(event) => {
+        setFinancialReportSelection(event.target.value);
+        setFinancialReportStatus("");
+        setFinancialReportResults([]);
+      }}
+    />
+
+    {dates}
+
+    <div className="legacy-check">
+      <label>
+        <input type="checkbox" />
+        Regional Language
+      </label>
+    </div>
+
+    <div className="legacy-report-actions">
+      <Button />
+    </div>
+  </>
+);
+    } else if (item === "Journals") {
+      body = legacyCard(
+  <>
+    <ListBox
+      options={base.options}
+      size={9}
+      value={journalReportSelection}
+      onChange={(event) => {
+        setJournalReportSelection(event.target.value);
+        setJournalReportStatus("");
+        setJournalReportResults([]);
+      }}
+    />
+
+    <div className="legacy-report-row">
+      <strong>From Date</strong>
+      <select
+        value={journalFromDate}
+        onChange={(event) => {
+          setJournalFromDate(event.target.value);
+          setJournalReportStatus("");
+          setJournalReportResults([]);
+        }}
+      >
+        <option value="">Select Date</option>
+        {reportAvailableDates.map((date) => (
+          <option key={`journal-from-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="legacy-report-row">
+      <strong>To Date</strong>
+      <select
+        value={journalToDate}
+        onChange={(event) => {
+          setJournalToDate(event.target.value);
+          setJournalReportStatus("");
+          setJournalReportResults([]);
+        }}
+      >
+        <option value="">Select Date</option>
+        {reportAvailableDates.map((date) => (
+          <option key={`journal-to-${date}`} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="legacy-report-actions">
+      <Button />
+    </div>
+
+    {journalReportStatus && (
+      <div
+        style={{
+          marginTop: "10px",
+          padding: "8px",
+          border: "1px solid #777",
+          background: "#f4f4f4",
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        {journalReportStatus}
+      </div>
+    )}
+
+    {renderJournalReportResults()}
+  </>
+);
+    }else if (item === "MIS") {
+  body = legacyCard(
+    <>
+      <ListBox
+        options={base.options}
+        size={13}
+        value={misReportSelection}
+        onChange={(event) => {
+          setMisReportSelection(event.target.value);
+          setMisReportStatus("");
+          setMisReportResults([]);
+        }}
+      />
+
+      <div className="legacy-report-two-col">
+        <div>
+          <div className="legacy-report-section-label">
+            Subledger
+          </div>
+
+          <ListBox
+            options={[
+              "Livelihood Loan Support 1",
+              "Livelihood Loan Support 2",
+              "Housing Loan",
+            ]}
+            size={3}
+            value={misReportSubledger}
+            onChange={(event) => {
+              setMisReportSubledger(event.target.value);
+              setMisReportStatus("");
+              setMisReportResults([]);
+            }}
+          />
+        </div>
+
+        <div>
+          <div className="legacy-report-section-label">
+            MONTH
+          </div>
+
+          <ListBox
+            options={months}
+            size={5}
+            value={misReportMonth}
+            onChange={(event) => {
+              setMisReportMonth(event.target.value);
+              setMisReportStatus("");
+              setMisReportResults([]);
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="legacy-report-actions">
+        <Button />
+      </div>
+
+      {misReportLoading && (
+        <div
+          style={{
+            marginTop: "10px",
+            padding: "8px",
+            border: "1px solid #777",
+            background: "#f4f4f4",
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          Loading MIS report...
+        </div>
+      )}
+
+      {misReportStatus && (
+        <div
+          style={{
+            marginTop: "10px",
+            padding: "8px",
+            border: "1px solid #777",
+            background: "#f4f4f4",
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          {misReportStatus}
+        </div>
+      )}
+
+      {misReportResults.length > 0 && (
+        <div
+          style={{
+            marginTop: "15px",
+            overflowX: "auto",
+          }}
+        >
+          <h2 style={{ textAlign: "center" }}>
+            {misReportSelection}
+            {" - "}
+            {misReportSubledger}
+            {" - "}
+            {misReportMonth}
+          </h2>
+
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              background: "#fff",
+            }}
+          >
+            <thead>
+              <tr>
+                {Object.keys(misReportResults[0]).map((key) => (
+                  <th
+                    key={key}
+                    style={{
+                      border: "1px solid #777",
+                      padding: "8px",
+                      background: "#e9e9e9",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {key}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {misReportResults.map((record, index) => (
+                <tr key={index}>
+                  {Object.keys(misReportResults[0]).map((key) => (
+                    <td
+                      key={key}
+                      style={{
+                        border: "1px solid #777",
+                        padding: "8px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {record[key] ?? ""}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+    
+    }   else if (item === "MIS-SSP") {
+      body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-row"><strong>Select Year</strong><select><option>Current Year</option><option>Previous Year</option></select></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["Social Security Programme - Member Life", "Social Security Programme - Spouse Life", "Social Security Programme - Livestock", "Social Security Programme - Health", "Social Security Programme - Pension","Social Security Programme - Endowment","Social Security Programme - Crop","Tata - AIA - Member","Tata - AIA - Spouse","Nalam","Mut.Help Prog. Risk share Contr.- Member Life","Mut.Help Prog. Risk share Contr.Spouse Life","Mut.Help Prog. Risk share Contr.- Health","Mut.Help Prog. Risk share Contr.- Livestock","Mut.Help Prog. Risk share Contr.- Crop","Mut.Help Prog. Funeral Fund","Mut.Help Prog.Admin Fund","Mut.Help Prog. Risk Share Contr.-Mem Li OA","Mut.Help Prog.Risk Share Contr. - Spo Li OA","Mut.Help Prog. - Benefit-Member Life","Mut.Help Prog. -Benefit - Spouse Life","Mut.Help Prog.-Benefit - Health","Mut.Help Prog.-Benefit -LiveStock","Mut.Help prog. - Benefit - Crop","Mut.Help prog. - Benefit - Funeral Fund","Mut.Help prog. - Benefit -Mem Life Old Age","Mut.Help prog. - Benefit - Spo Life Old Age","Social Secu. Prog.-Benefit- Health"]} size={6}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
+    } else if (item === "Dem. Sheet") {
+      body = <div className="legacy-report-simple"><h1>Demand Sheet</h1><div className="legacy-report-card demand-card"><div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div><div className="legacy-report-row"><strong>Meeting Date</strong><input type="date"/></div><div className="legacy-report-row"><strong>Members</strong><select><option>Without Locked Members</option><option>With Locked Members</option></select></div><div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></div></div>;
+    } else if (item === "Confirmation") {
+      body = <div className="legacy-report-simple confirmation-page"><h1>Member Confirmation Sheet</h1><p className="legacy-red-note">Run this report by selecting date which is end of Month to integrate Monthly Auto Journals</p><div className="confirmation-date"><strong>Meeting Date</strong><ListBox options={[""]} size={8}/></div><p className="legacy-red-warning">Monthly Auto Journals are not passed. Please pass Auto Journals / Temp Journals to display the date.</p></div>;
+    } else if (item === "Schedule") {
+      body = <div className="legacy-report-card schedule-card"><div className="legacy-report-title">Schedule</div><div className="legacy-report-row"><strong>Fed./Block Code</strong><input value="372" readOnly/><label className="inline-check"><input type="checkbox"/> All Sub Ledgers</label></div><div className="legacy-report-row"><strong>General Ledger</strong><select><option>Administrative Expenses - 4410</option><option>Advance Receivables - 2220</option><option>Allocation Funds - Federation - 1330</option><option>Current Assets -2110</option><option>Donations - 3320</option><option>External Audit Fees - 4520</option><option>Fixed Assets-2010</option><option>General And Corpus Fund - 1010</option><option>Group Level Allocation For Development od Members - 4510</option><option>Income From Livelihood Activities - 3110</option><option>Interest Income From Banks - 3210</option><option>Loan support from HOPE - 1250</option><option>Member Deposit - 1120</option><option>Member Deposit To Federation - 2020</option><option>Member Incentives - 4120</option><option>Mut.Help Prog Benefit - 1380</option><option>Mut Help Prog. Risk Share Contribution - 1370</option><option>Other Payables - 1340</option><option>Payables - Federation - 1320</option><option>Prog. Support For Poverty Reduction - Federation - 1230</option><option>Programme Cost For Livelihood Activities - 4210</option><option>Programme Expenses - 4110</option><option>Programme Fund For Poverty Reduction -Members - 2210</option><option>Programme Support For Poverty Reduction - Bank - 1220</option><option>Programme Support Loss Provision - 3330</option><option>Programme Support On Loss Provision - 1410</option><option>Revolving Fund - 1110</option><option>Risk/Mutuality Fund - 1420</option><option>Savings - 1130</option><option>Scholarship Fund - 1350</option><option>SHG - Bank Linkage Charges - 4420</option><option>Social Secu.Prog.Benefit - 1390</option><option>Social Security Scheme - Payables - 1310</option><option>Specified Prog. Activity - 1430</option><option>Subscription And Donations - 4310</option><option>Subscription And Enteance Fee - 3310</option><option>Sustainable Health Care Initiative - 1360</option></select></div><div className="legacy-report-row"><strong>Sub Ledger</strong><select><option>Bank Charges Not Related to SHG-Bank Linkage - 4415</option><option>Postage, Telegram & Telephone - 4414</option><option>Printing and Stationeries - 4413</option><option>Training and meeting Expense at Group Level - 4412</option><option>Travlel Expense - 4411</option></select></div><div className="legacy-report-row"><strong>As on Date</strong><input type="date"/><label className="inline-check"><input type="checkbox"/> All Details</label></div><div className="legacy-report-actions"><Button> vazhvathram </Button><Button> Cluster </Button><Button> Block/Fed. </Button></div></div>;
+    } else if (item === "Bank Link.") {
+      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["SHG", "Covid Loan - Bank", "ROC", "Federation Loan","HOPE-Housing"]} size={3}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={7}/></div></div><div className="legacy-report-actions"><Button /></div></>);
+    } else if (item === "Grading") {
+      body = <div className="legacy-report-card grading-card"><div className="legacy-report-title">PEARLS Institutional Rating</div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3}/></div><div><div className="legacy-report-section-label">Month</div><MonthBox size={6}/></div></div><div className="legacy-report-section-label">Language</div><select><option>English</option><option>தமிழ் (Tamil)</option><option>(Telugu)</option><option>ଓଡ଼ିଆ (Odia)</option><option>தமிழ் (Tamil)</option><option>తెలుగు (Telugu)</option><option>മലയാളം (Malayalam)</option> <option>मराठी (Marathi)</option><option>हिन्दी (Hindi)</option><option>অসমীয় (Assamese)</option></select><div className="legacy-report-actions"><Button>Generate Rating</Button></div></div>;
+    } else if (item === "Analytics") {
+      body = <div className="legacy-report-card analytics-card"><div className="legacy-report-title">Savings Forecast</div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3}/></div><div><div className="legacy-report-section-label">Forecast Head</div><ListBox options={["Regular Savings (1131)", "Special Savings (1132)", "Repayment LH1 Principal (2211)", "Repayment LH2 Principal (2212)", "Repayment LH3 Principal (2213)"]} size={5}/></div></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Historical Data</div><ListBox options={["All from FY2017", "Last 3 Financial Years"]} size={2}/></div><div><div className="legacy-report-section-label">Projection Type</div><ListBox options={["Monthly", "Annual"]} size={2}/></div></div><div className="legacy-report-section-label">Projection Period</div><select><option>1 Year</option><option>2 Years</option><option>3 Years</option><option>4 Years</option><option>5 Year</option><option>6 Year</option><option>7 Year</option><option>8 Year</option><option>9 Year</option><option>10 Year</option></select><div className="legacy-report-actions"><Button>Generate Forecast</Button></div><div className="accuracy-label">— Test Accuracy of this Model —</div><div className="legacy-report-row"><strong>Test Period</strong><select><option>-- Select --</option><option>1 Year (Current FY)</option><option>2 Year</option><option>3 Year</option></select></div><div className="legacy-report-actions"><Button>Test Model Accuracy</Button></div></div>;
+    } else if (item === "vazhvathram") {
+      body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-two-col amount-row"><div><div className="legacy-report-section-label">From Amt</div><input/></div><div><div className="legacy-report-section-label">To Amt</div><input/></div></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Sub Ledger</div><ListBox options={["Livelihood Loan Support 1", "Livelihood Loan Support 2", "Housing Loan", "Savings"]} size={4}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
+    } else if (item === "Cluster") {
+      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-section-label">MONTH</div><div className="legacy-report-center"><MonthBox size={5}/></div><div className="legacy-report-actions"><Button /></div></>);
+    } else if (item === "Block") {
+      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-row"><strong>No. of Members: From</strong><span className="inline-inputs"><input/><strong>To</strong><input/></span></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div><div><div className="legacy-report-section-label">Scheme</div><select><option></option></select></div></div><div className="legacy-report-actions"><Button /></div></>);
+    } else {
+      body = legacyCard(<><ListBox options={base.options} size={10}/><div className="legacy-report-actions"><Button /></div></>);
+    }
+
+    // BLOCK REPORT DATABASE CONNECTION (additive; preserves the original Block report UI)
+    const [blockReportSelection, setBlockReportSelection] = useState("BR 01 - Data Entry Status Report - vazhvathram");
+    const [blockFromMembers, setBlockFromMembers] = useState("");
+    const [blockToMembers, setBlockToMembers] = useState("");
+    const [blockMonth, setBlockMonth] = useState("April");
+    const [blockScheme, setBlockScheme] = useState("");
+    const [blockReportResults, setBlockReportResults] = useState([]);
+    const [blockReportLoading, setBlockReportLoading] = useState(false);
+    const [blockReportStatus, setBlockReportStatus] = useState("");
+
+    const runBlockReport = async () => {
+      setBlockReportLoading(true);
+      setBlockReportStatus("");
+      setBlockReportResults([]);
+      try {
+        const [clusters, vazhvathrams, members, receipts, payments, journals] = await Promise.all([
+          loadFinancialEndpoint("/clusters"),
+          loadFinancialEndpoint("/vazhvathrams"),
+          loadFinancialEndpoint("/members"),
+          loadFinancialEndpoint("/member-receipts"),
+          loadFinancialEndpoint("/member-payments"),
+          loadFinancialEndpoint("/member-journals"),
+        ]);
+
+        let data = members;
+        const report = blockReportSelection.toUpperCase();
+        if (report.includes("DATA ENTRY")) {
+          data = members;
+        } else if (report.includes("RECEIPTS") || report.includes("DEMAND") || report.includes("COLLECTION")) {
+          data = receipts;
+        } else if (report.includes("PAYMENT") || report.includes("REPAYMENT") || report.includes("DISBURSEMENT")) {
+          data = payments;
+        } else if (report.includes("JOURNAL")) {
+          data = journals;
+        } else if (report.includes("CLUSTER") || report.includes("SUMMARY")) {
+          data = clusters;
+        } else if (report.includes("Vazhvathram".toUpperCase())) {
+          data = vazhvathrams;
+        } else {
+          data = members;
+        }
+
+        let rows = Array.isArray(data) ? data : [];
+        rows = filterReportRecordsByContext(
+  rows,
+  members
+);
+        const fromCount = Number(blockFromMembers);
+        const toCount = Number(blockToMembers);
+        if (Number.isFinite(fromCount) && blockFromMembers.trim() !== "") {
+          rows = rows.filter((row) => {
+            const count = Number(row.memberCount ?? row.membersCount ?? row.noOfMembers ?? row.numberOfMembers);
+            return !Number.isNaN(count) && count >= fromCount;
+          });
+        }
+        if (Number.isFinite(toCount) && blockToMembers.trim() !== "") {
+          rows = rows.filter((row) => {
+            const count = Number(row.memberCount ?? row.membersCount ?? row.noOfMembers ?? row.numberOfMembers);
+            return !Number.isNaN(count) && count <= toCount;
+          });
+        }
+
+        if (blockScheme.trim()) {
+          const scheme = blockScheme.trim().toLowerCase();
+          rows = rows.filter((row) => Object.values(row || {}).some((value) => String(value ?? "").toLowerCase().includes(scheme)));
+        }
+
+        setBlockReportResults(rows.slice(0, 500));
+        setBlockReportStatus(`${blockReportSelection} loaded from database for ${blockMonth} (${rows.length} record(s)).`);
+      } catch (error) {
+        console.error("Block report error:", error);
+        setBlockReportStatus(error?.message || "Unable to load Block report from database.");
+      } finally {
+        setBlockReportLoading(false);
+      }
+    };
+
+    // ANALYTICS DATABASE VIEW (additive override; original Analytics page remains above)
+    if (item === "Analytics") {
+      body = legacyCard(
+        <>
+          <div className="legacy-report-title">Savings Forecast</div>
+          <div className="legacy-report-two-col">
+            <div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3} value={analyticsLevel} onChange={(e) => setAnalyticsLevel(e.target.value)} /></div>
+            <div><div className="legacy-report-section-label">Forecast Head</div><ListBox options={["Regular Savings (1131)", "Special Savings (1132)", "Repayment LH1 Principal (2211)", "Repayment LH2 Principal (2212)", "Repayment LH3 Principal (2213)"]} size={5} value={analyticsForecastHead} onChange={(e) => setAnalyticsForecastHead(e.target.value)} /></div>
+          </div>
+          <div className="legacy-report-two-col">
+            <div><div className="legacy-report-section-label">Historical Data</div><ListBox options={["All from FY2017", "Last 3 Financial Years"]} size={2} value={analyticsHistoricalData} onChange={(e) => setAnalyticsHistoricalData(e.target.value)} /></div>
+            <div><div className="legacy-report-section-label">Projection Type</div><ListBox options={["Monthly", "Annual"]} size={2} value={analyticsProjectionType} onChange={(e) => setAnalyticsProjectionType(e.target.value)} /></div>
+          </div>
+          <div className="legacy-report-section-label">Projection Period</div>
+          <select value={analyticsProjectionPeriod} onChange={(e) => setAnalyticsProjectionPeriod(e.target.value)}><option>1 Year</option><option>2 Years</option><option>3 Years</option><option>4 Years</option><option>5 Year</option><option>6 Year</option><option>7 Year</option><option>8 Year</option><option>9 Year</option><option>10 Year</option></select>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "analyticsForecast",
+                  type: "all",
+                })
+              }
+              >
+              Generate Forecast
+            </Button>
+          </div>
+          <div className="accuracy-label">— Test Accuracy of this Model —</div>
+          <div className="legacy-report-row"><strong>Test Period</strong><select value={analyticsTestPeriod} onChange={(e) => setAnalyticsTestPeriod(e.target.value)}><option>-- Select --</option><option>1 Year (Current FY)</option><option>2 Year</option><option>3 Year</option></select></div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "analyticsAccuracy",
+                  type: "all",
+                })
+              }
+              >
+              Test Model Accuracy
+            </Button>
+          </div>
+          {analyticsStatus && <div className="legacy-report-status">{analyticsStatus}</div>}
+          {analyticsResults.length > 0 && <div className="legacy-report-results"><table><thead><tr>{Object.keys(analyticsResults[0]).map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{analyticsResults.map((row, index) => <tr key={index}>{Object.keys(row).map((key) => <td key={key}>{String(row[key])}</td>)}</tr>)}</tbody></table></div>}
+        </>
+      );
+    }
+
+
+    // BLOCK REPORT DATABASE VIEW (additive override; original Block page remains above)
+    if (item === "Block") {
+      body = legacyCard(
+        <>
+          <ListBox options={base.options} size={14} value={blockReportSelection} onChange={(event) => { setBlockReportSelection(event.target.value); setBlockReportStatus(""); setBlockReportResults([]); }} />
+          <div className="legacy-report-row">
+            <strong>No. of Members: From</strong>
+            <span className="inline-inputs"><input value={blockFromMembers} onChange={(event) => setBlockFromMembers(event.target.value)} /><strong>To</strong><input value={blockToMembers} onChange={(event) => setBlockToMembers(event.target.value)} /></span>
+          </div>
+          <div className="legacy-report-two-col">
+            <div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5} value={blockMonth} onChange={(event) => setBlockMonth(event.target.value)} /></div>
+            <div><div className="legacy-report-section-label">Scheme</div><select value={blockScheme} onChange={(event) => setBlockScheme(event.target.value)}><option value=""></option><option>Regular Savings</option><option>Special Savings</option><option>Livelihood Loan Support 1</option><option>Livelihood Loan Support 2</option><option>Housing Loan</option></select></div>
+          </div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "block",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
+          {blockReportStatus && <div className="legacy-report-status">{blockReportStatus}</div>}
+          {blockReportResults.length > 0 && (
+            <div className="legacy-report-results"><table><thead><tr>{Array.from(new Set(blockReportResults.flatMap((row) => Object.keys(row || {})))).filter((key) => key !== "id").slice(0, 10).map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{blockReportResults.map((row, index) => { const keys = Array.from(new Set(blockReportResults.flatMap((entry) => Object.keys(entry || {})))).filter((key) => key !== "id").slice(0, 10); return <tr key={row?.id ?? index}>{keys.map((key) => <td key={key}>{String(row?.[key] ?? "")}</td>)}</tr>; })}</tbody></table></div>
+          )}
+        </>
+      );
+    }
+
+
+    const runVazhvathramReport = async () => {
+      setVazReportLoading(true);
+      setVazReportStatus("");
+      setVazReportResults([]);
+      try {
+        const endpoints = {
+          "members": "/members",
+          "vazhvathrams": "/vazhvathrams",
+          "receipts": "/member-receipts",
+          "payments": "/member-payments",
+          "journals": "/member-journals"
+        };
+        const [members, vazhvathrams, receipts, payments, journals] = await Promise.all(
+          Object.values(endpoints).map((endpoint) => apiRequest(endpoint))
+        );
+        const selected = String(vazReportSelection || "").toLowerCase();
+        let rows = Array.isArray(members) ? members : [];
+        if (selected.includes("vazhvathram") || selected.includes("group")) {
+          rows = Array.isArray(vazhvathrams) ? vazhvathrams : [];
+        } else if (selected.includes("receipt")) {
+          rows = Array.isArray(receipts) ? receipts : [];
+        } else if (selected.includes("payment")) {
+          rows = Array.isArray(payments) ? payments : [];
+        } else if (selected.includes("journal")) {
+          rows = Array.isArray(journals) ? journals : [];
+        }
+        const subText = String(vazSubLedger || "").toLowerCase();
+        const from = Number(String(vazFromAmt).replace(/,/g, ""));
+        const to = Number(String(vazToAmt).replace(/,/g, ""));
+  const contextRows = filterReportRecordsByContext(
+  rows,
+  Array.isArray(members) ? members : []
+);
+
+const filtered = contextRows.filter((row) => {
+          const text = Object.values(row || {}).join(" ").toLowerCase();
+          const amountValue = Object.entries(row || {})
+            .filter(([key]) => /amount|amt|value|balance/i.test(key))
+            .map(([, value]) => Number(String(value).replace(/,/g, "")))
+            .find((value) => Number.isFinite(value));
+          const subOk = !subText || text.includes(subText.split(" - ")[0]);
+          const fromOk = !Number.isFinite(from) || !vazFromAmt || (Number.isFinite(amountValue) && amountValue >= from);
+          const toOk = !Number.isFinite(to) || !vazToAmt || (Number.isFinite(amountValue) && amountValue <= to);
+          return subOk && fromOk && toOk;
+        });
+        setVazReportResults(filtered.slice(0, 500));
+        setVazReportStatus(`${filtered.length} database record(s) loaded for ${vazMonth}.`);
+      } catch (error) {
+        setVazReportStatus(error.message || "Unable to load Vazhvathram report data.");
+      } finally {
+        setVazReportLoading(false);
+      }
+    };
+
+
+    // VAZHVATHRAM DATABASE VIEW (additive override; original Vazhvathram page remains above)
+    if (item === "vazhvathram") {
+      body = legacyCard(
+        <>
+          <ListBox options={base.options} size={11} value={vazReportSelection} onChange={(e) => { setVazReportSelection(e.target.value); setVazReportResults([]); setVazReportStatus(""); }} />
+          <div className="legacy-report-two-col amount-row">
+            <div><div className="legacy-report-section-label">From Amt</div><input value={vazFromAmt} onChange={(e) => setVazFromAmt(e.target.value)} /></div>
+            <div><div className="legacy-report-section-label">To Amt</div><input value={vazToAmt} onChange={(e) => setVazToAmt(e.target.value)} /></div>
+          </div>
+          <div className="legacy-report-two-col">
+            <div><div className="legacy-report-section-label">Sub Ledger</div><ListBox options={["Livelihood Loan Support 1", "Livelihood Loan Support 2", "Housing Loan", "Savings"]} size={4} value={vazSubLedger} onChange={(e) => setVazSubLedger(e.target.value)} /></div>
+            <div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5} value={vazMonth} onChange={(e) => setVazMonth(e.target.value)} /></div>
+          </div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "vazhvathramReport",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
+          {vazReportStatus && <div className="legacy-report-status">{vazReportStatus}</div>}
+          {vazReportResults.length > 0 && <div className="legacy-report-results"><table><thead><tr>{Object.keys(vazReportResults[0]).filter((key) => key !== "id").map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{vazReportResults.map((row, index) => <tr key={index}>{Object.keys(row).filter((key) => key !== "id").map((key) => <td key={key}>{String(row[key] ?? "")}</td>)}</tr>)}</tbody></table></div>}
+        </>
+      );
+    }
+
+    // MIS-SSP DATABASE VIEW (additive override; original MIS-SSP page remains above)
+    if (item === "MIS-SSP") {
+      body = legacyCard(
+        <>
+          <ListBox
+            options={base.options}
+            size={11}
+            value={misSspReportSelection}
+            onChange={(event) => {
+              setMisSspReportSelection(event.target.value);
+              setMisSspReportStatus("");
+              setMisSspReportResults([]);
+            }}
+          />
+          <div className="legacy-report-row">
+            <strong>Select Year</strong>
+            <select value={misSspYear} onChange={(event) => setMisSspYear(event.target.value)}>
+              <option>Current Year</option>
+              <option>Previous Year</option>
+            </select>
+          </div>
+          <div className="legacy-report-two-col">
+            <div>
+              <div className="legacy-report-section-label">Subledger</div>
+              <select value={misSspSubledger} onChange={(event) => setMisSspSubledger(event.target.value)}>
+                <option>Social Security Programme - Member Life</option>
+                <option>Social Security Programme - Spouse Life</option>
+                <option>Social Security Programme - Livestock</option>
+                <option>Social Security Programme - Health</option>
+                <option>Social Security Programme - Pension</option>
+                <option>Social Security Programme - Endowment</option>
+                <option>Social Security Programme - Crop</option>
+                <option>Tata - AIA - Member</option>
+                <option>Tata - AIA - Spouse</option>
+                <option>Nalam</option>
+              </select>
+            </div>
+            <div>
+              <div className="legacy-report-section-label">MONTH</div>
+              <select value={misSspMonth} onChange={(event) => setMisSspMonth(event.target.value)}>
+                {Object.keys({ January: 0, February: 1, March: 2, April: 3, May: 4, June: 5, July: 6, August: 7, September: 8, October: 9, November: 10, December: 11 }).map((month) => (
+                  <option key={month}>{month}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="legacy-report-actions">
+            <Button>Execute</Button>
+          </div>
+          {misSspReportStatus && (
+            <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
+              {misSspReportLoading ? "Loading MIS-SSP Report..." : misSspReportStatus}
+            </div>
+          )}
+          {renderMISSSPReportResults()}
+        </>
+      );
+    }
+
+    // GRADING DB VIEW (additive override; original Grading page remains above)
+    if (item === "Grading") {
+      body = <div className="legacy-report-card grading-card">
+        <div className="legacy-report-title">PEARLS Institutional Rating</div>
+        <div className="legacy-report-two-col">
+          <div><div className="legacy-report-section-label">Level</div><select value={gradingLevel} onChange={(e) => { setGradingLevel(e.target.value); setGradingReportStatus(""); setGradingReportResults([]); }}><option>Federation</option><option>Cluster</option><option>vazhvathram (Group)</option></select></div>
+          <div><div className="legacy-report-section-label">Month</div><select value={gradingMonth} onChange={(e) => { setGradingMonth(e.target.value); setGradingReportStatus(""); setGradingReportResults([]); }}>{["April","May","June","July","August","September","October","November","December","January","February","March"].map((m) => <option key={m}>{m}</option>)}</select></div>
+        </div>
+        <div className="legacy-report-section-label">Language</div>
+        <select value={gradingLanguage} onChange={(e) => setGradingLanguage(e.target.value)}><option>English</option><option>தமிழ் (Tamil)</option><option>తెలుగు (Telugu)</option><option>മലയാളം (Malayalam)</option><option>मराठी (Marathi)</option><option>हिन्दी (Hindi)</option><option>অসমীয় (Assamese)</option></select>
+        <div className="legacy-report-actions"><Button>Generate Rating</Button></div>
+        {gradingReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{gradingReportLoading ? "Loading Grading Report..." : gradingReportStatus}</div>}
+        {renderGradingReportResults()}
+      </div>;
+    }
+
+    // DEMAND SHEET DB VIEW (additive override; original Demand Sheet page remains above)
+    if (item === "Dem. Sheet") {
+      body = <div className="legacy-report-simple">
+        <h1>Demand Sheet</h1>
+        <div className="legacy-report-card demand-card">
+          <div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div>
+          <div className="legacy-report-row"><strong>Meeting Date</strong><input type="date" value={demandMeetingDate} onChange={(event) => { setDemandMeetingDate(event.target.value); setDemandReportStatus(""); setDemandReportResults([]); }}/></div>
+          <div className="legacy-report-row"><strong>Members</strong><select value={demandMemberMode} onChange={(event) => { setDemandMemberMode(event.target.value); setDemandReportStatus(""); setDemandReportResults([]); }}><option>Without Locked Members</option><option>With Locked Members</option></select></div>
+          <div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div>
+          <div className="legacy-report-actions"><Button>Execute</Button></div>
+          {demandReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{demandReportLoading ? "Loading Demand Sheet..." : demandReportStatus}</div>}
+          {renderDemandSheetResults()}
+        </div>
+      </div>;
+    }
+
+
+    // CONFIRMATION DB VIEW (additive override; original Confirmation page remains above)
+    if (item === "Confirmation") {
+      body = <div className="legacy-report-simple confirmation-page">
+        <h1>Member Confirmation Sheet</h1>
+        <p className="legacy-red-note">Run this report by selecting date which is end of Month to integrate Monthly Auto Journals</p>
+        <div className="confirmation-date">
+          <strong>Meeting Date</strong>
+          <input type="date" value={confirmationMeetingDate} onChange={(event) => { setConfirmationMeetingDate(event.target.value); setConfirmationReportStatus(""); setConfirmationReportResults([]); }} />
+        </div>
+        <div className="legacy-report-actions"><Button>Execute</Button></div>
+        {confirmationReportStatus && (
+          <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>
+            {confirmationReportLoading ? "Loading Confirmation Report..." : confirmationReportStatus}
+          </div>
+        )}
+        {renderConfirmationReportResults()}
+      </div>;
+    }
+
+    // SCHEDULE DB VIEW (additive override; original Schedule page remains above)
+    if (item === "Schedule") {
+      body = <div className="legacy-report-card schedule-card">
+        <div className="legacy-report-title">Schedule</div>
+        <div className="legacy-report-row"><strong>Fed./Block Code</strong><input value={scheduleFedBlockCode} onChange={(event) => setScheduleFedBlockCode(event.target.value)} /><label className="inline-check"><input type="checkbox" checked={scheduleAllSubLedgers} onChange={(event) => setScheduleAllSubLedgers(event.target.checked)} /> All Sub Ledgers</label></div>
+        <div className="legacy-report-row"><strong>General Ledger</strong><select value={scheduleGeneralLedger} onChange={(event) => { setScheduleGeneralLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Administrative Expenses - 4410","Advance Receivables - 2220","Allocation Funds - Federation - 1330","Current Assets -2110","Donations - 3320","External Audit Fees - 4520","Fixed Assets-2010","General And Corpus Fund - 1010","Group Level Allocation For Development od Members - 4510","Income From Livelihood Activities - 3110","Interest Income From Banks - 3210","Loan support from HOPE - 1250","Member Deposit - 1120","Member Deposit To Federation - 2020","Member Incentives - 4120","Mut.Help Prog Benefit - 1380","Mut Help Prog. Risk Share Contribution - 1370","Other Payables - 1340","Payables - Federation - 1320","Prog. Support For Poverty Reduction - Federation - 1230","Programme Cost For Livelihood Activities - 4210","Programme Expenses - 4110","Programme Fund For Poverty Reduction -Members - 2210","Programme Support For Poverty Reduction - Bank - 1220","Programme Support Loss Provision - 3330","Programme Support On Loss Provision - 1410","Revolving Fund - 1110","Risk/Mutuality Fund - 1420","Savings - 1130","Scholarship Fund - 1350","SHG - Bank Linkage Charges - 4420","Social Secu.Prog.Benefit - 1390","Social Security Scheme - Payables - 1310","Specified Prog. Activity - 1430","Subscription And Donations - 4310","Subscription And Enteance Fee - 3310","Sustainable Health Care Initiative - 1360"].map((option) => <option key={option}>{option}</option>)}</select></div>
+        <div className="legacy-report-row"><strong>Sub Ledger</strong><select value={scheduleSubLedger} onChange={(event) => { setScheduleSubLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Bank Charges Not Related to SHG-Bank Linkage - 4415","Postage, Telegram & Telephone - 4414","Printing and Stationeries - 4413","Training and meeting Expense at Group Level - 4412","Travlel Expense - 4411"].map((option) => <option key={option}>{option}</option>)}</select></div>
+        <div className="legacy-report-row"><strong>As on Date</strong><input type="date" value={scheduleAsOnDate} onChange={(event) => { setScheduleAsOnDate(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }} /><label className="inline-check"><input type="checkbox" checked={scheduleAllDetails} onChange={(event) => setScheduleAllDetails(event.target.checked)} /> All Details</label></div>
+        <div className="legacy-report-actions"><Button>Execute</Button></div>
+        {scheduleReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{scheduleReportLoading ? "Loading Schedule Report..." : scheduleReportStatus}</div>}
+        {renderScheduleReportResults()}
+      </div>;
+    }
+
+    // BANK LINK DATABASE VIEW (additive override; original Bank Link page remains above)
+    if (item === "Bank Link.") {
+      body = legacyCard(
+        <>
+          <ListBox
+            options={base.options}
+            size={14}
+            value={bankLinkReportSelection}
+            onChange={(event) => {
+              setBankLinkReportSelection(event.target.value);
+              setBankLinkReportStatus("");
+              setBankLinkReportResults([]);
+            }}
+          />
+          <div className="legacy-report-two-col">
+            <div>
+              <div className="legacy-report-section-label">Subledger</div>
+              <select value={bankLinkSubledger} onChange={(event) => { setBankLinkSubledger(event.target.value); setBankLinkReportStatus(""); setBankLinkReportResults([]); }}>
+                {["SHG", "Covid Loan - Bank", "ROC", "Federation Loan", "HOPE-Housing"].map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </div>
+            <div>
+              <div className="legacy-report-section-label">MONTH</div>
+              <select value={bankLinkMonth} onChange={(event) => { setBankLinkMonth(event.target.value); setBankLinkReportStatus(""); setBankLinkReportResults([]); }}>
+                {months.map((month) => <option key={month}>{month}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                  page: "bankLinkReport",
+                  type: "all",
+                })
+              }
+              >
+              Execute
+            </Button>
+          </div>
+          {bankLinkReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{bankLinkReportLoading ? "Loading Bank Link Report..." : bankLinkReportStatus}</div>}
+          {renderBankLinkReportResults()}
+        </>
+      );
+    }
+
+    // CLUSTER REPORT DATABASE CONNECTION (additive; keeps the original report layout)
+    const [clusterReportSelection, setClusterReportSelection] = useState("CL 01 - Cluster Details");
+    const [clusterMonth, setClusterMonth] = useState("April");
+    const [clusterReportResults, setClusterReportResults] = useState([]);
+    const [clusterReportLoading, setClusterReportLoading] = useState(false);
+    const [clusterReportStatus, setClusterReportStatus] = useState("");
+
+    const runClusterReport = async () => {
+      setClusterReportLoading(true);
+      setClusterReportStatus("");
+      setClusterReportResults([]);
+      try {
+        const [clusters, vazhvathrams, members] = await Promise.all([
+          loadFinancialEndpoint("/clusters"),
+          loadFinancialEndpoint("/vazhvathrams"),
+          loadFinancialEndpoint("/members"),
+        ]);
+
+        let data = [];
+        if (clusterReportSelection.includes("Cluster Details")) {
+          data = clusters;
+        } else if (clusterReportSelection.includes("vazhvathram")) {
+          data = vazhvathrams;
+        } else {
+          data = members;
+        }
+
+        let rows = Array.isArray(data) ? data : [];
+
+// Apply selected Cluster → Vazhvathram context
+rows = filterReportRecordsByContext(
+  rows,
+  Array.isArray(members) ? members : []
+);
+        setClusterReportResults(rows.slice(0, 500));
+        setClusterReportStatus(`${clusterReportSelection} loaded from database (${rows.length} record(s)).`);
+      } catch (error) {
+        console.error("Cluster report error:", error);
+        setClusterReportStatus(error?.message || "Unable to load Cluster report from database.");
+      } finally {
+        setClusterReportLoading(false);
+      }
+    };
+
+    const renderClusterReportResults = () => {
+      if (!clusterReportResults.length) return null;
+      const keys = Array.from(new Set(clusterReportResults.flatMap((record) => Object.keys(record || {}))))
+        .filter((key) => key !== "id")
+        .slice(0, 10);
+      return (
+        <div style={{ marginTop: "12px", overflowX: "auto" }}>
+          <div className="legacy-report-subtitle">Cluster Database Results</div>
+          <table className="legacy-table">
+            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+            <tbody>
+              {clusterReportResults.map((record, index) => (
+                <tr key={record?.id ?? index}>
+                  {keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    // JOURNAL REPORT DB VIEW (additive override; original Journal page remains above)
+    if (false && item === "Journals") {
+      body = legacyCard(
+        <>
+          <ListBox options={base.options} size={9}/>
+          {dates}
+          <div className="legacy-report-actions"><Button /></div>
+          {journalReportDbBody}
+        </>
+      );
+    }
+
+    // CLUSTER DATABASE VIEW (additive override; original Cluster branch remains above)
+    if (item === "Cluster") {
+      body = legacyCard(
+        <>
+          <ListBox
+            options={[
+              "CL 01 - Cluster Details",
+              "CL 02 - vazhvathram Details",
+              "CL 03 - Member Details",
+            ]}
+            size={14}
+            value={clusterReportSelection}
+            onChange={(event) => {
+              setClusterReportSelection(event.target.value);
+              setClusterReportStatus("");
+              setClusterReportResults([]);
+            }}
+          />
+          <div className="legacy-report-section-label">MONTH</div>
+          <div className="legacy-report-center">
+            <select value={clusterMonth} onChange={(event) => setClusterMonth(event.target.value)}>
+              {months.map((month) => <option key={month}>{month}</option>)}
+            </select>
+          </div>
+          <div className="legacy-report-actions">
+            <Button
+               onClick={() =>
+                 openResultInNewTab({
+                    page: "clusterReport",
+                    type: "all",
+                   })
+                 }
+               >
+                Execute
+             </Button>
+           </div>
+          {clusterReportStatus && (
+            <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
+              {clusterReportStatus}
+            </div>
+          )}
+          {renderClusterReportResults()}
+        </>
+      );
+    }
+
+    // CLUSTER REPORT FULL OPTIONS + DATABASE (additive; restores all original Cluster report entries)
+    const runClusterReportFull = async (reportName) => {
+      setClusterReportLoading(true);
+      setClusterReportStatus("");
+      setClusterReportResults([]);
+      try {
+        const [clusters, vazhvathrams, members, receipts, payments, journals] = await Promise.all([
+          apiRequest("/clusters"),
+          apiRequest("/vazhvathrams"),
+          apiRequest("/members"),
+          apiRequest("/member-receipts"),
+          apiRequest("/member-payments"),
+          apiRequest("/member-journals")
+        ]);
+        let data = [];
+        if (reportName.includes("CR 01") || reportName.includes("CR 02") || reportName.includes("Cluster") || reportName.includes("Clusterwise") || reportName.includes("Cluster Wise")) {
+          data = clusters;
+        } else if (reportName.includes("CR 03") || reportName.includes("CR 04") || reportName.includes("CR 05") || reportName.includes("CR 06") || reportName.includes("CR 07") || reportName.includes("CR 08") || reportName.includes("CR 09") || reportName.includes("CR 10") || reportName.includes("CR 15") || reportName.includes("CR 16")) {
+          data = [...receipts, ...payments, ...journals];
+        } else if (reportName.includes("CR 13") || reportName.includes("CR 14")) {
+          data = members;
+        } else if (reportName.startsWith("BL")) {
+          data = vazhvathrams;
+        } else {
+          data = members;
+        }
+        const rows = Array.isArray(data) ? data : [];
+        setClusterReportResults(rows.slice(0, 500));
+        setClusterReportStatus(`${reportName} loaded from database (${rows.length} record(s)).`);
+      } catch (error) {
+        console.error("Cluster report error:", error);
+        setClusterReportStatus(error?.message || "Unable to load Cluster report from database.");
+      } finally {
+        setClusterReportLoading(false);
+      }
+    };
+
+    const clusterFullOptions = base.options;
+    const clusterDisplayedSelection = clusterFullOptions.includes(clusterReportSelection)
+      ? clusterReportSelection
+      : clusterFullOptions[0];
+
+    if (item === "Cluster") {
+      body = legacyCard(
+        <>
+          <ListBox
+            options={clusterFullOptions}
+            size={14}
+            value={clusterDisplayedSelection}
+            onChange={(event) => {
+              setClusterReportSelection(event.target.value);
+              setClusterReportStatus("");
+              setClusterReportResults([]);
+            }}
+          />
+          <div className="legacy-report-section-label">MONTH</div>
+          <div className="legacy-report-center">
+            <MonthBox size={5} value={clusterMonth} onChange={(event) => setClusterMonth(event.target.value)} />
+          </div>
+          <div className="legacy-report-actions">
+            <Button
+              onClick={() =>
+                openResultInNewTab({
+                   page: "clusterReportFull",
+                   type: "all",
+                 })
+                }
+              >
+               Execute
+            </Button>
+          </div>
+          {clusterReportStatus && (
+            <div className="legacy-report-status">{clusterReportStatus}</div>
+          )}
+          {renderClusterReportResults()}
+        </>
+      );
+    }
+
+    return (
+      <div className="save-page reports-page">
+        <TopBar />
+        <div className="main-container">
+          <ReportsMenu
+            reportItems={reportItems}
+            setPage={setPage}
+            openUploadImages={openUploadImages}
+            />
+          <div className="content legacy-report-content">
+            {body}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 function App() {
     const resultParams = new URLSearchParams(
     window.location.search
@@ -24359,10091 +34462,6 @@ if (item === "Mark Dissolved Gps") {
   // REPORT PAGES - BUILT FROM THE SUPPLIED LEGACY SCREENSHOTS
   // =========================================================
 
-  const ReportPage = ({ item }) => {
-useEffect(() => {
-  console.log("REPORT PAGE CREATED");
-  return () => console.log("REPORT PAGE REMOVED");
-}, []);
-    const months = [
-      "April", "May", "June", "July", "August", "September",
-      "October", "November", "December", "January", "February", "March",
-    ];
-
-    const [masterReportSelection, setMasterReportSelection] = useState("MA 01 - General Ledger Details");
-    const [masterFromDate, setMasterFromDate] = useState("");
-    const [masterToDate, setMasterToDate] = useState("");
-    const [masterReportResults, setMasterReportResults] = useState([]);
-    const [masterReportLoading, setMasterReportLoading] = useState(false);
-    const [masterReportStatus, setMasterReportStatus] = useState("");
-
-    const [openingBalanceSelection, setOpeningBalanceSelection] = useState(
-      "OB 01 - Member Confirmation - vazhvathram"
-    );
-    const [openingBalanceSubledger, setOpeningBalanceSubledger] = useState(
-      "Poverty Reduction Fund 1"
-    );
-    const [openingBalanceStatus, setOpeningBalanceStatus] = useState("");
-    const [openingBalanceResults, setOpeningBalanceResults] = useState([]);
-    const [openingBalanceLoading, setOpeningBalanceLoading] = useState(false);
-
-    // FINANCIAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
-    const [financialReportSelection, setFinancialReportSelection] = useState("Cash Book - FR01");
-    const [financialMember, setFinancialMember] = useState(() => {
-        return sessionStorage.getItem("financialMember") || "";
-    });
-    const [financialSubLedger, setFinancialSubLedger] = useState("Regular Savings");
-    const [financialBankLoanLedger, setFinancialBankLoanLedger] = useState("SHG Linkage - Bank");
-    const [financialAcctType, setFinancialAcctType] = useState("Savings Bank AC");
-    const [financialBankBranch, setFinancialBankBranch] = useState("");
-    const [financialAcctNo, setFinancialAcctNo] = useState("");
-    useEffect(() => {
-  if (!financialMember) {
-    setFinancialAcctNo("");
-    setFinancialBankBranch("");
-    setFinancialAcctType("Savings Bank AC");
-    return;
-  }
-
-  const selectedMemberRecord = memberRecords.find(
-    (member) =>
-      String(member?.memberCode || "").trim() ===
-      String(financialMember || "").trim()
-  );
-
-  if (!selectedMemberRecord) {
-    setFinancialAcctNo("");
-    setFinancialBankBranch("");
-    setFinancialAcctType("Savings Bank AC");
-    return;
-  }
-
-  const selectedBankAccount = bankAccountRecords.find(
-    (record) =>
-      String(record?.memberId ?? "").trim() ===
-      String(selectedMemberRecord?.id ?? "").trim()
-  );
-
-  if (!selectedBankAccount) {
-    setFinancialAcctNo("");
-    setFinancialBankBranch("");
-    setFinancialAcctType("Savings Bank AC");
-    return;
-  }
-
-  setFinancialAcctNo(
-    String(selectedBankAccount.accountNumber || "")
-  );
-
-  setFinancialBankBranch(
-    selectedBankAccount.branchName || ""
-  );
-
-  setFinancialAcctType(
-    selectedBankAccount.accountType || ""
-  );
-}, [
-  financialMember,
-  memberRecords,
-  bankAccountRecords,
-]);
-    const [financialFromDate, setFinancialFromDate] = useState(() => {
-  return sessionStorage.getItem("financialFromDate") || "";
-});
-
-const [financialToDate, setFinancialToDate] = useState(() => {
-  return sessionStorage.getItem("financialToDate") || "";
-});
-    const [financialReportResults, setFinancialReportResults] = useState([]);
-    const [financialReportLoading, setFinancialReportLoading] = useState(false);
-    const [financialReportStatus, setFinancialReportStatus] = useState("");
-    const selectedFinancialMemberCode = financialMember;
-useEffect(() => {
-  console.log(
-    "FINANCIAL CONTEXT CHANGED:",
-    selectedCluster,
-    selectedVazhvathram
-  );
-}, [selectedCluster, selectedVazhvathram]);
-
-
-    // JOURNAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
-    const [journalReportSelection, setJournalReportSelection] = useState(
-      "JR01 - Complete Journal Report - vazhvathram"
-    );
-    const [journalFromDate, setJournalFromDate] = useState("");
-    const [journalToDate, setJournalToDate] = useState("");
-    const [journalReportResults, setJournalReportResults] = useState([]);
-    const [journalReportLoading, setJournalReportLoading] = useState(false);
-    const [journalReportStatus, setJournalReportStatus] = useState("");
-    const [reportAvailableDates, setReportAvailableDates] = useState([]);
-    const [financialMemberDates, setFinancialMemberDates] = useState([]);
-useEffect(() => {
-  let cancelled = false;
-
-  const loadFinancialMemberDates = async () => {
-    if (!financialMember) {
-      setFinancialMemberDates([]);
-      setFinancialFromDate("");
-      setFinancialToDate("");
-      return;
-    }
-
-    try {
-      const [
-        memberReceipts,
-        memberPayments,
-        memberJournals,
-      ] = await Promise.all([
-        apiRequest("/member-receipts"),
-        apiRequest("/member-payments"),
-        apiRequest("/member-journals"),
-      ]);
-
-      const selectedCode = String(financialMember)
-        .trim()
-        .toLowerCase();
-
-      const records = [
-        ...(Array.isArray(memberReceipts) ? memberReceipts : []),
-        ...(Array.isArray(memberPayments) ? memberPayments : []),
-        ...(Array.isArray(memberJournals) ? memberJournals : []),
-      ];
-
-      const dateSet = new Set();
-
-      records.forEach((record) => {
-        const recordMemberCode = String(
-          record?.memberCode ||
-            record?.member ||
-            record?.memberId ||
-            ""
-        )
-          .trim()
-          .toLowerCase();
-
-        if (recordMemberCode !== selectedCode) {
-          return;
-        }
-
-        const rawDate =
-          record?.receiptDate ||
-          record?.voucherDate ||
-          record?.journalDate ||
-          record?.date ||
-          record?.transactionDate ||
-          record?.entryDate ||
-          "";
-
-        if (!rawDate) {
-          return;
-        }
-
-        const text = String(rawDate).trim();
-
-        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-          dateSet.add(text);
-          return;
-        }
-
-        if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
-          const [day, month, year] = text.split("-");
-          dateSet.add(`${year}-${month}-${day}`);
-          return;
-        }
-
-        const parsed = new Date(text);
-
-        if (!Number.isNaN(parsed.getTime())) {
-          const year = parsed.getFullYear();
-          const month = String(
-            parsed.getMonth() + 1
-          ).padStart(2, "0");
-          const day = String(
-            parsed.getDate()
-          ).padStart(2, "0");
-
-          dateSet.add(`${year}-${month}-${day}`);
-        }
-      });
-
-      const dates = Array.from(dateSet)
-  .sort((a, b) => a.localeCompare(b));
-
-      if (!cancelled) {
-        setFinancialMemberDates(dates);
-      }
-    } catch (error) {
-      console.error(
-        "Could not load financial member dates:",
-        error
-      );
-
-      if (!cancelled) {
-        setFinancialMemberDates([]);
-      }
-    }
-  };
-
-  loadFinancialMemberDates();
-
-  return () => {
-    cancelled = true;
-  };
-}, [financialMember]);
-
-    useEffect(() => {
-  let cancelled = false;
-
-  const loadReportAvailableDates = async () => {
-    try {
-      const [
-        memberReceipts,
-        otherReceipts,
-        memberPayments,
-        otherPayments,
-        memberJournals,
-        otherJournals,
-        attendances,
-      ] = await Promise.all([
-        apiRequest("/member-receipts"),
-        apiRequest("/other-receipts"),
-        apiRequest("/member-payments"),
-        apiRequest("/other-payments"),
-        apiRequest("/member-journals"),
-        apiRequest("/other-journals"),
-        apiRequest("/attendances"),
-      ]);
-
-      const allRecords = [
-        ...(Array.isArray(memberReceipts) ? memberReceipts : []),
-        ...(Array.isArray(otherReceipts) ? otherReceipts : []),
-        ...(Array.isArray(memberPayments) ? memberPayments : []),
-        ...(Array.isArray(otherPayments) ? otherPayments : []),
-        ...(Array.isArray(memberJournals) ? memberJournals : []),
-        ...(Array.isArray(otherJournals) ? otherJournals : []),
-        ...(Array.isArray(attendances) ? attendances : []),
-      ];
-
-      const dateSet = new Set();
-
-      allRecords.forEach((record) => {
-        const rawDate =
-          record?.receiptDate ||
-          record?.voucherDate ||
-          record?.journalDate ||
-          record?.meetingDate ||
-          record?.date ||
-          record?.transactionDate ||
-          record?.entryDate ||
-          record?.createdDate ||
-          "";
-
-        if (!rawDate) return;
-
-        const text = String(rawDate).trim();
-
-        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-          dateSet.add(text);
-          return;
-        }
-
-        if (/^\d{2}-\d{2}-\d{4}$/.test(text)) {
-          const [day, month, year] = text.split("-");
-          dateSet.add(`${year}-${month}-${day}`);
-          return;
-        }
-
-        const parsed = new Date(text);
-
-        if (!Number.isNaN(parsed.getTime())) {
-          const year = parsed.getFullYear();
-          const month = String(parsed.getMonth() + 1).padStart(2, "0");
-          const day = String(parsed.getDate()).padStart(2, "0");
-          dateSet.add(`${year}-${month}-${day}`);
-        }
-      });
-
-      const currentYearStart =
-        CURRENT_FINANCIAL_YEAR.apiStartDate;
-      const currentYearEnd =
-        CURRENT_FINANCIAL_YEAR.apiEndDate;
-
-      const availableDates = Array.from(dateSet)
-        .filter(
-          (date) =>
-            date >= currentYearStart &&
-            date <= currentYearEnd
-        )
-        .sort((a, b) => b.localeCompare(a));
-
-      if (!cancelled) {
-        setReportAvailableDates(availableDates);
-      }
-    } catch (error) {
-      console.error(
-        "Could not load available report dates:",
-        error
-      );
-
-      if (!cancelled) {
-        setReportAvailableDates([]);
-      }
-    }
-  };
-
-    loadReportAvailableDates();
-
-  return () => {
-    cancelled = true;
-  };
-}, [selectedCluster, selectedVazhvathram]);
-    
-    // MIS-SSP DATABASE CONNECTION (additive; original MIS-SSP page is preserved below)
-    const [misSspReportSelection, setMisSspReportSelection] = useState(
-      "MLSSP 01 - List of Members Enrolled during current year"
-    );
-    const [misSspYear, setMisSspYear] = useState("Current Year");
-    const [misSspSubledger, setMisSspSubledger] = useState(
-      "Social Security Programme - Member Life"
-    );
-    const [misSspMonth, setMisSspMonth] = useState("April");
-    const [misSspReportResults, setMisSspReportResults] = useState([]);
-    const [misSspReportLoading, setMisSspReportLoading] = useState(false);
-    const [misSspReportStatus, setMisSspReportStatus] = useState("");
-
-    // MIS KL 01 - Vazhvathram Details
-    const [misReportSelection, setMisReportSelection] = useState(
-      "KL 01 - vazhvathram Details"
-    );
-    const [misReportResults, setMisReportResults] = useState([]);
-    const [misReportLoading, setMisReportLoading] = useState(false);
-    const [misReportStatus, setMisReportStatus] = useState("");
-
-    const [misReportSubledger, setMisReportSubledger] = useState(
-         "Livelihood Loan Support 1"
-     );
-    const [misReportMonth, setMisReportMonth] = useState("April");
-    
-    // VAZHVATHRAM REPORT DATABASE CONNECTION (additive; original page preserved)
-    const [vazReportSelection, setVazReportSelection] = useState("VAZ 01 - Member Details");
-    const [vazFromAmt, setVazFromAmt] = useState("");
-    const [vazToAmt, setVazToAmt] = useState("");
-    const [vazSubLedger, setVazSubLedger] = useState("Livelihood Loan Support 1");
-    const [vazMonth, setVazMonth] = useState("April");
-    const [vazReportResults, setVazReportResults] = useState([]);
-    const [vazReportLoading, setVazReportLoading] = useState(false);
-    const [vazReportStatus, setVazReportStatus] = useState("");
-
-    // ANALYTICS DATABASE CONNECTION (additive; original Analytics page is preserved below)
-    const [analyticsLevel, setAnalyticsLevel] = useState("Federation");
-    const [analyticsForecastHead, setAnalyticsForecastHead] = useState("Regular Savings (1131)");
-    const [analyticsHistoricalData, setAnalyticsHistoricalData] = useState("Last 3 Financial Years");
-    const [analyticsProjectionType, setAnalyticsProjectionType] = useState("Monthly");
-    const [analyticsProjectionPeriod, setAnalyticsProjectionPeriod] = useState("1 Year");
-    const [analyticsTestPeriod, setAnalyticsTestPeriod] = useState("-- Select --");
-    const [analyticsResults, setAnalyticsResults] = useState([]);
-    const [analyticsLoading, setAnalyticsLoading] = useState(false);
-    const [analyticsStatus, setAnalyticsStatus] = useState("");
-
-    const runAnalyticsReport = async () => {
-      setAnalyticsLoading(true);
-      setAnalyticsStatus("");
-      setAnalyticsResults([]);
-      try {
-        const [members, receipts, payments, journals] = await Promise.all([
-          apiRequest("/members"),
-          apiRequest("/member-receipts"),
-          apiRequest("/member-payments"),
-          apiRequest("/member-journals"),
-        ]);
-        const rows = [
-  ...(Array.isArray(receipts) ? receipts : []).map((r) => ({
-    ...r,
-    source: "Receipt",
-  })),
-  ...(Array.isArray(payments) ? payments : []).map((r) => ({
-    ...r,
-    source: "Payment",
-  })),
-  ...(Array.isArray(journals) ? journals : []).map((r) => ({
-    ...r,
-    source: "Journal",
-  })),
-];
-
-const contextRows = filterReportRecordsByContext(
-  rows,
-  Array.isArray(members) ? members : []
-);
-        const headText = analyticsForecastHead.split(" (")[0].toLowerCase();
-        const filtered = contextRows.filter((r) => {
-          const text = Object.values(r || {}).join(" ").toLowerCase();
-          return headText === "regular savings" ? text.includes("regular") || text.includes("savings") : text.includes(headText);
-        });
-        const numericValues = filtered.map((r) => {
-          const values = Object.entries(r || {}).filter(([k]) => /amount|amt|value|balance|principal/i.test(k));
-          const found = values.map(([,v]) => Number(String(v).replace(/,/g, ""))).find((v) => Number.isFinite(v) && v !== 0);
-          return Number.isFinite(found) ? found : 0;
-        }).filter((v) => v > 0);
-        const total = numericValues.reduce((a,b) => a+b, 0);
-        const average = numericValues.length ? total / numericValues.length : 0;
-        const years = Math.max(1, Number.parseInt(analyticsProjectionPeriod, 10) || 1);
-        const periods = analyticsProjectionType === "Annual" ? years : years * 12;
-        const projected = average * periods;
-        const memberCount = Array.isArray(members) ? members.length : 0;
-        setAnalyticsResults([{
-          level: analyticsLevel,
-          forecastHead: analyticsForecastHead,
-          historicalData: analyticsHistoricalData,
-          projectionType: analyticsProjectionType,
-          projectionPeriod: analyticsProjectionPeriod,
-          members: memberCount,
-          matchedTransactions: filtered.length,
-          historicalTotal: Number(total.toFixed(2)),
-          averageTransaction: Number(average.toFixed(2)),
-          projectedValue: Number(projected.toFixed(2)),
-        }]);
-        setAnalyticsStatus(filtered.length ? `Forecast generated from ${filtered.length} existing database transactions.` : "No matching database transactions found for the selected forecast head.");
-      } catch (error) {
-        setAnalyticsStatus(`Database error: ${error.message}`);
-      } finally {
-        setAnalyticsLoading(false);
-      }
-    };
-
-    // DEMAND SHEET DATABASE CONNECTION (additive; original page preserved)
-    const [demandMeetingDate, setDemandMeetingDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
-    const [demandMemberMode, setDemandMemberMode] = useState("Without Locked Members");
-    const [demandReportResults, setDemandReportResults] = useState([]);
-    const [demandReportLoading, setDemandReportLoading] = useState(false);
-    const [demandReportStatus, setDemandReportStatus] = useState("");
-
-
-    // CONFIRMATION REPORT DATABASE CONNECTION (additive; original page preserved)
-    const [confirmationMeetingDate, setConfirmationMeetingDate] = useState(CURRENT_FINANCIAL_YEAR.confirmationMeetingDate);
-    const [confirmationReportResults, setConfirmationReportResults] = useState([]);
-    const [confirmationReportLoading, setConfirmationReportLoading] = useState(false);
-    const [confirmationReportStatus, setConfirmationReportStatus] = useState("");
-
-
-    // GRADING REPORT DATABASE CONNECTION (additive; original Grading page preserved)
-    const [gradingLevel, setGradingLevel] = useState("Federation");
-    const [gradingMonth, setGradingMonth] = useState("April");
-    const [gradingLanguage, setGradingLanguage] = useState("English");
-    const [gradingReportResults, setGradingReportResults] = useState([]);
-    const [gradingReportLoading, setGradingReportLoading] = useState(false);
-    const [gradingReportStatus, setGradingReportStatus] = useState("");
-
-    // SCHEDULE REPORT DATABASE CONNECTION (additive; original Schedule page preserved)
-    const [scheduleFedBlockCode, setScheduleFedBlockCode] = useState("001");
-    const [scheduleAllSubLedgers, setScheduleAllSubLedgers] = useState(false);
-    const [scheduleGeneralLedger, setScheduleGeneralLedger] = useState("Administrative Expenses - 4410");
-    const [scheduleSubLedger, setScheduleSubLedger] = useState("Bank Charges Not Related to SHG-Bank Linkage - 4415");
-    const [scheduleAsOnDate, setScheduleAsOnDate] = useState(CURRENT_FINANCIAL_YEAR.apiStartDate);
-    const [scheduleAllDetails, setScheduleAllDetails] = useState(false);
-    const [scheduleReportResults, setScheduleReportResults] = useState([]);
-    const [scheduleReportLoading, setScheduleReportLoading] = useState(false);
-    const [scheduleReportStatus, setScheduleReportStatus] = useState("");
-
-    // BANK LINK REPORT DATABASE CONNECTION (additive; original Bank Link page preserved)
-    const [bankLinkReportSelection, setBankLinkReportSelection] = useState("BK 01 - Cluster wise Linkage status");
-    const [bankLinkSubledger, setBankLinkSubledger] = useState("SHG");
-    const [bankLinkMonth, setBankLinkMonth] = useState("April");
-    const [bankLinkReportResults, setBankLinkReportResults] = useState([]);
-    const [bankLinkReportLoading, setBankLinkReportLoading] = useState(false);
-    const [bankLinkReportStatus, setBankLinkReportStatus] = useState("");
-
-    const runBankLinkReport = async () => {
-      setBankLinkReportLoading(true);
-      setBankLinkReportStatus("");
-      setBankLinkReportResults([]);
-
-      try {
-        const [membersData, bankDetailsData, branchesData, receiptsData, paymentsData, fixedDepositsData] = await Promise.all([
-          apiRequest("/members"),
-          apiRequest("/bank-details"),
-          apiRequest("/branches"),
-          apiRequest("/member-receipts"),
-          apiRequest("/member-payments"),
-          apiRequest("/fixed-deposits"),
-        ]);
-
-        const members = Array.isArray(membersData) ? membersData : [];
-        const bankDetails = Array.isArray(bankDetailsData) ? bankDetailsData : [];
-        const branches = Array.isArray(branchesData) ? branchesData : [];
-        const receipts = Array.isArray(receiptsData) ? receiptsData : [];
-        const payments = Array.isArray(paymentsData) ? paymentsData : [];
-        const fixedDeposits = Array.isArray(fixedDepositsData) ? fixedDepositsData : [];
-        const selected = String(bankLinkReportSelection || "");
-        const selectedSubledger = String(bankLinkSubledger || "").toLowerCase();
-
-        let rows = [];
-
-if (selected.includes("Fixed Deposit")) {
-  rows = fixedDeposits;
-} else if (
-  selected.includes("Branch wise") ||
-  selected.includes("Branchwise")
-) {
-  rows = branches;
-} else if (
-  selected.includes("Bank Linkage status") ||
-  selected.includes("Linkage Efficiency") ||
-  selected.includes("Interest Outstanding") ||
-  selected.includes("vazhvathrams not linked")
-) {
-  rows = members.filter((record) => {
-    const text = Object.values(record || {})
-      .join(" ")
-      .toLowerCase();
-
-    return selected.includes("vazhvathrams not linked")
-      ? !text.includes("bank")
-      : true;
-  });
-} else if (
-  selected.includes("Disbursement") ||
-  selected.includes("Repayment") ||
-  selected.includes("Demand Collection")
-) {
-  rows = [...receipts, ...payments];
-} else {
-  rows = [
-    ...bankDetails,
-    ...branches,
-    ...receipts,
-    ...payments,
-  ];
-}
-
-// Apply selected Cluster → Vazhvathram context
-rows = filterReportRecordsByContext(
-  rows,
-  members
-);
-
-        if (selectedSubledger && selectedSubledger !== "shg") {
-          rows = rows.filter((record) => Object.values(record || {}).join(" ").toLowerCase().includes(selectedSubledger));
-        }
-
-        setBankLinkReportResults(rows);
-        setBankLinkReportStatus(`${selected} - ${rows.length} database record(s) for ${bankLinkMonth}.`);
-      } catch (error) {
-        console.error("Bank Link report error:", error);
-        setBankLinkReportStatus(error?.message || "Unable to load Bank Link report from database.");
-      } finally {
-        setBankLinkReportLoading(false);
-      }
-    };
-
-    const renderBankLinkReportResults = () => {
-      if (!bankLinkReportResults.length) return null;
-      const keys = Array.from(new Set(bankLinkReportResults.flatMap((record) => Object.keys(record || {})))).filter((key) => key !== "id").slice(0, 10);
-      return (
-        <div style={{ marginTop: "12px", overflowX: "auto" }}>
-          <div className="legacy-report-subtitle">Bank Link Database Results</div>
-          <table className="legacy-table">
-            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>{bankLinkReportResults.map((record, index) => <tr key={record?.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>)}</tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const runMISSSPReport = async () => {
-      setMisSspReportLoading(true);
-      setMisSspReportStatus("");
-      setMisSspReportResults([]);
-
-      try {
-        const [membersData, productsData, receiptsData, paymentsData] = await Promise.all([
-          apiRequest("/members"),
-          apiRequest("/insurance-products"),
-          apiRequest("/member-receipts"),
-          apiRequest("/member-payments"),
-        ]);
-
-        const members = Array.isArray(membersData) ? membersData : [];
-        const products = Array.isArray(productsData) ? productsData : [];
-        const receipts = Array.isArray(receiptsData) ? receiptsData : [];
-        const payments = Array.isArray(paymentsData) ? paymentsData : [];
-        const selected = String(misSspReportSelection || "");
-        const lowerSelected = selected.toLowerCase();
-
-        let productType = "";
-        if (lowerSelected.includes("life")) productType = "life";
-        else if (lowerSelected.includes("health")) productType = "health";
-        else if (lowerSelected.includes("livestock")) productType = "livestock";
-        else if (lowerSelected.includes("crop")) productType = "crop";
-        else if (lowerSelected.includes("all products")) productType = "all";
-
-        const wantsNotEnrolled = lowerSelected.includes("not enrolled");
-        const wantsSpouse = lowerSelected.includes("spouse");
-        const isWiseReport = lowerSelected.startsWith("klssp") || lowerSelected.startsWith("clssp");
-
-        const currentYearStart = new Date(
-         `${CURRENT_FINANCIAL_YEAR.apiStartDate}T00:00:00`
-         );
-
-       const currentYearEnd = new Date(
-         `${CURRENT_FINANCIAL_YEAR.apiEndDate}T23:59:59.999`
-        );
-
-      const previousYearStart = new Date(currentYearStart);
-      previousYearStart.setFullYear(previousYearStart.getFullYear() - 1);
-
-      const previousYearEnd = new Date(currentYearEnd);
-      previousYearEnd.setFullYear(previousYearEnd.getFullYear() - 1);
-
-      const reportYearStart =
-         misSspYear === "Previous Year"
-           ? previousYearStart
-           : currentYearStart;
-
-      const reportYearEnd =
-         misSspYear === "Previous Year"
-           ? previousYearEnd
-           : currentYearEnd;
-
-        const monthNumber = {
-          January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
-          July: 6, August: 7, September: 8, October: 9, November: 10, December: 11,
-        }[misSspMonth];
-
-        const hasRelevantDate = (record) => {
-          const raw = record?.receiptDate || record?.paymentDate || record?.date || record?.createdAt || record?.productDate || "";
-          if (!raw) return true;
-          const d = new Date(raw);
-          if (Number.isNaN(d.getTime())) return true;
-          if (d < reportYearStart || d > reportYearEnd) return false;
-          if (monthNumber !== undefined && d.getMonth() !== monthNumber) return false;
-          return true;
-        };
-
-        const normalizedProducts = products.map((product) => JSON.stringify(product).toLowerCase());
-        const transactionRows = [...receipts, ...payments].filter(hasRelevantDate);
-
-        const getMemberCode = (member) => String(
-          member?.memberCode || member?.code || member?.memberId || member?.id || ""
-        ).trim();
-        const getMemberName = (member) => String(
-          member?.memberName || member?.name || member?.member_name || ""
-        ).trim();
-
-        const matchesType = (text) => {
-          const t = String(text || "").toLowerCase();
-          if (productType === "all") return /life|health|livestock|crop|insurance|social security|mutual/.test(t);
-          if (!productType) return true;
-          return t.includes(productType);
-        };
-
-        const contextMembers = filterReportRecordsByContext(
-  members,
-  members
-);
-
-const memberRows = contextMembers.map((member) => {
-          const code = getMemberCode(member);
-          const name = getMemberName(member);
-          const memberJson = JSON.stringify(member).toLowerCase();
-          const relatedTransactions = transactionRows.filter((record) => {
-            const text = JSON.stringify(record).toLowerCase();
-            const sameMember = (code && text.includes(code.toLowerCase())) || (name && text.includes(name.toLowerCase()));
-            return sameMember && matchesType(text);
-          });
-          const matchingProducts = normalizedProducts.filter(matchesType);
-          const spouseText = `${memberJson} ${relatedTransactions.map((r) => JSON.stringify(r).toLowerCase()).join(" ")}`;
-          const enrolled = relatedTransactions.length > 0 || (matchingProducts.length > 0 && matchesType(memberJson));
-          const spouseEnrolled = wantsSpouse && /spouse|husband|wife/.test(spouseText) && enrolled;
-          const finalEnrolled = wantsSpouse ? spouseEnrolled : enrolled;
-
-          return {
-            memberCode: code,
-            memberName: name,
-            enrolled: finalEnrolled ? "Yes" : "No",
-            report: selected,
-            subledger: misSspSubledger,
-            year: misSspYear,
-            month: misSspMonth,
-          };
-        });
-
-        let rows = memberRows.filter((row) => wantsNotEnrolled ? row.enrolled === "No" : row.enrolled === "Yes");
-
-        if (isWiseReport) {
-          const groupField = lowerSelected.startsWith("clssp") ? "cluster" : "vazhvathram";
-          const grouped = {};
-          rows.forEach((row) => {
-            const original = members.find((member) => getMemberCode(member) === row.memberCode);
-            const value = String(
-              original?.[groupField] || original?.[`${groupField}Name`] || original?.clusterName || original?.vazhvathramName || "Unknown"
-            ).trim() || "Unknown";
-            grouped[value] = (grouped[value] || 0) + 1;
-          });
-          rows = Object.entries(grouped).map(([group, count]) => ({
-            [groupField]: group,
-            memberCount: count,
-            report: selected,
-            year: misSspYear,
-            month: misSspMonth,
-          }));
-        }
-
-        setMisSspReportResults(rows);
-        setMisSspReportStatus(
-          `${selected}: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded from existing PostgreSQL data.`
-        );
-      } catch (error) {
-        console.error("MIS-SSP Report execute error:", error);
-        setMisSspReportResults([]);
-        setMisSspReportStatus(`Unable to load MIS-SSP data. ${error.message}`);
-      } finally {
-        setMisSspReportLoading(false);
-      }
-    };
-
-     const runMISReport = async () => {
-  setMisReportLoading(true);
-  setMisReportStatus("");
-  setMisReportResults([]);
-
-  try {
-    /*
-     * =========================================================
-     * COMMON MIS DATA
-     * =========================================================
-     */
-
-    const safeApiRequest = async (endpoint) => {
-      try {
-        const data = await apiRequest(endpoint);
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.warn(`MIS endpoint unavailable: ${endpoint}`, error);
-        return [];
-      }
-    };
-
-    const [
-      vazhvathrams,
-      clusters,
-      members,
-      bankAccounts,
-      memberReceipts,
-      otherReceipts,
-      memberPayments,
-      otherPayments,
-      memberJournals,
-      otherJournals,
-      attendances,
-      insuranceProducts,
-    ] = await Promise.all([
-      safeApiRequest("/vazhvathrams"),
-      safeApiRequest("/clusters"),
-      safeApiRequest("/members"),
-      safeApiRequest("/bank-accounts"),
-      safeApiRequest("/member-receipts"),
-      safeApiRequest("/other-receipts"),
-      safeApiRequest("/member-payments"),
-      safeApiRequest("/other-payments"),
-      safeApiRequest("/member-journals"),
-      safeApiRequest("/other-journals"),
-      safeApiRequest("/attendances"),
-      safeApiRequest("/insurance-products"),
-    ]);
-
-    /*
-     * =========================================================
-     * COMMON VALUES
-     * =========================================================
-     */
-
-    const selectedReport = String(misReportSelection || "").trim();
-    const selectedSubledger = String(misReportSubledger || "").trim();
-    const selectedMonth = String(misReportMonth || "April").trim();
-
-    const monthNumbers = {
-      January: 1,
-      February: 2,
-      March: 3,
-      April: 4,
-      May: 5,
-      June: 6,
-      July: 7,
-      August: 8,
-      September: 9,
-      October: 10,
-      November: 11,
-      December: 12,
-    };
-
-    const monthNumber = monthNumbers[selectedMonth] || 4;
-
-    const financialYearStartYear = Number(
-      String(
-        CURRENT_FINANCIAL_YEAR?.apiStartDate ||
-          (CURRENT_WEBSITE === "website2"
-            ? "2025-04-01"
-            : "2026-04-01")
-      ).slice(0, 4)
-    );
-
-    const reportYear =
-      monthNumber >= 4
-        ? financialYearStartYear
-        : financialYearStartYear + 1;
-
-    const pad = (value) => String(value).padStart(2, "0");
-
-    const monthStart = new Date(
-      `${reportYear}-${pad(monthNumber)}-01T00:00:00`
-    );
-
-    const monthEnd = new Date(
-      reportYear,
-      monthNumber,
-      0,
-      23,
-      59,
-      59,
-      999
-    );
-
-    const financialYearStart = new Date(
-      `${financialYearStartYear}-04-01T00:00:00`
-    );
-
-    const parseDate = (value) => {
-      if (!value) return null;
-
-      const date = new Date(value);
-
-      return Number.isNaN(date.getTime())
-        ? null
-        : date;
-    };
-
-    const formatDate = (value) => {
-      if (!value) return "";
-
-      const date = parseDate(value);
-
-      if (!date) return String(value);
-
-      return `${pad(date.getDate())}-${pad(
-        date.getMonth() + 1
-      )}-${date.getFullYear()}`;
-    };
-
-    const money = (value) => {
-      const number = Number(value || 0);
-      return Number.isFinite(number) ? number : 0;
-    };
-
-    const getRecordDate = (record) =>
-      record?.receiptDate ||
-      record?.voucherDate ||
-      record?.journalDate ||
-      record?.date ||
-      record?.accountDate ||
-      record?.createdAt ||
-      "";
-
-    const isInSelectedMonth = (record) => {
-      const date = parseDate(getRecordDate(record));
-
-      if (!date) return false;
-
-      return date >= monthStart && date <= monthEnd;
-    };
-
-    const isUptoSelectedMonth = (record) => {
-      const date = parseDate(getRecordDate(record));
-
-      if (!date) return false;
-
-      return (
-        date >= financialYearStart &&
-        date <= monthEnd
-      );
-    };
-
-    const getMemberCode = (member) =>
-      member?.memberCode ||
-      member?.code ||
-      member?.memberId ||
-      member?.id ||
-      "";
-
-    const getMemberName = (member) =>
-      member?.memberName ||
-      member?.name ||
-      "";
-
-    const getRecordMember = (record) => {
-      const code = String(
-        record?.memberCode || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      const name = String(
-        record?.memberName || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      return (
-        members.find((member) => {
-          const memberCode = String(
-            getMemberCode(member)
-          )
-            .trim()
-            .toLowerCase();
-
-          const memberName = String(
-            getMemberName(member)
-          )
-            .trim()
-            .toLowerCase();
-
-          return (
-            (code &&
-              memberCode &&
-              code === memberCode) ||
-            (name &&
-              memberName &&
-              name === memberName)
-          );
-        }) || null
-      );
-    };
-
-    const memberMatchesVazhvathram = (
-      member,
-      vazhvathram
-    ) => {
-      if (!member || !vazhvathram) return false;
-
-      const memberText = JSON.stringify(
-        member
-      ).toLowerCase();
-
-      const code = String(
-        vazhvathram?.vazhvathramCode || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      const name = String(
-        vazhvathram?.vazhvathramName || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      return (
-        (code && memberText.includes(code)) ||
-        (name && memberText.includes(name))
-      );
-    };
-
-    const getSelectedVazhvathram = () => {
-      const selected = String(
-        selectedVazhvathram || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      return (
-        vazhvathrams.find((record) => {
-          const code = String(
-            record?.vazhvathramCode || ""
-          )
-            .trim()
-            .toLowerCase();
-
-          const name = String(
-            record?.vazhvathramName || ""
-          )
-            .trim()
-            .toLowerCase();
-
-          return (
-            selected === code ||
-            selected === name
-          );
-        }) || null
-      );
-    };
-
-    const selectedVazhvathramRecord =
-      getSelectedVazhvathram();
-
-    /*
-     * =========================================================
-     * KL 01
-     * VAZHVATHRAM DETAILS
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 01 - vazhvathram Details"
-    ) {
-      const rows = vazhvathrams.map(
-        (record) => {
-          const code =
-            record?.vazhvathramCode || "";
-
-          const name =
-            record?.vazhvathramName || "";
-
-          const relatedMembers =
-            members.filter((member) =>
-              memberMatchesVazhvathram(
-                member,
-                record
-              )
-            );
-
-          const bankAccount =
-            bankAccounts.find((account) => {
-              const text = JSON.stringify(
-                account || {}
-              ).toLowerCase();
-
-              return (
-                (code &&
-                  text.includes(
-                    String(code).toLowerCase()
-                  )) ||
-                (name &&
-                  text.includes(
-                    String(name).toLowerCase()
-                  ))
-              );
-            });
-
-          let ageMonths = "";
-
-          const formation =
-            parseDate(record?.formationDate);
-
-          if (formation) {
-            const today = new Date();
-
-            ageMonths =
-              (today.getFullYear() -
-                formation.getFullYear()) *
-                12 +
-              (today.getMonth() -
-                formation.getMonth());
-
-            if (
-              today.getDate() <
-              formation.getDate()
-            ) {
-              ageMonths -= 1;
-            }
-
-            ageMonths = Math.max(
-              0,
-              ageMonths
-            );
-          }
-
-          const categoryCount =
-            relatedMembers.reduce(
-              (result, member) => {
-                const category = String(
-                  member?.category || ""
-                ).toLowerCase();
-
-                if (category.includes("s1"))
-                  result.s1 += 1;
-                else if (
-                  category.includes("s2")
-                )
-                  result.s2 += 1;
-                else if (
-                  category.includes("s3")
-                )
-                  result.s3 += 1;
-
-                return result;
-              },
-              {
-                s1: 0,
-                s2: 0,
-                s3: 0,
-              }
-            );
-
-          return {
-            "Vazhvathram Code": code,
-            "Vazhvathram Name": name,
-            "Cluster Code": "",
-            "Cluster Name": "",
-            "Federation Name": "",
-            "Panchayat Name": "",
-            "Village Name":
-              record?.villageName || "",
-            "Formation Date":
-              formatDate(
-                record?.formationDate
-              ),
-            "Quality Checked Date":
-              formatDate(
-                record?.qualityCheckedDate
-              ),
-            "Meeting Type":
-              record?.meetingType || "",
-            "Bank A/C Date":
-              formatDate(
-                bankAccount?.accountDate
-              ),
-            "Bank A/C No":
-              bankAccount?.accountNumber ||
-              "",
-            "Total Members":
-              relatedMembers.length,
-            "Age (Mon)": ageMonths,
-            "Member Categorisation":
-              `S1 - ${categoryCount.s1} S2 - ${categoryCount.s2} S3 - ${categoryCount.s3} Total - ${relatedMembers.length}`,
-          };
-        }
-      );
-
-      setMisReportResults(
-  rows.filter((row) => {
-    const clusterMatches =
-      !selectedCluster ||
-      String(row["Cluster Name"] || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(row["Vazhvathram Name"] || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  })
-);
-      setMisReportStatus(
-        `KL 01 generated successfully. ${rows.length} Vazhvathram record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 02
-     * MEMBER DETAILS
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 02 - Member Details"
-    ) {
-      const rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-        (member) => ({
-          "Member Code":
-            getMemberCode(member),
-          "Member Name":
-            getMemberName(member),
-          "Regional Name":
-            member?.regionalMemberName ||
-            "",
-          "Designation":
-            member?.designation || "",
-          "Date":
-            formatDate(member?.date),
-          "Date of Joining":
-            formatDate(
-              member?.dateOfJoining
-            ),
-          "Year of Birth":
-            member?.yearOfBirth || "",
-          "Marital Status":
-            member?.maritalStatus || "",
-          "Category":
-            member?.category || "",
-          "Family Category":
-            member?.familyCategory || "",
-          "Mobile Number":
-            member?.mobileNumber || "",
-          "Regular Savings":
-            money(
-              member?.regularSavings
-            ),
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 02 generated successfully. ${rows.length} member${rows.length === 1 ? "" : "s"} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 03A
-     * DESIGNATION
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 03A - Member details-Designation"
-    ) {
-      const rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-        (member) => ({
-          "Member Code":
-            getMemberCode(member),
-          "Member Name":
-            getMemberName(member),
-          "Designation":
-            member?.designation || "",
-          "Date of Joining":
-            formatDate(
-              member?.dateOfJoining
-            ),
-          "Mobile Number":
-            member?.mobileNumber || "",
-          "Category":
-            member?.category || "",
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 03A generated successfully. ${rows.length} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 03B
-     * SOCIAL ECONOMIC CATEGORIZATION
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 03B - Member details-Social economic Categorization"
-    ) {
-      const rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-        (member) => ({
-          "Member Code":
-            getMemberCode(member),
-          "Member Name":
-            getMemberName(member),
-          "Social Economic Category":
-            member?.category || "",
-          "Family Category":
-            member?.familyCategory || "",
-          "House Ownership":
-            member?.houseOwnership || "",
-          "Caste":
-            member?.caste || "",
-          "Marital Status":
-            member?.maritalStatus || "",
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 03B generated successfully. ${rows.length} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 03C
-     * FAMILY CATEGORIZATION
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 03C - Member details-Family Categorization"
-    ) {
-      const rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-        (member) => ({
-          "Member Code":
-            getMemberCode(member),
-          "Member Name":
-            getMemberName(member),
-          "Family Category":
-            member?.familyCategory || "",
-          "Husband/Father Name":
-            member?.husbandFatherName || "",
-          "Marital Status":
-            member?.maritalStatus || "",
-          "Members Alive":
-            member?.aliveStatus || "",
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 03C generated successfully. ${rows.length} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 04
-     * VAZHVATHRAM MANAGEMENT
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 04 - vazhvathram Management Information Report"
-    ) {
-      const rows = vazhvathrams
-  .filter(
-    (record) =>
-      (!selectedCluster ||
-        String(record?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(record?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-        (record) => ({
-          "Vazhvathram Code":
-            record?.vazhvathramCode || "",
-          "Vazhvathram Name":
-            record?.vazhvathramName || "",
-          "Regional Name":
-            record?.regionalVazhvathramName ||
-            "",
-          "Formation Date":
-            formatDate(
-              record?.formationDate
-            ),
-          "Quality Checked Date":
-            formatDate(
-              record?.qualityCheckedDate
-            ),
-          "Meeting Type":
-            record?.meetingType || "",
-          "Meeting Date":
-            formatDate(
-              record?.meetingDate
-            ),
-          "Village Name":
-            record?.villageName || "",
-          "Bank Name":
-            record?.bankName || "",
-          "Branch Name":
-            record?.branchName || "",
-          "Service Area Branch":
-            record?.serviceAreaBranch ||
-            "",
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 04 generated successfully. ${rows.length} Vazhvathram records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 05 FAMILY
-     * LOAN / REPAYMENT REPORTS
-     * =========================================================
-     */
-
-    if (
-      /^KL 05/.test(selectedReport)
-    ) {
-      const monthlyPayments =
-  memberPayments
-    .filter(isInSelectedMonth)
-    .filter((payment) => {
-      const member =
-        getRecordMember(payment);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-      let rows = monthlyPayments.map(
-        (payment) => {
-          const member =
-            getRecordMember(payment);
-
-          return {
-            "Member Code":
-              payment?.memberCode ||
-              getMemberCode(member),
-
-            "Member Name":
-              payment?.memberName ||
-              getMemberName(member),
-
-            "Voucher No":
-              payment?.voucherNo || "",
-
-            "Voucher Date":
-              formatDate(
-                payment?.voucherDate
-              ),
-
-            "Voucher Type":
-              payment?.voucherType || "",
-
-            "Loan Type":
-              payment?.loanType || "",
-
-            "Loan Amount":
-              money(payment?.loanAmount),
-
-            "Instalment Amount":
-              money(
-                payment?.instalmentAmount
-              ),
-
-            "Instalment Type":
-              payment?.instalmentType || "",
-
-            "Purpose":
-              payment?.purpose || "",
-
-            "Sub Purpose":
-              payment?.subPurpose || "",
-
-            "Narration":
-              payment?.narration || "",
-
-            "Total":
-              money(payment?.total),
-          };
-        }
-      );
-
-      if (
-        selectedReport ===
-        "KL 05B - Member without Livelihood Loan Support"
-      ) {
-        rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .filter((member) => {
-            const code =
-              String(
-                getMemberCode(member)
-              ).toLowerCase();
-
-            const hasLoan =
-              memberPayments.some(
-                (payment) =>
-                  String(
-                    payment?.memberCode ||
-                      ""
-                  ).toLowerCase() ===
-                    code &&
-                  money(
-                    payment?.loanAmount
-                  ) > 0
-              );
-
-            return !hasLoan;
-          })
-          .map((member) => ({
-            "Member Code":
-              getMemberCode(member),
-            "Member Name":
-              getMemberName(member),
-            "Regular Savings":
-              money(
-                member?.regularSavings
-              ),
-            "Status":
-              "No Livelihood Loan Support",
-          }));
-      }
-
-      if (
-        selectedReport ===
-        "KL 05C - Member Total Loan O/S"
-      ) {
-        rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-          (member) => {
-            const code = String(
-              getMemberCode(member)
-            )
-              .trim()
-              .toLowerCase();
-
-            const payments =
-              memberPayments.filter(
-                (payment) =>
-                  String(
-                    payment?.memberCode ||
-                      ""
-                  )
-                    .trim()
-                    .toLowerCase() === code
-              );
-
-            const loanAmount =
-              payments.reduce(
-                (sum, payment) =>
-                  sum +
-                  money(
-                    payment?.loanAmount
-                  ),
-                0
-              );
-
-            const repayment =
-              payments.reduce(
-                (sum, payment) =>
-                  sum +
-                  money(
-                    payment?.instalmentAmount
-                  ),
-                0
-              );
-
-            return {
-              "Member Code":
-                getMemberCode(member),
-              "Member Name":
-                getMemberName(member),
-              "Total Loan":
-                loanAmount,
-              "Total Repayment":
-                repayment,
-              "Loan O/S":
-                Math.max(
-                  0,
-                  loanAmount - repayment
-                ),
-            };
-          }
-        );
-      }
-
-      if (
-        selectedReport ===
-        "KL 05D - Member Total Loan O/S OD"
-      ) {
-        rows = members
-  .filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  )
-  .map(
-          (member) => {
-            const code = String(
-              getMemberCode(member)
-            )
-              .trim()
-              .toLowerCase();
-
-            const payments =
-              memberPayments.filter(
-                (payment) =>
-                  String(
-                    payment?.memberCode ||
-                      ""
-                  )
-                    .trim()
-                    .toLowerCase() === code
-              );
-
-            const loan =
-              payments.reduce(
-                (sum, payment) =>
-                  sum +
-                  money(
-                    payment?.loanAmount
-                  ),
-                0
-              );
-
-            const repayment =
-              payments.reduce(
-                (sum, payment) =>
-                  sum +
-                  money(
-                    payment?.instalmentAmount
-                  ),
-                0
-              );
-
-            const outstanding =
-              Math.max(
-                0,
-                loan - repayment
-              );
-
-            return {
-              "Member Code":
-                getMemberCode(member),
-              "Member Name":
-                getMemberName(member),
-              "Loan Amount": loan,
-              "Repayment": repayment,
-              "Outstanding": outstanding,
-              "OD Amount":
-                outstanding > 0
-                  ? outstanding
-                  : 0,
-            };
-          }
-        );
-      }
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 06
-     * REGULAR SAVINGS DEMAND VS COLLECTION
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 06 - Regular Savings - Demand Vs. Collection"
-    ) {
-      const receipts =
-  memberReceipts
-    .filter(isInSelectedMonth)
-    .filter((receipt) => {
-      const member =
-        getRecordMember(receipt);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-      const grouped = {};
-
-      receipts.forEach((receipt) => {
-        const code =
-          receipt?.memberCode ||
-          receipt?.memberName ||
-          receipt?.id ||
-          "";
-
-        if (!grouped[code]) {
-          grouped[code] = {
-            "Member Code":
-              receipt?.memberCode || "",
-            "Member Name":
-              receipt?.memberName || "",
-            "Regular Savings Collection": 0,
-          };
-        }
-
-        grouped[code][
-          "Regular Savings Collection"
-        ] += money(
-          receipt?.regularSavings
-        );
-      });
-
-      const rows = Object.values(
-        grouped
-      ).map((row) => ({
-        ...row,
-
-        /*
-         * Demand is not stored as a separate
-         * field in the current Member entity.
-         * Therefore the report does not invent
-         * a demand amount.
-         */
-        "Regular Savings Demand":
-          "",
-
-        Difference: "",
-
-        Month: selectedMonth,
-      }));
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 06 generated successfully for ${selectedMonth}. ${rows.length} member records loaded. Demand remains blank because no separate demand field exists in the current database.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 07
-     * SPECIAL SAVINGS
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 07 - Special Savings Report"
-    ) {
-      const receipts =
-  memberReceipts
-    .filter(isInSelectedMonth)
-    .filter((receipt) => {
-      const member =
-        getRecordMember(receipt);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-      const rows = receipts.map(
-        (receipt) => ({
-          "Member Code":
-            receipt?.memberCode || "",
-          "Member Name":
-            receipt?.memberName || "",
-          "Special Savings":
-            money(
-              receipt?.specialSavings
-            ),
-          "Special Savings Amount":
-            money(
-              receipt?.specialSavingsAmount
-            ),
-          "Special Savings More Type":
-            receipt?.specialSavingsMoreType ||
-            "",
-          "Special Savings More Amount":
-            money(
-              receipt?.specialSavingsMoreAmount
-            ),
-          "Month":
-            selectedMonth,
-          "Receipt Date":
-            formatDate(
-              receipt?.receiptDate
-            ),
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 07 generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 08
-     * REGULAR SAVINGS >= 15000
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 08 - Regular Savings Amount >= 15000 Report"
-    ) {
-      const grouped = {};
-
-      memberReceipts
-  .filter(isInSelectedMonth)
-  .filter((receipt) => {
-    const member =
-      getRecordMember(receipt);
-
-    return (
-      member &&
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-    );
-  })
-  .forEach((receipt) => {
-          const code =
-            receipt?.memberCode ||
-            receipt?.memberName ||
-            receipt?.id ||
-            "";
-
-          if (!grouped[code]) {
-            grouped[code] = {
-              "Member Code":
-                receipt?.memberCode ||
-                "",
-              "Member Name":
-                receipt?.memberName ||
-                "",
-              "Regular Savings": 0,
-            };
-          }
-
-          grouped[code][
-            "Regular Savings"
-          ] += money(
-            receipt?.regularSavings
-          );
-        });
-
-      const rows = Object.values(
-        grouped
-      ).filter(
-        (row) =>
-          money(
-            row["Regular Savings"]
-          ) >= 15000
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 08 generated successfully for ${selectedMonth}. ${rows.length} qualifying members found.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 09
-     * REGULAR ALL REPORT
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 09 - Regular All Report"
-    ) {
-      const grouped = {};
-
-      memberReceipts
-  .filter(isInSelectedMonth)
-  .filter((receipt) => {
-    const member =
-      getRecordMember(receipt);
-
-    return (
-      member &&
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-    );
-  })
-  .forEach((receipt) => {
-          const code =
-            receipt?.memberCode ||
-            receipt?.memberName ||
-            receipt?.id ||
-            "";
-
-          if (!grouped[code]) {
-            grouped[code] = {
-              "Member Code":
-                receipt?.memberCode || "",
-              "Member Name":
-                receipt?.memberName || "",
-              "Regular Savings": 0,
-              "Special Savings": 0,
-              "Livelihood Loan Support 1": 0,
-              "Livelihood Loan Support 2": 0,
-              "Housing Loan": 0,
-              "Total": 0,
-            };
-          }
-
-          grouped[code][
-            "Regular Savings"
-          ] += money(
-            receipt?.regularSavings
-          );
-
-          grouped[code][
-            "Special Savings"
-          ] += money(
-            receipt?.specialSavings
-          );
-
-          grouped[code][
-            "Livelihood Loan Support 1"
-          ] += money(
-            receipt?.livelihoodLoanSupport1
-          );
-
-          grouped[code][
-            "Livelihood Loan Support 2"
-          ] += money(
-            receipt?.livelihoodLoanSupport2
-          );
-
-          grouped[code][
-            "Housing Loan"
-          ] += money(
-            receipt?.housingLoan
-          );
-
-          grouped[code]["Total"] +=
-            money(receipt?.total);
-        });
-
-      const rows = Object.values(
-        grouped
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 09 generated successfully for ${selectedMonth}. ${rows.length} members loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 10
-     * SAVINGS + INTEREST MONTHWISE
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 10 - Member wise Savings and Interest - Monthwise"
-    ) {
-      const receipts =
-  memberReceipts
-    .filter(isInSelectedMonth)
-    .filter((receipt) => {
-      const member =
-        getRecordMember(receipt);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-      const grouped = {};
-
-      receipts.forEach((receipt) => {
-        const code =
-          receipt?.memberCode ||
-          receipt?.memberName ||
-          receipt?.id ||
-          "";
-
-        if (!grouped[code]) {
-          grouped[code] = {
-            "Member Code":
-              receipt?.memberCode || "",
-            "Member Name":
-              receipt?.memberName || "",
-            "Regular Savings": 0,
-            "Special Savings": 0,
-          };
-        }
-
-        grouped[code][
-          "Regular Savings"
-        ] += money(
-          receipt?.regularSavings
-        );
-
-        grouped[code][
-          "Special Savings"
-        ] += money(
-          receipt?.specialSavings
-        );
-      });
-
-      const rows = Object.values(
-        grouped
-      ).map((row) => ({
-        ...row,
-        Month: selectedMonth,
-        Interest: "",
-      }));
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 10 generated successfully for ${selectedMonth}. Interest is blank because the current database does not expose a separate interest field.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * KL 10A
-     * SPECIAL SAVINGS + INTEREST
-     * =========================================================
-     */
-
-    if (
-      selectedReport ===
-      "KL 10A - Member wise Special Savings and Interest - Monthwise"
-    ) {
-      const receipts =
-  memberReceipts
-    .filter(isInSelectedMonth)
-    .filter((receipt) => {
-      const member =
-        getRecordMember(receipt);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-      const rows = receipts.map(
-        (receipt) => ({
-          "Member Code":
-            receipt?.memberCode || "",
-          "Member Name":
-            receipt?.memberName || "",
-          "Special Savings":
-            money(
-              receipt?.specialSavings
-            ),
-          "Special Savings Amount":
-            money(
-              receipt?.specialSavingsAmount
-            ),
-          Month: selectedMonth,
-          Interest: "",
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `KL 10A generated successfully for ${selectedMonth}. ${rows.length} records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * CL REPORTS
-     * =========================================================
-     */
-
-    if (
-  selectedReport.startsWith("CL ")
-) {
-  const isFederationReport =
-    selectedReport
-      .toLowerCase()
-      .includes("federation");
-      const monthlyReceipts =
-  memberReceipts
-    .filter(isInSelectedMonth)
-    .filter((record) => {
-      const member =
-        getRecordMember(record);
-
-      return (
-        member &&
-        isFederationReport ||
-        !selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()
-      );
-    });
-
-const monthlyPayments =
-  memberPayments
-    .filter(isInSelectedMonth)
-    .filter((record) => {
-      const member =
-        getRecordMember(record);
-
-      return (
-        member &&
-        isFederationReport ||
-        !selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()
-      );
-    });
-
-      const totalSavings =
-        monthlyReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.regularSavings
-            ),
-          0
-        );
-
-      const totalSpecialSavings =
-        monthlyReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.specialSavings
-            ),
-          0
-        );
-
-      const totalLoan =
-        monthlyPayments.reduce(
-          (sum, record) =>
-            sum +
-            money(record?.loanAmount),
-          0
-        );
-
-      const totalRepayment =
-        monthlyPayments.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.instalmentAmount
-            ),
-          0
-        );
-
-      const attended =
-  attendances
-    .filter(isInSelectedMonth)
-    .filter((attendance) => {
-      const member =
-        getRecordMember(attendance);
-
-      return (
-        member &&
-        isFederationReport ||
-        !selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()
-      );
-    }).length;
-
-      const rows = clusters
-  .filter(
-    (cluster) =>
-      isFederationReport ||
-      !selectedCluster ||
-      String(cluster?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim()
-  )
-  .map(
-    (cluster) => ({
-          "Cluster Code":
-            cluster?.clusterCode || "",
-          "Cluster Name":
-            cluster?.clusterName || "",
-          "Regional Name":
-            cluster?.regionalClusterName ||
-            "",
-          "Formation Date":
-            formatDate(
-              cluster?.formationDate
-            ),
-          "Report":
-            selectedReport,
-          "Month":
-            selectedMonth,
-          "Total Members":
-            members.length,
-          "Members Attended":
-            attended,
-          "Regular Savings":
-            totalSavings,
-          "Special Savings":
-            totalSpecialSavings,
-          "Loan Amount":
-            totalLoan,
-          "Loan Repayment":
-            totalRepayment,
-        })
-      );
-
-      setMisReportResults(rows);
-
-      setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth}. ${rows.length} cluster records loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * BL REPORTS
-     * =========================================================
-     */
-
-    if (
-      selectedReport.startsWith("BL ")
-    ) {
-      const uptoReceipts =
-  memberReceipts
-    .filter(isUptoSelectedMonth)
-    .filter((record) => {
-      const member =
-        getRecordMember(record);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-const uptoPayments =
-  memberPayments
-    .filter(isUptoSelectedMonth)
-    .filter((record) => {
-      const member =
-        getRecordMember(record);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-const monthlyReceipts =
-  memberReceipts
-    .filter(isInSelectedMonth)
-    .filter((record) => {
-      const member =
-        getRecordMember(record);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-const monthlyPayments =
-  memberPayments
-    .filter(isInSelectedMonth)
-    .filter((record) => {
-      const member =
-        getRecordMember(record);
-
-      return (
-        member &&
-        (!selectedCluster ||
-          String(member?.clusterName || "").trim() ===
-            String(selectedCluster || "").trim()) &&
-        (!selectedVazhvathram ||
-          String(member?.vazhvathramName || "").trim() ===
-            String(selectedVazhvathram || "").trim())
-      );
-    });
-
-      const totalRegularSavings =
-        uptoReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.regularSavings
-            ),
-          0
-        );
-
-      const totalSpecialSavings =
-        uptoReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.specialSavings
-            ),
-          0
-        );
-
-      const totalLoan =
-        uptoPayments.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.loanAmount
-            ),
-          0
-        );
-
-      const totalRepayment =
-        uptoPayments.reduce(
-          (sum, record) =>
-            sum +
-            money(
-              record?.instalmentAmount
-            ),
-          0
-        );
-
-      const monthlyCollection =
-        monthlyReceipts.reduce(
-          (sum, record) =>
-            sum +
-            money(record?.total),
-          0
-        );
-
-      const monthlyPayment =
-        monthlyPayments.reduce(
-          (sum, record) =>
-            sum +
-            money(record?.total),
-          0
-        );
-
-      const report = {
-        "Report":
-          selectedReport,
-        "Month":
-          selectedMonth,
-        "Vazhvathrams":
-  vazhvathrams.filter(
-    (record) =>
-      (!selectedCluster ||
-        String(record?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(record?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  ).length,
-
-"Clusters":
-  clusters.filter(
-    (record) =>
-      !selectedCluster ||
-      String(record?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim()
-  ).length,
-
-"Members":
-  members.filter(
-    (member) =>
-      (!selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim()) &&
-      (!selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim())
-  ).length,
-
-"Bank Accounts":
-  bankAccounts.length,
-        "Regular Savings":
-          totalRegularSavings,
-        "Special Savings":
-          totalSpecialSavings,
-        "Total Loan":
-          totalLoan,
-        "Total Repayment":
-          totalRepayment,
-        "Loan Outstanding":
-          Math.max(
-            0,
-            totalLoan - totalRepayment
-          ),
-        "Monthly Collection":
-          monthlyCollection,
-        "Monthly Payment":
-          monthlyPayment,
-        "Insurance Products":
-          insuranceProducts.length,
-      };
-
-      setMisReportResults([
-        report,
-      ]);
-
-      setMisReportStatus(
-        `${selectedReport} generated successfully for ${selectedMonth}.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * UNKNOWN / FUTURE MIS OPTION
-     * =========================================================
-     *
-     * Do not silently show a fake generic report.
-     * Show a clear message instead.
-     */
-
-    setMisReportResults([]);
-
-    setMisReportStatus(
-      `${selectedReport || "Selected MIS report"} is not yet mapped to a database calculation in this SAVE version.`
-    );
-  } catch (error) {
-    console.error(
-      "MIS report error:",
-      error
-    );
-
-    setMisReportResults([]);
-
-    setMisReportStatus(
-      `Unable to generate MIS report. ${
-        error?.message || error
-      }`
-    );
-  } finally {
-    setMisReportLoading(false);
-  }
-};
-
-    const renderMISSSPReportResults = () => {
-      if (!misSspReportResults.length) return null;
-      const keys = Array.from(
-        new Set(misSspReportResults.flatMap((record) => Object.keys(record || {})))
-      ).filter((key) => key !== "id").slice(0, 10);
-      if (!keys.length) return null;
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table">
-            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>
-              {misSspReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>
-                  {keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const runDemandSheetReport = async () => {
-      setDemandReportLoading(true);
-      setDemandReportStatus("");
-      setDemandReportResults([]);
-      try {
-        const data = await apiRequest("/members");
-        const members = Array.isArray(data) ? data : [];
-        const targetDate = demandMeetingDate ? new Date(`${demandMeetingDate}T00:00:00`) : null;
-        const isLocked = (member) => {
-          const text = JSON.stringify(member || {}).toLowerCase();
-          return /lock|locked/.test(text) || String(member?.locked || member?.isLocked || "").toLowerCase() === "true";
-        };
-        let rows = filterReportRecordsByContext(
-  members,
-  members
-);
-
-rows = rows.filter((member) => {
-  if (demandMemberMode === "With Locked Members") {
-    return true;
-  }
-
-  return !isLocked(member);
-});
-        rows = rows.map((member) => ({
-          memberCode: member?.memberCode || member?.code || member?.memberId || member?.id || "",
-          memberName: member?.memberName || member?.name || "",
-          vazhvathramCode: member?.vazhvathramCode || member?.vazhvathram || "0010101",
-          meetingDate: demandMeetingDate,
-          memberMode: demandMemberMode,
-          status: isLocked(member) ? "Locked" : "Active"
-        }));
-        setDemandReportResults(rows);
-        setDemandReportStatus(
-          `Demand Sheet: ${rows.length} member${rows.length === 1 ? "" : "s"} loaded from existing PostgreSQL data for ${targetDate && !Number.isNaN(targetDate.getTime()) ? demandMeetingDate : "the selected date"}.`
-        );
-      } catch (error) {
-        console.error("Demand Sheet execute error:", error);
-        setDemandReportResults([]);
-        setDemandReportStatus(`Unable to load Demand Sheet data. ${error.message}`);
-      } finally {
-        setDemandReportLoading(false);
-      }
-    };
-
-    const renderDemandSheetResults = () => {
-      if (!demandReportResults.length) return null;
-      const keys = ["memberCode", "memberName", "vazhvathramCode", "meetingDate", "memberMode", "status"];
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table">
-            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>
-              {demandReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const runConfirmationReport = async () => {
-  setConfirmationReportLoading(true);
-  setConfirmationReportStatus("");
-  setConfirmationReportResults([]);
-
-  try {
-    const [
-      membersData,
-      locksData,
-      vazhvathramsData,
-    ] = await Promise.all([
-      apiRequest("/members"),
-      apiRequest("/auto-journal-locks"),
-      apiRequest("/vazhvathrams"),
-    ]);
-
-    const members = Array.isArray(membersData) ? membersData : [];
-    const locks = Array.isArray(locksData) ? locksData : [];
-    const vazhvathrams = Array.isArray(vazhvathramsData)
-      ? vazhvathramsData
-      : [];
-
-    const targetDate = confirmationMeetingDate
-      ? new Date(`${confirmationMeetingDate}T00:00:00`)
-      : null;
-
-    const monthName =
-      targetDate && !Number.isNaN(targetDate.getTime())
-        ? targetDate.toLocaleString("en-US", {
-            month: "long",
-          })
-        : "";
-
-    const year =
-      targetDate && !Number.isNaN(targetDate.getTime())
-        ? targetDate.getFullYear()
-        : null;
-
-    const getLockStatus = (vazhvathram) => {
-      const vazhvathramCode = String(
-        vazhvathram?.vazhvathramCode || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      const vazhvathramName = String(
-        vazhvathram?.vazhvathramName || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      const locked = locks.some((lock) => {
-        const lockMonth = String(lock?.month || "")
-          .trim()
-          .toLowerCase();
-
-        const lockDate = String(
-          lock?.lockedDate || lock?.createdAt || ""
-        );
-
-        const lockYear = lockDate
-          ? new Date(lockDate).getFullYear()
-          : null;
-
-        const lockCode = String(
-          lock?.vazhvathramCode || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        const lockName = String(
-          lock?.vazhvathramName || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        const sameGroup =
-          !lockCode ||
-          !vazhvathramCode ||
-          lockCode === vazhvathramCode ||
-          (!!lockName &&
-            !!vazhvathramName &&
-            lockName === vazhvathramName);
-
-        return (
-          sameGroup &&
-          lockMonth === monthName.toLowerCase() &&
-          (!year || !lockYear || lockYear === year)
-        );
-      });
-
-      return locked
-        ? "Ready for Confirmation"
-        : "Auto Journal Not Locked";
-    };
-
-    const rows = [];
-
-    vazhvathrams.forEach((vazhvathram) => {
-      const vazhvathramCode = String(
-        vazhvathram?.vazhvathramCode || ""
-      ).trim();
-
-      const vazhvathramName =
-        vazhvathram?.vazhvathramName || "";
-
-      const membersForGroup = members.filter((member) => {
-        const memberVazCode = String(
-          member?.vazhvathramCode ||
-            member?.vazhvathram ||
-            ""
-        ).trim();
-
-        const memberCode = String(
-          member?.memberCode ||
-            member?.code ||
-            member?.memberId ||
-            member?.id ||
-            ""
-        ).trim();
-
-        if (
-          memberVazCode &&
-          vazhvathramCode
-        ) {
-          return (
-            memberVazCode.toLowerCase() ===
-            vazhvathramCode.toLowerCase()
-          );
-        }
-
-        if (vazhvathramCode && memberCode) {
-          return memberCode.startsWith(vazhvathramCode);
-        }
-
-        return false;
-      });
-
-      const confirmationStatus =
-        getLockStatus(vazhvathram);
-
-      if (membersForGroup.length === 0) {
-        rows.push({
-          vazhvathramCode,
-          vazhvathramName,
-          regionalVazhvathramName:
-            vazhvathram?.regionalVazhvathramName || "",
-          formationDate:
-            vazhvathram?.formationDate || "",
-          qualityCheckedDate:
-            vazhvathram?.qualityCheckedDate || "",
-          meetingType:
-            vazhvathram?.meetingType || "",
-          meetingDate:
-            vazhvathram?.meetingDate || "",
-          formedBy:
-            vazhvathram?.formedBy || "",
-          villageName:
-            vazhvathram?.villageName || "",
-          bankName:
-            vazhvathram?.bankName || "",
-          branchName:
-            vazhvathram?.branchName || "",
-          serviceAreaBranch:
-            vazhvathram?.serviceAreaBranch || "",
-          memberCode: "",
-          memberName: "",
-          memberRegionalName: "",
-          memberMobile: "",
-          memberCategory: "",
-          memberCaste: "",
-          selectedMeetingDate: confirmationMeetingDate,
-          confirmationStatus,
-        });
-
-        return;
-      }
-
-      membersForGroup.forEach((member) => {
-        rows.push({
-          vazhvathramCode,
-          vazhvathramName,
-          regionalVazhvathramName:
-            vazhvathram?.regionalVazhvathramName || "",
-          formationDate:
-            vazhvathram?.formationDate || "",
-          qualityCheckedDate:
-            vazhvathram?.qualityCheckedDate || "",
-          meetingType:
-            vazhvathram?.meetingType || "",
-          meetingDate:
-            vazhvathram?.meetingDate || "",
-          formedBy:
-            vazhvathram?.formedBy || "",
-          villageName:
-            vazhvathram?.villageName || "",
-          bankName:
-            vazhvathram?.bankName || "",
-          branchName:
-            vazhvathram?.branchName || "",
-          serviceAreaBranch:
-            vazhvathram?.serviceAreaBranch || "",
-
-          memberCode:
-            member?.memberCode ||
-            member?.code ||
-            member?.memberId ||
-            member?.id ||
-            "",
-
-          memberName:
-            member?.memberName ||
-            member?.name ||
-            member?.member_name ||
-            "",
-
-          memberRegionalName:
-            member?.regionalMemberName || "",
-
-          memberMobile:
-            member?.mobileNumber || "",
-
-          memberCategory:
-            member?.category || "",
-
-          memberCaste:
-            member?.caste || "",
-
-          selectedMeetingDate:
-            confirmationMeetingDate,
-
-          confirmationStatus,
-        });
-      });
-    });
-
-    setConfirmationReportResults(rows);
-
-    setConfirmationReportStatus(
-      rows.length
-        ? `Confirmation data loaded for ${monthName || "the selected date"} ${year || ""}. ${rows.length} record${rows.length === 1 ? "" : "s"} found.`
-        : "No Vazhvathram or Member records found in the database."
-    );
-  } catch (error) {
-    console.error(
-      "Confirmation Report execute error:",
-      error
-    );
-
-    setConfirmationReportResults([]);
-
-    setConfirmationReportStatus(
-      `Unable to load Confirmation data. ${error.message}`
-    );
-  } finally {
-    setConfirmationReportLoading(false);
-  }
-};
-
-const renderConfirmationReportResults = () => {
-  if (!confirmationReportResults.length) return null;
-
-  return (
-    <div
-      style={{
-        marginTop: "14px",
-        overflowX: "auto",
-        border: "1px solid #777",
-        background: "#fff",
-      }}
-    >
-      <table
-        className="legacy-table"
-        style={{
-          minWidth: "2200px",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <thead>
-          <tr>
-            <th>Vazhvathram Code</th>
-            <th>Vazhvathram Name</th>
-            <th>Regional Vazhvathram Name</th>
-            <th>Formation Date</th>
-            <th>Quality Checked Date</th>
-            <th>Meeting Type</th>
-            <th>Meeting Date / Day</th>
-            <th>Formed By</th>
-            <th>Village Name</th>
-            <th>Bank Name</th>
-            <th>Branch Name</th>
-            <th>Service Area Branch</th>
-
-            <th>Member Code</th>
-            <th>Member Name</th>
-            <th>Regional Member Name</th>
-            <th>Mobile Number</th>
-            <th>Category</th>
-            <th>Caste</th>
-
-            <th>Selected Meeting Date</th>
-            <th>Confirmation Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {confirmationReportResults.map((record, index) => (
-            <tr key={record.id ?? index}>
-              <td>{record.vazhvathramCode}</td>
-              <td>{record.vazhvathramName}</td>
-              <td>{record.regionalVazhvathramName}</td>
-              <td>{record.formationDate}</td>
-              <td>{record.qualityCheckedDate}</td>
-              <td>{record.meetingType}</td>
-              <td>{record.meetingDate}</td>
-              <td>{record.formedBy}</td>
-              <td>{record.villageName}</td>
-              <td>{record.bankName}</td>
-              <td>{record.branchName}</td>
-              <td>{record.serviceAreaBranch}</td>
-
-              <td>{record.memberCode}</td>
-              <td>{getMemberDisplayName(record.memberCode,record.memberName )}</td>
-              <td>{record.memberRegionalName}</td>
-              <td>{record.memberMobile}</td>
-              <td>{record.memberCategory}</td>
-              <td>{record.memberCaste}</td>
-
-              <td>{record.selectedMeetingDate}</td>
-              <td>{record.confirmationStatus}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-    const runScheduleReport = async () => {
-      setScheduleReportLoading(true);
-      setScheduleReportStatus("");
-      setScheduleReportResults([]);
-
-      try {
-        const [
-  receiptsData,
-  paymentsData,
-  memberJournalsData,
-  otherJournalsData,
-  membersData,
-] = await Promise.all([
-  apiRequest("/member-receipts"),
-  apiRequest("/member-payments"),
-  apiRequest("/member-journals"),
-  apiRequest("/other-journals"),
-  apiRequest("/members"),
-]);
-
-        const sources = [
-          ...(Array.isArray(receiptsData) ? receiptsData : []).map((row) => ({ ...row, _source: "Member Receipt" })),
-          ...(Array.isArray(paymentsData) ? paymentsData : []).map((row) => ({ ...row, _source: "Member Payment" })),
-          ...(Array.isArray(memberJournalsData) ? memberJournalsData : []).map((row) => ({ ...row, _source: "Member Journal" })),
-          ...(Array.isArray(otherJournalsData) ? otherJournalsData : []).map((row) => ({ ...row, _source: "Other Journal" })),
-        ];
-    const members = Array.isArray(membersData)
-  ? membersData
-  : [];
-
-const contextSources = filterReportRecordsByContext(
-  sources,
-  members
-);
-
-        const selectedLedger = String(scheduleGeneralLedger || "").toLowerCase();
-        const selectedSubLedger = String(scheduleSubLedger || "").toLowerCase();
-        const targetDate = scheduleAsOnDate ? new Date(`${scheduleAsOnDate}T23:59:59`) : null;
-
-        const rows = contextSources.filter((row) => {
-          const text = Object.entries(row)
-            .filter(([key]) => !String(key).startsWith("_"))
-            .map(([, value]) => String(value ?? ""))
-            .join(" ")
-            .toLowerCase();
-
-          const ledgerMatch = !selectedLedger || text.includes(selectedLedger) || text.includes(selectedLedger.replace(/\s+-\s+\d+$/, ""));
-          const subLedgerMatch = scheduleAllSubLedgers || !selectedSubLedger || text.includes(selectedSubLedger) || text.includes(selectedSubLedger.replace(/\s+-\s+\d+$/, ""));
-
-          const rawDate = row.date || row.receiptDate || row.paymentDate || row.journalDate || row.transactionDate || row.entryDate || row.createdDate;
-          if (!targetDate || !rawDate) return ledgerMatch && subLedgerMatch;
-          const rowDate = new Date(rawDate);
-          if (Number.isNaN(rowDate.getTime())) return ledgerMatch && subLedgerMatch;
-          return rowDate <= targetDate && ledgerMatch && subLedgerMatch;
-        });
-
-        const finalRows = scheduleAllDetails ? rows : rows.slice(0, 100);
-        setScheduleReportResults(finalRows);
-        setScheduleReportStatus(
-          `${finalRows.length} matching transaction${finalRows.length === 1 ? "" : "s"} loaded from existing PostgreSQL data as on ${scheduleAsOnDate || "the selected date"}.`
-        );
-      } catch (error) {
-        setScheduleReportStatus(error?.message || "Unable to load Schedule report data.");
-      } finally {
-        setScheduleReportLoading(false);
-      }
-    };
-
-    const renderScheduleReportResults = () => {
-      if (scheduleReportLoading || !scheduleReportResults.length) return null;
-      const keys = Array.from(
-        new Set(scheduleReportResults.flatMap((row) => Object.keys(row).filter((key) => !String(key).startsWith("_"))))
-      ).slice(0, 10);
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table">
-            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>
-              {scheduleReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const runGradingReport = async () => {
-      setGradingReportLoading(true);
-      setGradingReportStatus("");
-      setGradingReportResults([]);
-      try {
-        const [membersData, receiptsData, paymentsData, journalsData] = await Promise.all([
-          apiRequest("/members"),
-          apiRequest("/member-receipts"),
-          apiRequest("/member-payments"),
-          apiRequest("/member-journals"),
-        ]);
-        const members = Array.isArray(membersData) ? membersData : [];
-        const receipts = Array.isArray(receiptsData) ? receiptsData : [];
-        const payments = Array.isArray(paymentsData) ? paymentsData : [];
-        const journals = Array.isArray(journalsData) ? journalsData : [];
-        const contextMembers = filterReportRecordsByContext(
-  members,
-  members
-);
-
-const contextReceipts = filterReportRecordsByContext(
-  receipts,
-  members
-);
-
-const contextPayments = filterReportRecordsByContext(
-  payments,
-  members
-);
-
-const contextJournals = filterReportRecordsByContext(
-  journals,
-  members
-);
-        const transactionCount =
-  contextReceipts.length +
-  contextPayments.length +
-  contextJournals.length;
-        const lockedCount = contextMembers.filter(
-  (m) => Boolean(
-    m.locked ??
-    m.isLocked ??
-    m.memberLocked
-  )
-).length;
-        const activeCount = members.filter((m) => String(m.status ?? "").toLowerCase().includes("active") || m.active === true).length;
-        const totalSavings = [
-  ...contextReceipts,
-  ...contextPayments,
-].reduce((sum, row) => {
-          const value = Number(row.amount ?? row.receiptAmount ?? row.paymentAmount ?? 0);
-          return sum + (Number.isFinite(value) ? value : 0);
-        }, 0);
-        setGradingReportResults([{
-          level: gradingLevel, month: gradingMonth, language: gradingLanguage,
-          totalMembers: members.length, activeMembers: activeCount, lockedMembers: lockedCount,
-          transactionsReviewed: transactionCount, transactionAmountTotal: totalSavings.toFixed(2),
-        }]);
-        setGradingReportStatus(`PEARLS data loaded from existing PostgreSQL records for ${gradingLevel} - ${gradingMonth}.`);
-      } catch (error) {
-        setGradingReportStatus(error?.message || "Unable to load Grading report data.");
-      } finally {
-        setGradingReportLoading(false);
-      }
-    };
-
-    const renderGradingReportResults = () => {
-      if (gradingReportLoading || !gradingReportResults.length) return null;
-      const keys = Object.keys(gradingReportResults[0]);
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table"><thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>{gradingReportResults.map((record, index) => <tr key={index}>{keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}</tr>)}</tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const Button = ({ children = "Execute", onClick }) => (
-  <button
-    type="button"
-    onClick={
-      onClick ||
-      (() => {
-        if (item === "Financial" && children === "Execute") {
-          openResultInNewTab({
-            page: "financial",
-            type: "all",
-        });
-        } else if (item === "Journals" && children === "Execute") {
-          openResultInNewTab({
-            page: "journals",
-            type: "all",
-          });
-        } else if (item === "MIS-SSP" && children === "Execute") {
-          openResultInNewTab({
-            page: "misSsp",
-            type: "all",
-          });
-        } else if (item === "MIS" && children === "Execute") {
-          openResultInNewTab({
-            page: "mis",
-            type: "all",
-          });
-        } else if (item === "Dem. Sheet" && children === "Execute") {
-          openResultInNewTab({
-            page: "demandSheet",
-            type: "all",
-          });
-        } else if (item === "Confirmation" && children === "Execute") {
-          openResultInNewTab({
-              page: "confirmation",
-              type: "all",
-           });
-        } else if (item === "Schedule" && children === "Execute") {
-          openResultInNewTab({
-            page: "schedule",
-            type: "all",
-          });
-        } else if (item === "Grading" && children === "Generate Rating") {
-          openResultInNewTab({
-            page: "grading",
-            type: "all",
-          });
-        } else {
-          alert(`${item}: ${children}`);
-        }
-      })
-    }
-  >
-    {children}
-  </button>
-);
-
-    const ListBox = ({ options, size = 8, multiple = false, value, onChange }) => (
-      <select className="legacy-report-list" size={size} multiple={multiple} value={value} onChange={onChange} defaultValue={value === undefined ? (multiple ? [] : undefined) : undefined}>
-        {!multiple && options.map((option) => <option key={option}>{option}</option>)}
-        {multiple && options.map((option) => <option key={option} value={option}>{option}</option>)}
-      </select>
-    );
-
-    const runMasterReport = async () => {
-      const endpointByMasterReport = {
-        "MA 04 - Cluster Details": "/clusters",
-        "MA 05 - vazhvathram Details": "/vazhvathrams",
-        "MA 06 - Member Details": "/members",
-        "MA 07 - Member Details - Active": "/members",
-        "MA 08 - Member Address": "/members",
-        "MA 09 - Cluster EC Leaders Details": "/staff-details",
-        "MA 10 - Federation EC Leaders Details": "/staff-details",
-        "MA 11 - Iyyakam Leaders Details": "/staff-details",
-        "MA 12 - Bank Details": "/bank-details",
-        "MA 13 - Branch Details": "/branches",
-        "MA 17 - Panchayat Union Details": "/pan-unions",
-        "MA 18 - Panchayat Details": "/panchayats",
-        "MA 19 - Village Details": "/villages",
-        "MA 22 - Removed Member Details": "/members",
-        "MA 23 - Locked MemBer Details": "/members",
-      };
-
-      const endpoint = endpointByMasterReport[masterReportSelection];
-      setMasterReportLoading(true);
-      setMasterReportStatus("");
-
-      try {
-        if (!endpoint) {
-          setMasterReportResults([]);
-          setMasterReportStatus(
-            `${masterReportSelection} does not have a matching database table in the current project yet.`
-          );
-          return;
-        }
-
-const data = await apiRequest(endpoint);
-let rows = Array.isArray(data) ? data : [];
-
-// Apply selected Cluster → Vazhvathram context
-const memberMasterReports = [
-  "MA 06 - Member Details",
-  "MA 07 - Member Details - Active",
-  "MA 08 - Member Address",
-  "MA 22 - Removed Member Details",
-  "MA 23 - Locked MemBer Details",
-];
-
-if (memberMasterReports.includes(masterReportSelection)) {
-  rows = filterReportRecordsByContext(rows, rows);
-}
-
-        if (masterReportSelection === "MA 07 - Member Details - Active") {
-          rows = rows.filter((record) => {
-            const status = String(
-              record.memberAliveStatus || record.status || record.memberStatus || ""
-            ).toLowerCase();
-            return !status || status === "alive" || status === "active" || status === "working";
-          });
-        }
-
-        setMasterReportResults(rows);
-        setMasterReportStatus(
-          `${masterReportSelection}: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded from database.`
-        );
-      } catch (error) {
-        console.error("Master Report execute error:", error);
-        setMasterReportResults([]);
-        setMasterReportStatus(`Unable to load Master Report data. ${error.message}`);
-      } finally {
-        setMasterReportLoading(false);
-      }
-    };
-
-    const renderMasterReportResults = () => {
-      if (!masterReportResults.length) return null;
-      const keys = Array.from(
-        new Set(masterReportResults.flatMap((record) => Object.keys(record || {})))
-      ).filter((key) => key !== "id").slice(0, 10);
-
-      if (!keys.length) return null;
-
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table">
-            <thead>
-              <tr>
-                {keys.map((key) => <th key={key}>{key}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {masterReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>
-                  {keys.map((key) => (
-                    <td key={key}>{String(record?.[key] ?? "")}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const MonthBox = ({ size = 5 }) => <ListBox options={months} size={size} />;
-
-    const runJournalReport = async () => {
-  setJournalReportLoading(true);
-  setJournalReportStatus("");
-  setJournalReportResults([]);
-
-  try {
-    /*
-     * =========================================================
-     * JOURNAL REPORT - COMMON DATA
-     * =========================================================
-     */
-
-   const [
-  memberJournalsData,
-  otherJournalsData,
-  memberData,
-] = await Promise.all([
-  apiRequest("/member-journals"),
-  apiRequest("/other-journals"),
-  apiRequest("/members"),
-]);
-
-const memberJournals = Array.isArray(
-  memberJournalsData
-)
-  ? memberJournalsData
-  : [];
-
-const otherJournals = Array.isArray(
-  otherJournalsData
-)
-  ? otherJournalsData
-  : [];
-
-const members = Array.isArray(memberData)
-  ? memberData
-  : [];
-    const memberBelongsToSelectedContext = (record) => {
-  const memberCode =
-    record?.memberCode ||
-    record?.member?.memberCode ||
-    record?.member ||
-    "";
-
-  const member = members.find(
-    (item) =>
-      String(item?.memberCode || "")
-        .trim()
-        .toLowerCase() ===
-      String(memberCode)
-        .trim()
-        .toLowerCase()
-  );
-
-  if (!member) {
-    return false;
-  }
-
-  const clusterMatches =
-    !selectedCluster ||
-    String(member?.clusterName || "").trim() ===
-      String(selectedCluster || "").trim();
-
-  const vazhvathramMatches =
-    !selectedVazhvathram ||
-    String(member?.vazhvathramName || "").trim() ===
-      String(selectedVazhvathram || "").trim();
-
-  return (
-    clusterMatches &&
-    vazhvathramMatches
-  );
-};
-
-    /*
-     * =========================================================
-     * DATE HELPER
-     * =========================================================
-     */
-
-    const getJournalDate = (record) =>
-      record?.date ||
-      record?.journalDate ||
-      record?.jrDate ||
-      record?.createdDate ||
-      record?.createdAt ||
-      "";
-
-    const parseJournalDate = (value) => {
-      if (!value) return null;
-
-      const date = new Date(value);
-
-      if (Number.isNaN(date.getTime())) {
-        return null;
-      }
-
-      return date;
-    };
-
-    const fromDate = journalFromDate
-      ? new Date(`${journalFromDate}T00:00:00`)
-      : null;
-
-    const toDate = journalToDate
-      ? new Date(`${journalToDate}T23:59:59.999`)
-      : null;
-
-    const isInDateRange = (record) => {
-      const rawDate = getJournalDate(record);
-
-      /*
-       * Keep records without a usable date instead of
-       * silently deleting database records.
-       */
-      if (!rawDate) {
-        return true;
-      }
-
-      const parsed = parseJournalDate(rawDate);
-
-      if (!parsed) {
-        return true;
-      }
-
-      if (fromDate && parsed < fromDate) {
-        return false;
-      }
-
-      if (toDate && parsed > toDate) {
-        return false;
-      }
-
-      return true;
-    };
-
-    /*
-     * =========================================================
-     * NORMALIZE MEMBER JOURNALS
-     * =========================================================
-     */
-
-    const memberRows = memberJournals.map(
-      (record) => ({
-        ...record,
-        "Journal Source":
-          "Member Journal",
-        "Journal Number":
-          record?.jrNo ||
-          record?.journalNumber ||
-          record?.id ||
-          "",
-        "Journal Date":
-          getJournalDate(record),
-        "Member Code":
-          record?.memberCode ||
-          record?.member?.memberCode ||
-          "",
-        "Member Name":
-          record?.memberName ||
-          record?.member?.memberName ||
-          "",
-        "General Ledger":
-          record?.genLedger ||
-          "",
-        "Narration":
-          record?.narration ||
-          "",
-        "Credit Total":
-          Number(
-            record?.creditTotal || 0
-          ),
-        "Debit Total":
-          Number(
-            record?.debitTotal || 0
-          ),
-      })
-    );
-
-    /*
-     * =========================================================
-     * NORMALIZE OTHER JOURNALS
-     * =========================================================
-     */
-
-    const otherRows = otherJournals.map(
-      (record) => ({
-        ...record,
-        "Journal Source":
-          "Other Journal",
-        "Journal Number":
-          record?.journalNumber ||
-          record?.jrNo ||
-          record?.id ||
-          "",
-        "Journal Date":
-          getJournalDate(record),
-        "Member Code": "",
-        "Member Name": "",
-        "General Ledger":
-          record?.generalLedger ||
-          "",
-        "Narration":
-          record?.narration ||
-          "",
-        "Credit Total":
-          Number(
-            record?.creditTotal || 0
-          ),
-        "Debit Total":
-          Number(
-            record?.debitTotal || 0
-          ),
-      })
-    );
-
-    /*
-     * =========================================================
-     * DATE FILTER
-     * =========================================================
-     */
-const filteredMemberRows = memberRows.filter(
-  memberBelongsToSelectedContext
-);
-
-const allRows = [
-  ...filteredMemberRows,
-  ...otherRows,
-].filter(isInDateRange);
-
-    /*
-     * Sort oldest -> newest.
-     */
-    allRows.sort((a, b) => {
-      const dateA =
-        parseJournalDate(
-          a["Journal Date"]
-        );
-
-      const dateB =
-        parseJournalDate(
-          b["Journal Date"]
-        );
-
-      if (!dateA && !dateB) return 0;
-      if (!dateA) return 1;
-      if (!dateB) return -1;
-
-      return dateA - dateB;
-    });
-
-    /*
-     * =========================================================
-     * JR01 - COMPLETE JOURNAL - VAZHVATHRAM
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR01 - Complete Journal Report - vazhvathram"
-    ) {
-      setJournalReportResults(
-        allRows.map((record) => ({
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        }))
-      );
-
-      setJournalReportStatus(
-        `JR01 - Complete Journal Report - vazhvathram: ${allRows.length} record${allRows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR02 - MANUAL JOURNAL - VAZHVATHRAM
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR02 - Manual Journal Report - vazhvathram"
-    ) {
-      const rows = allRows
-          .filter(
-            (record) =>
-              record["Journal Source"] ===
-                 "Member Journal" ||
-              record["Journal Source"] ===
-                  "Other Journal"
-         )
-         .map(
-        (record) => ({
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR02 - Manual Journal Report - vazhvathram: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR03 - AUTO JOURNAL - VAZHVATHRAM
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR03 - Auto Journal Report - vazhvathram"
-    ) {
-      const rows = allRows
-  .filter(
-    (record) =>
-      record["Journal Source"] ===
-        "Member Journal" ||
-      record["Journal Source"] ===
-        "Other Journal"
-  )
-  .map(
-        (record) => ({
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR03 - Auto Journal Report - vazhvathram: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR04 - COMPLETE JOURNAL - CLUSTER
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR04 - Complete Journal Report - Cluster"
-    ) {
-      const rows = allRows
-  .filter((record) => {
-    if (
-      record["Journal Source"] ===
-      "Member Journal"
-    ) {
-      return record["Member Code"] &&
-        memberBelongsToSelectedContext(record);
-    }
-
-    return true;
-  })
-  .map(
-        (record) => ({
-          "Report Level":
-            "Cluster",
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR04 - Complete Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR05 - MANUAL JOURNAL - CLUSTER
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR05 - Manual Journal Report - Cluster"
-    ) {
-      const rows = allRows
-  .filter((record) => {
-    if (
-      record["Journal Source"] ===
-      "Member Journal"
-    ) {
-      return (
-        record["Member Code"] &&
-        memberBelongsToSelectedContext(record)
-      );
-    }
-
-    return true;
-  })
-  .map(
-        (record) => ({
-          "Report Level":
-            "Cluster",
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR05 - Manual Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR06 - AUTO JOURNAL - CLUSTER
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR06 - Auto Journal Report - Cluster"
-    ) {
-      const rows = allRows
-  .filter((record) => {
-    if (
-      record["Journal Source"] ===
-      "Member Journal"
-    ) {
-      return (
-        record["Member Code"] &&
-        memberBelongsToSelectedContext(record)
-      );
-    }
-
-    return true;
-  })
-  .map(
-        (record) => ({
-          "Report Level":
-            "Cluster",
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR06 - Auto Journal Report - Cluster: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR07 - COMPLETE JOURNAL - FEDERATION
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR07 - Complete Journal Report - Federation"
-    ) {
-      const rows = allRows.map(
-        (record) => ({
-          "Report Level":
-            "Federation",
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR07 - Complete Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR08 - MANUAL JOURNAL - FEDERATION
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR08 - Manual Journal Report - Federation"
-    ) {
-      const rows = allRows.map(
-        (record) => ({
-          "Report Level":
-            "Federation",
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR08 - Manual Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * JR09 - AUTO JOURNAL - FEDERATION
-     * =========================================================
-     */
-
-    if (
-      journalReportSelection ===
-      "JR09 - Auto Journal Report - Federation"
-    ) {
-      const rows = allRows.map(
-        (record) => ({
-          "Report Level":
-            "Federation",
-          "Journal Source":
-            record["Journal Source"],
-          "Journal Number":
-            record["Journal Number"],
-          "Journal Date":
-            record["Journal Date"],
-          "Member Code":
-            record["Member Code"],
-          "Member Name":
-            record["Member Name"],
-          "General Ledger":
-            record["General Ledger"],
-          "Narration":
-            record["Narration"],
-          "Credit Total":
-            record["Credit Total"],
-          "Debit Total":
-            record["Debit Total"],
-        })
-      );
-
-      setJournalReportResults(rows);
-
-      setJournalReportStatus(
-        `JR09 - Auto Journal Report - Federation: ${rows.length} record${rows.length === 1 ? "" : "s"} loaded.`
-      );
-
-      return;
-    }
-
-    /*
-     * =========================================================
-     * UNKNOWN REPORT
-     * =========================================================
-     */
-
-    setJournalReportStatus(
-      `${journalReportSelection} is not a recognized Journal Report option.`
-    );
-  } catch (error) {
-    console.error(
-      "Journal Report execute error:",
-      error
-    );
-
-    setJournalReportResults([]);
-
-    setJournalReportStatus(
-      `Unable to load Journal Report data. ${
-        error?.message || error
-      }`
-    );
-  } finally {
-    setJournalReportLoading(false);
-  }
-};
-    
-    const renderJournalReportResults = () => {
-      if (!journalReportResults.length) return null;
-
-      const keys = Array.from(
-        new Set(journalReportResults.flatMap((record) => Object.keys(record || {})))
-      )
-        .filter((key) => key !== "id" && key !== "rowsJson")
-        .slice(0, 10);
-
-      if (!keys.length) return null;
-
-      return (
-        <div
-          style={{
-            marginTop: "14px",
-            overflowX: "auto",
-            border: "1px solid #777",
-            background: "#fff",
-          }}
-        >
-          <table className="legacy-table">
-            <thead>
-              <tr>
-                {keys.map((key) => <th key={key}>{key}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {journalReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>
-                  {keys.map((key) => (
-                    <td key={key}>
-                      {typeof record?.[key] === "object"
-                        ? JSON.stringify(record?.[key] ?? "")
-                        : String(record?.[key] ?? "")}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    const journalReportDbBody = (
-      <div className="legacy-report-panel">
-        <div className="legacy-report-subtitle">Journal Report Database</div>
-
-        <div className="legacy-report-row">
-          <strong>Report</strong>
-          <select
-            value={journalReportSelection}
-            onChange={(event) => {
-              setJournalReportSelection(event.target.value);
-              setJournalReportStatus("");
-              setJournalReportResults([]);
-            }}
-          >
-            {[
-              "JR01 - Complete Journal Report - vazhvathram",
-              "JR02 - Manual Journal Report - vazhvathram",
-              "JR03 - Auto Journal Report - vazhvathram",
-              "JR04 - Complete Journal Report - Cluster",
-              "JR05 - Manual Journal Report - Cluster",
-              "JR06 - Auto Journal Report - Cluster",
-              "JR07 - Complete Journal Report - Federation",
-              "JR08 - Manual Journal Report - Federation",
-              "JR09 - Auto Journal Report - Federation",
-            ].map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="legacy-report-two-col">
-          <div className="legacy-report-row">
-            <strong>From Date</strong>
-            <input
-              type="date"
-              value={journalFromDate}
-              onChange={(event) => setJournalFromDate(event.target.value)}
-            />
-          </div>
-          <div className="legacy-report-row">
-            <strong>To Date</strong>
-            <input
-              type="date"
-              value={journalToDate}
-              onChange={(event) => setJournalToDate(event.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="legacy-report-actions">
-          <Button
-            onClick={() =>
-              openResultInNewTab({
-                page: "journals",
-                type: "all",
-              })
-            }
-            >
-            Execute
-          </Button>
-        </div>
-
-        {journalReportStatus && (
-          <div
-            style={{
-              marginTop: "10px",
-              padding: "8px",
-              border: "1px solid #777",
-              background: "#f4f4f4",
-              textAlign: "center",
-              fontWeight: "bold",
-            }}
-          >
-            {journalReportStatus}
-          </div>
-        )}
-
-        {renderJournalReportResults()}
-      </div>
-    );
-
-
-    const reportData = {
-      "Master": {
-        title: "MASTER REPORT",
-        options: [
-          "MA 01 - General Ledger Details", "MA 02 - Sub Ledger Details",
-          "MA 03 - Federation/Block Details", "MA 04 - Cluster Details",
-          "MA 05 - vazhvathram Details", "MA 06 - Member Details",
-          "MA 07 - Member Details - Active", "MA 08 - Member Address",
-          "MA 09 - Cluster EC Leaders Details", "MA 10 - Federation EC Leaders Details",
-          "MA 11 - Iyyakam Leaders Details", "MA 12 - Bank Details",
-          "MA 13 - Branch Details", "MA 14 - Agewise vazhvathram Details (Cluster)",
-          "MA 15 - Agewise vazhvathram Details (Year)", "MA 16 - vazhvathram Leaders",
-          "MA 17 - Panchayat Union Details", "MA 18 - Panchayat Details",
-          "MA 19 - Village Details", "MA 20 - Removed Cluster Details",
-          "MA 21 - Removed vazhvathram Details", "MA 22 - Removed Member Details",
-          "MA 23 - Locked MemBer Details",
-        ],
-      },
-      "Opening Bal.": {
-        title: "Opening Balance Reports",
-        options: [
-          "OB 01 - Member Confirmation - vazhvathram", "OB 02 - Balance Sheet - vazhvathram",
-          "OB 03 - Bank Loan - vazhvathram", "OB 04 - Income and Expenditure - vazhvathram",
-          "OB 05 - Balance Sheet Consolidation - vazhvathram", "OB 06 - Balance Sheet Consolidation - Cluster",
-          "OB 07 - Income & Expenditure Consolidation - vazhvathram", "OB 08 - Income & Expenditure Consolidation - Cluster",
-          "OB 09 - Balance Sheet Asset & Liability Difference", "OB 09A - Difference in Bank Balance in Balance sheet and branch wise balances",
-          "OB 10 - Member Conf. and Bal. Sheet Difference", "OB 11 - Programme Support For Poverty Reduction - Bank List",
-          "OB 12 - Programme Support For Poverty Reduction - Federation List", "OB 13 - Member Poverty Reduction Fund Repayment Performance",
-          "OB 14 - Check SB A/c - 1", "OB 15 - Check SB A/c - 2" , "OB 16 - Check SB A/c - 3", 
-        ],
-      },
-      "Financial": {
-        title: "FINANCIAL REPORT",
-        options: [
-          "Cash Book - FR01", "Bank Book - Acct No. wise - FR02A", "Receipts & Payments - FR03",
-          "Income & Expenditure - FR04", "Balance Sheet - FR05", "Trial Balance - FR06",
-          "Member Ledger - FR07", "Member Ledger (All Heads) - Previous Year - FR08",
-          "Member Ledger (All Heads) - FR09", "Bank Loan Ledger - FR10 - New",
-          "Audit Front Page - FR11", "Homeless Entries",
-        ],
-      },
-      "Journals": {
-        title: "JOURNAL REPORT",
-        options: [
-          "JR01 - Complete Journal Report - vazhvathram", "JR02 - Manual Journal Report - vazhvathram",
-          "JR03 - Auto Journal Report - vazhvathram", "JR04 - Complete Journal Report - Cluster",
-          "JR05 - Manual Journal Report - Cluster", "JR06 - Auto Journal Report - Cluster",
-          "JR07 - Complete Journal Report - Federation", "JR08 - Manual Journal Report - Federation",
-          "JR09 - Auto Journal Report - Federation",
-        ],
-      },
-      "MIS": {
-        title: "MIS REPORT",
-        options: [
-          "KL 01 - vazhvathram Details", "KL 02 - Member Details", "KL 03A - Member details-Designation",
-          "KL 03B - Member details-Social economic Categorization", "KL 03C - Member details-Family Categorization",
-          "KL 04 - vazhvathram Management Information Report", "KL 05 - Member Livelihood Loan Support Repayment performance",
-          "KL 05RH - Member Livelihood Loan Support Repayment performance - Repayment Holiday",
-          "KL 05A - Member Livelihood Loan Support Repayment performance for all", "KL 05B - Member without Livelihood Loan Support",
-          "KL 05C - Member Total Loan O/S", "KL 05D - Member Livelihood Loan Support Repayment performance - OD",
-          "KL 06 - Regular Savings - Demand Vs. Collection", "KL 07 - Special Savings Report",
-          "KL 08 - Regular Savings Amount >= 15000 Report","KL 09 - Regular All Report",
-          "KL 10 - Member wise Savings and Interest - Monthwise", "KL 10A - Member wise Special Savings and Interest - Monthwise",
-          "CL 01 - vazhvathram Registration Details - Cluster", "CL 01A - vazhvathram Registration details - Federation",
-          "CL 03 - Status of New & Dropped Members - Cluster", "CL 03A - Status of New & Dropped Members - Federation",
-          "CL 04 - Status of Members Attlended and Saved - Cluster", "CL 04A - Status of Members Attlended and Saved - Federation",
-          "CL 05 - Status of Regular Savings - Cluster", "CL 05A - Status of Regular Savings - Federation",
-          "CL 06 - Status of Special Savings - Cluster", "CL 06A - Status of Special Savings - Federation",
-          "CL 07 - Status of Profit & Loss - Cluster", "CL 07A - Status of Profit & Loss - Federation",
-          "CL 08 - Purposewise Loan Consolidation - For the Month - Cluster", "CL 08F - Purposewise Loan Consolidation - For the Month - Federation",
-          "CL 8A - Purposewise Loan Consolidation - Upto the Month - Cluster", "CL 8AF - Purposewise Loan Consolidation - Upto the Month - Federation",
-          "CL 8B - Sub Purposewise Loan Consolidation - For the Month", "CL 8C - Sub Purposewise Loan Consolidation - Upto this Month",
-          "CL 09 - Member Livelihood Loan Support Repayment Performance - Cluster", "CL 09A - Member Livelihood Loan Support Repayment Performance - Federation",
-          "CL 09H - Member Livelihood Loan Support Repayment Performance - Considering Repayment Holiday - Cluster","CL 09AH - Member Livelihood Loan Support Repayment performance - Considering Repayment Holiday - Federation",
-          "CL 11-Status of Programme Expenses Collection - Cluster","CL 11A-Status of Programme Expenses Collection - Federation",
-          "CL 12-Cluster Summary Report Page 1 - Cluster","CL 12-Cluster Summary Report Page 1 - Federation",
-          "CL 12-Cluster Summary Report Page 2 - Cluster","CL 12-Cluster Summary Report Page 2 - Federation",
-          "CL 12-Cluster Summary Report Page 3 - Cluster","CL 12-Cluster Summary Report Page 3 - Federation",
-          "CL 14-Non Savers","CL 16-Receipts Vouchers Collection and Verification - Cluster",
-          "CL 16-Receipts Vouchers Collection and Verification - Federation","BL 01-vazhvathram Registration details - Federation",
-          "BL 02-Cluster details","BL 04-Status of New & Dissolved Groups",
-          "BL 05-Status of New & Dropped Members","BL 06 Status of members attended and members saved",
-          "BL 07-Status of Regular Savings","BL. 08 Status of Special Savings",
-          "BL 09-Status of Profit & Loss","BL 10 - Purposewise Loan Consolidation For the Month",
-          "BL 10A-Purposewise Loan Consolidation-Upto the Month","BL 108-Sub Purposewise Loan Consolidation For the Month",
-          "BL 10C-Sub Purposewise Loan Consolidation Upto the Month","BL 11 Member Livelihood Loan Support Repayment performance",
-          "BL 11 Member Livelihood Loan Support", "Repayment performance Considering Repayment Holiday",
-          "BL 13-Status of Programme Expenses Collection","BL 14-Block Summary Report Page 1",
-          "BL 14-Block Summary Report Page 2","BL 14-Block Summary Report Page 3","BL 16 Non Savers","BL 17-Life Insurance Uncovered members",
-          "BL 18-Health Insurance Uncovered members","BL 19-List of Members taken Sanitation and Water Loan Products",
-          "BL20-NO. of Groups completed Data Entry with in 5 days of Group Meeting",
-        ],
-      },
-      "MIS-SSP": {
-        title: "MIS REPORT - SSP",
-        options: [
-          "MLSSP 01 - List of Members Enrolled during current year", "MLSSP 02 - List of Members Not Enrolled during current year",
-          "MLSSP 03 - List of Members Enrolled in any one of the Life Product",
-          "MLSSP 04 - List of Members Not Enrolled in any one of the Life Product",
-          "MLSSP 05 - List of Members whose Spouses are Enrolled in any one of the Life Product",
-          "MLSSP 06 - List of Members whose Spouses are Not Enrolled in any one of the Life Product",
-          "MLSSP 07 - List of Members Enrolled in any one of the Health Product",
-          "MLSSP 08 - List of Members Not Enrolled in any one of the Health Product",
-          "MLSSP 09 - List of Members Enrolled in any one of the Livestock Product",
-          "MLSSP 10 - List of Members Not Enrolled in any one of the Livestock Product",
-          "MLSSP 11 - List of Members Enrolled in any one of the Crop Product",
-          "MLSSP 12 - List of Members Not Enrolled in any one of the Crop Product",
-          "MLSSP 13 - List of Members Enrolled in any one of All Products",
-          "MLSSP 14 - List of Members Not Enrolled in any one of All Products",
-          "KLSSP 01 - No. of Members Enrolled - vazhvathram Wise",
-          "KLSSP 02 - No. of Members Not Enrolled - Kalanjian Wise",
-          "KLSSP 03 - No. of Members Enrolled in any one of the Life Product - vazhvathram Wise",
-          "KLSSP 04 - No of Members Not Enrolled in any one of the Life Product - vazhvathram Wise",
-          "KLSSP 05 - No. of Members whose Spouses are Enrolled in any one of the Life Product - vazhvathram Wise",
-          "KLSSP 06 - No of Members whose Spouses are Not Enrolled in any one of the Life Product - Kalaniiam Wise",
-          "KLSSP 07 - No. of Members Enrolled in any one of the Health Product - vazhvathram Wise",
-          "KLSSP 08 - No. of Members Not Enrolled in any one of the Health Product - vazhvathram Wise",
-          "KLSSP 09 - No. of Members Enrolled in any one of the Livestock Product - vazhvathram Wise",
-          "KLSSP 10 - No. of Members Not Enrolled in any one of the Livestock Product - vazhvathram Wise",
-          "KLSSP 11 - No. of Members Enrolled in any one of the Crop Product - vazhvathram Wise",
-          "KLSSP 12 - No. of Members Not Enrolled in any one of the Crop Product - vazhvathram Wise",
-          "KLSSP 13 - No. of Members Enrolled in any one of All Products - vazhvathram Wise",
-          "KLSSP 14 - No of Members Not Enrolled in any one of All Products - vazhvathram Wise",
-          "CLSSP 01 - No. of Members Enrolled - Cluster Wise",
-          "CLSSP 02 - No of Members Not Enrolled - Cluster Wise",
-          "CLSSP 03 - No. of Members Enrolled in any one of the Life Product - Cluster Wise",
-          "CLSSP 04 - No. of Members Not Enrolled in any one of the Life Product -  Cluster Wise",
-          "CLSSP 05 - No of Members whose Spouses are Enrolled in any one of the Life Product - Cluster Wise",
-          "CLSSP 06 - No. of Members whose Spouses are Not Enrolled in any one of the Life Product - Cluster Wise",
-          "CLSSP 07 - No. of Members Enrolled in any one of the Health Product - Cluster Wise",
-          "CLSSP 08 - No. of Members Not Enrolled in any one of the Health Product - Cluster Wise",
-          "CLSSP 09 - No. of Members Enrolled in any one of the Livestock Product - Cluster Wise",
-          "CLSSP 10 - No. of Members Not Enrolled in any one of the Livestock Product - Cluster Wise",
-          "CLSSP 11 - No. of Members Enrolled in any one of the Crop Product - Cluster Wise",
-          "CLSSP 12 - No. of Members Not Enrolled in any one of the Crop Product - Cluster Wise",
-          "CLSSP 13 - No. of Members Enrolled in any one of All Products - Cluster Wise",
-          "CLSSP 14 - No. of Members Not Enrolled in any one of All Products - Cluster Wise"
-        ],
-      },
-      "Bank Link.": {
-        title: "Bank Linkage Reports",
-        options: [
-          "BK 01 - Cluster wise Linkage status", "BK 02 - Branch wise Linkage status", "BK 03 - Bank Linkage Status for the month",
-          "BK 04 - Clusterwise Demand Collection Balance (DCB)", "BK 05 - Groupwise Demand Collection Balance (DCB)",
-          "BK 06 - Monthwise Repayment Status", "BK 07 - Monthwise Disbursement & Repayment Status - With Additional Parameters",
-          "BK 07A - Monthwise Disbursement & Repayment Status", "BK 07B - Monthwise Disbursement & Repayment Status - With Additional Parameters - Including Groups not having Bank OS",
-          "BK 08 - Cluster Monthwise Disbursement Status", "BK 09 - Group Monthwise Disbursement Status",
-          "BK 10 - Branchwise Disbursement Status", "BK 11 - vazhvathrams not linked with Bank",
-          "BK 12 - Linkage Efficiency Status", "BK 13 - Interest Outstanding Status",
-          "BK 14 - Fixed Deposit List","BK 15 - Fixed Deposit Maturity List for the Month",
-          "BK 16 - Fixed Deposit Maturity List for the Month", 
-        ],
-      },
-      "vazhvathram": {
-        title: "Monthwise vazhvathram Reports",
-        options: [
-          "KR 01 - Receipts & Payments", "KR 02 - Income & Expenditure", "KR 03 - Balance Sheet",
-          "KR 04A - Monthwise Member Livelihood Loan - Repayment-Group Level",
-          "KR 04B - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Group Level",
-          "KR 04C - Monthwise Member Livelihood Loan - Repayment-Cluster Level",
-          "KR 04D - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Cluster Level",
-          "KR 04E - Monthwise Member Livelihood Loan - Repayment-Fed Level",
-          "KR 04F - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Fed Level",
-          "KR 07 - Loans Availed by Members - Past Loans",
-          "KR 08 - List of Members who have saved for the range Entered in From Amt and To Amt",
-          "KR 09 - Monthwise Member Livelihood Loan(All Loans LH1,LH2,LH3) - Repayment-Fed Level - For the Amt Greater than - Entered in To Amt Field",
-        ],
-      },
-      "Cluster": {
-        title: "Other Cluster Reports",
-        options: [
-          "CR 01 - Data Entry Status Report", "CR 02 - Data Entry Status Report All", "CR 03 - Cash in Hand - vazhvathram",
-          "CR 04 - Cash at Bank - vazhvathram", "CR 04SBAC - Cash at Bank - vazhvathram - SB A/C",
-          "CR 04LNAC - Cash at Bank - vazhvathram - LOAN A/C", "CR 04A - Cash at Bank, Branchwise - vazhvathram",
-          "CR 04ASB - Cash at Bank, Branchwise - vazhvathram - SB A/C", "CR 04ALN - Cash at Bank, Branchwise - vazhvathram - LOAN A/C",
-          "CR 05 - Receipts & Payments Consolidation - vazhvathram", "CR 06 - Receipts & Payments Consolidation - Month",
-          "CR 07 - Income & Expenditure Consolidation - vazhvathram", "CR 08 - Income & Expenditure Consolidation - Month",
-          "CR 08A - Journal Transactions - vazhvathram", "CR 08B - Journal Transactions - Month", "CR 09 - Balance Sheet Consolidation - vazhvathram",
-          "CR 09-Balance Sheet Consolidation - vazhvathram","CR 10-Balance Sheet Consolidation - Month","CR 11-Prog. Sup. O/S with Bank & Federation - vazhvathram",
-          "CR 12-Prog Sup. Repayment to Bank & Federation - vazhvathram","CR 13-Poverty Reduction Fund Issued Details - Member",
-          "CR 14-Insurance Paid Details - Member",
-          "CR 15-Receipts & Payments Consolidation upto - vazhvathram","CR 16-Income & Expenditure Consolidation upto - vazhvathram",
-        ],
-      },
-      "Block": {
-        title: "Other Block Reports",
-        options: [
-          "BR 01 - Data Entry Status Report - vazhvathram", "BR 01A - Groups Not Locked",
-          "BR 02 - Receipts & Payments Consolidation - Cluster", "BR 03 - Receipts & Payments Consolidation - Month",
-          "BR 04 - Income & Expenditure Consolidation - Cluster", "BR 05 - Income & Expenditure Consolidation - Month",
-          "BR 05A - Journal Transactions Consolidation - Cluster", "BR 05B - Journal Transactions Consolidation - Month",
-          "BR 06 - Balance Sheet Consolidation - Cluster", "BR 07 - Balance Sheet Consolidation - Month",
-          "BR 08 - Prog. Sup. O/S with Bank & Fed. - vazhvathram", "BR 09 - Prog. Sup. Repayment to Bank & Fed. - vazhvathram",
-          "BR 10 - Poverty Reduction Fund Issued Details - Members", "BR 10A - Poverty Reduction Fund Issued Details As On - Members",
-          "BR 11 - Insurance Paid Details - Members", "BR 11A - Insurance - Collaboration Prog. Receivable / Payables - At Group Level",
-          "BR 11B-Mutuals Products/Nalam Receivable / Payables - At Group Level","BR 12-Savings Repaid Details - Members",
-          "BR 12 A-Savings Details for the month- Memberwise","BR 13-Groups Having No. of Members Greater than",
-          "BR 16-Members with no Transactions","BR 16A-Grps with no Transactions","BR 17- Receipts & Payments Consolidation upto - Cluster",
-          "BR 18-Income & Expenditure Consolidation upto - Cluster","BR 19-Members Not saved Continuously",
-          "BR 19A-Table Format Members Not saved Continuously","BR 19B-List of Members added Every month: Give the List Associates for Action.","BR 20-Members Not saved Intermittently",
-          "BR 20A-Table Format Members Not saved Intermittently","BR 21-Groups Not conducted meeting continuously",
-          "BR 21A-Table Format Groups that Not conducted meeting continuously","BR 21B-List of Groups Added Every Month - Take the List for Action",
-          "BR 22-Groups Not conducted meeting Intermittently","BR 22A-Table Format Groups Not conducted meeting Intermittently",
-          "BR 23 List of Members enrolled in Insurance","BR 23A List of Members enrolled in Insurance",
-          "BR 24 List of Members who have saved more than Rs 1000 in a single Meeting","BR 25 Auto Journal Passed details",
-          "BR 26 Multiple Benefits Survey - Entry Status","BR 27-Donations paid by Group",
-          "BR 28-Donations Recerved by Federation - Receiptwise.","BR 28A-Donations Received by Federation",
-          "BR 29-No. of Receipts during the month","BR 30 Loans Repaid by Member more than Rs. 10000",
-          "BR 31 Cash Deposited into Bank","BR 32 Village wise Groups Promoted",
-        ],
-      },
-    };
-
-    const base = reportData[item] || { title: item.toUpperCase(), options: ["KR 01-Receipts & Payments","KR 02-Income & Expenditure","KR 03-Balance Sheet","KR 04A-Monthwise Member Livelihood Loan - Repayment-Group Level","KR 04B-Monthwise Member Livelihood Loan (All Loans LH1, LH2, LH3) - Repayment-Group Level","KR 04C-Monthwise Member Livelihood Loan - Repayment-Cluster Level","KR 04D-Monthwise Member Livelihood Loan (All Loans LH1, LH2, LH3) - Repayment-Cluster Level","KR 04E-Monthwise Member Livelihood Loan - Repayment-Fed Level","KR 04F-Monthwise Member Livelihood Loan(All Loans LH1, LH2, LH3) - Repayment-Fed Level","KR 07-Loans Availed by Members - Past Loans","KR 08 List of Members who have saved for the range Entered in From Amt and To Amt","KR 09-Monthwise Member Livelihood Loan (All Loans LH1, LH2, LH3) - Repayment-Fed Level - For the Amt Greater than - Entered in To Amt Field",] };
-
-    const legacyCard = (children, className = "") => (
-      <div className={`legacy-report-card ${className}`}>
-        <div className="legacy-report-title">{base.title}</div>
-        {children}
-        {item === "Financial" && financialReportStatus && (
-          <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
-            {financialReportLoading ? "Loading..." : financialReportStatus}
-          </div>
-        )}
-{item === "Financial" && (
-  <>
-    {renderFinancialReportResults()}
-  </>
-)}
-      </div>
-    );
-
-const dates = (
-<>
-  <div className="legacy-report-row">
-    <strong>From Date</strong>
-
-    <select
-      value={financialFromDate}
-   onChange={(event) => {
-  const selectedDate = event.target.value;
-
-  console.log("FROM DATE SELECTED:", selectedDate);
-
-  setFinancialFromDate(selectedDate);
-
-  // A new From Date means To Date must be selected again
-  setFinancialToDate("");
-  sessionStorage.setItem("financialFromDate", selectedDate);
-  sessionStorage.removeItem("financialToDate");
-}}
-    >
-      <option value="">Select Date</option>
-
-      {financialMemberDates.map((date) => (
-        <option key={`from-${date}`} value={date}>
-          {date}
-        </option>
-      ))}
-    </select>
-  </div>
-
-  <div className="legacy-report-row">
-    <strong>To Date</strong>
-
-    <select
-      value={financialToDate}
-      onChange={(event) => {
-        const selectedDate = event.target.value;
-
-        setFinancialToDate(selectedDate);
-        sessionStorage.setItem("financialToDate", selectedDate);
-        setFinancialReportStatus("");
-        setFinancialReportResults([]);
-      }}
-    >
-      <option value="">Select Date</option>
-
-      {financialMemberDates
-  .filter(
-    (date) =>
-      !financialFromDate || date >= financialFromDate
-  )
-  .map((date) => (
-    <option key={`to-${date}`} value={date}>
-      {date}
-    </option>
-  ))}
-    </select>
-  </div>
-</>
-  
-);
-
-    const parseFinancialDate = (value) => {
-      const text = String(value || "").trim();
-      if (!text) return null;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) { const [y,m,d]=text.split("-").map(Number); return new Date(y,m-1,d); }
-      if (/^\d{2}-\d{2}-\d{4}$/.test(text)) { const [d,m,y]=text.split("-").map(Number); return new Date(y,m-1,d); }
-      const parsed=new Date(text); return Number.isNaN(parsed.getTime()) ? null : parsed;
-    };
-    const getFinancialRecordDate = (record) => record?.receiptDate || record?.voucherDate || record?.journalDate || record?.date || record?.fdDate || record?.accountDate || record?.createdAt || "";
-    const filterFinancialDateRange = (rows) => {
-      const from=parseFinancialDate(financialFromDate), to=parseFinancialDate(financialToDate);
-      if (!from && !to) return rows; if (to) to.setHours(23,59,59,999);
-      return rows.filter(record => { const date=parseFinancialDate(getFinancialRecordDate(record)); if(!date) return true; return (!from || date>=from) && (!to || date<=to); });
-    };
-    const loadFinancialEndpoint = async (endpoint) => { const data=await apiRequest(endpoint); return Array.isArray(data) ? data : []; };
-    const runFinancialReport = async () => {
-      setFinancialReportLoading(true); setFinancialReportStatus(""); setFinancialReportResults([]);
-const fromDate = parseFinancialDate(financialFromDate);
-const toDate = parseFinancialDate(financialToDate);
-
-if (fromDate && toDate && fromDate > toDate) {
-  setFinancialReportStatus(
-    "From Date cannot be later than To Date."
-  );
-  setFinancialReportLoading(false);
-  return;
-}
-      try {
-        let rows=[]; let sourceLabel="";
-       if (financialReportSelection === "Cash Book - FR01") {
-  const [
-    mr,
-    or,
-    mp,
-    op,
-    mj,
-    oj,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/other-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/member-journals"),
-    loadFinancialEndpoint("/other-journals"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const memberBelongsToSelectedContext = (record) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(
-          record?.memberCode || ""
-        )
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  const filteredMemberReceipts =
-    mr.filter(
-      memberBelongsToSelectedContext
-    );
-
-  const filteredMemberPayments =
-    mp.filter(
-      memberBelongsToSelectedContext
-    );
-
-  const filteredMemberJournals =
-    mj.filter((record) => {
-      const member = members.find(
-        (item) =>
-          String(item?.memberCode || "")
-            .trim()
-            .toLowerCase() ===
-          String(record?.member || "")
-            .trim()
-            .toLowerCase()
-      );
-
-      if (!member) {
-        return false;
-      }
-
-      const clusterMatches =
-        !selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim();
-
-      const vazhvathramMatches =
-        !selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim();
-
-      return (
-        clusterMatches &&
-        vazhvathramMatches
-      );
-    });
-
-  rows = [
-    ...filteredMemberReceipts.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Receipt",
-      })
-    ),
-
-    ...or.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Receipt",
-      })
-    ),
-
-    ...filteredMemberPayments.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Payment",
-      })
-    ),
-
-    ...op.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Payment",
-      })
-    ),
-
-    ...filteredMemberJournals.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Journal",
-      })
-    ),
-
-    ...oj.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Journal",
-      })
-    ),
-  ];
-
-  sourceLabel =
-    "existing receipt, payment and journal tables";
-}
-        else if (financialReportSelection === "Bank Book - Acct No. wise - FR02A") {
-         const [mr, or, mp, op, bankAccounts, memberData] =
-  await Promise.all([
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/other-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/bank-accounts"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-const members = Array.isArray(memberData)
-  ? memberData
-  : [];
-const bankAccountRows = Array.isArray(bankAccounts)
-  ? bankAccounts
-  : [];
-
-const findMemberBankAccount = (record) => {
-  const memberCode = String(record?.memberCode || "")
-    .trim()
-    .toLowerCase();
-
-  const memberName = String(record?.memberName || "")
-    .trim()
-    .toLowerCase();
-
-  return bankAccountRows.find((account) => {
-    const accountMemberCode = String(
-      account?.memberCode || ""
-    )
-      .trim()
-      .toLowerCase();
-
-    const accountMemberName = String(
-      account?.memberName || ""
-    )
-      .trim()
-      .toLowerCase();
-
-    return (
-      (memberCode &&
-        accountMemberCode &&
-        memberCode === accountMemberCode) ||
-      (memberName &&
-        accountMemberName &&
-        memberName === accountMemberName)
-    );
-  });
-};
-const receiptRows = [
-  ...mr
-    .filter((r) => {
-      const member = members.find(
-        (item) =>
-          String(item?.memberCode || "")
-            .trim()
-            .toLowerCase() ===
-          String(r?.memberCode || "")
-            .trim()
-            .toLowerCase()
-      );
-
-      if (!member) {
-        return false;
-      }
-
-      const clusterMatches =
-        !selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim();
-
-      const vazhvathramMatches =
-        !selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim();
-
-      return (
-        clusterMatches &&
-        vazhvathramMatches
-      );
-    })
-    .map((r) => {
-      const bankAccount =
-        findMemberBankAccount(r);
-
-      return {
-        ...r,
-        transactionType: "Receipt",
-        accountCode:
-          bankAccount?.accountNumber ||
-          r.accountNo ||
-          r.accountType ||
-          "",
-        accountName:
-          r.memberName ||
-          bankAccount?.memberName ||
-          "Member Receipt",
-        transactionDate:
-          r.receiptDate || "",
-        receiptAmount:
-          Number(r.total || 0),
-        paymentAmount: 0,
-      };
-    }),
-
-
-  ...or.map((r) => ({
-    ...r,
-    transactionType: "Receipt",
-    accountCode: r.accountNo || r.accountType || "",
-    accountName:
-      r.receiptType ||
-      r.subLedger ||
-      "Other Receipt",
-    transactionDate: r.receiptDate || "",
-    receiptAmount: Number(r.total || r.amount || 0),
-    paymentAmount: 0,
-  })),
-];
-
-const paymentRows = [
-  ...mp
-    .filter((r) => {
-      const member = members.find(
-        (item) =>
-          String(item?.memberCode || "")
-            .trim()
-            .toLowerCase() ===
-          String(r?.memberCode || "")
-            .trim()
-            .toLowerCase()
-      );
-
-      if (!member) {
-        return false;
-      }
-
-      const clusterMatches =
-        !selectedCluster ||
-        String(member?.clusterName || "").trim() ===
-          String(selectedCluster || "").trim();
-
-      const vazhvathramMatches =
-        !selectedVazhvathram ||
-        String(member?.vazhvathramName || "").trim() ===
-          String(selectedVazhvathram || "").trim();
-
-      return (
-        clusterMatches &&
-        vazhvathramMatches
-      );
-    })
-    .map((r) => {
-    const bankAccount = findMemberBankAccount(r);
-
-    return {
-      ...r,
-      transactionType: "Payment",
-      accountCode:
-        bankAccount?.accountNumber ||
-        r.accountNo ||
-        r.accountType ||
-        "",
-      accountName:
-        r.memberName ||
-        bankAccount?.memberName ||
-        "Member Payment",
-      transactionDate: r.voucherDate || "",
-      receiptAmount: 0,
-      paymentAmount: Number(
-  r.total ||
-  [
-    r.savings,
-    r.savingsIncentive,
-    r.bulletSavings,
-    r.socialSecurityAmount,
-    r.specialSavingsAmount,
-    r.specialSavingsMoreAmount,
-    r.specialSavingsIncentive,
-    r.loanAmount,
-    r.instalmentAmount,
-  ].reduce(
-    (sum, value) => sum + (parseFloat(value) || 0),
-    0
-  )
-),
-    };
-  }),
-
-  ...op.map((r) => ({
-    ...r,
-    transactionType: "Payment",
-    accountCode: r.accountNo || r.accountType || "",
-    accountName:
-      r.voucherType ||
-      r.accountType ||
-      "Other Payment",
-    transactionDate: r.voucherDate || "",
-    receiptAmount: 0,
-    paymentAmount: Number(r.total || r.amount || 0),
-  })),
-];
-
-rows = [...receiptRows, ...paymentRows];
-
-sourceLabel =
-  "existing receipt, payment and bank account tables";}
-        else if (
-  financialReportSelection ===
-  "Receipts & Payments - FR03"
-) {
-  const [
-    mr,
-    or,
-    mp,
-    op,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/other-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(record?.memberCode || "")
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  const filteredMemberReceipts =
-    mr.filter(
-      memberBelongsToSelectedContext
-    );
-
-  const filteredMemberPayments =
-    mp.filter(
-      memberBelongsToSelectedContext
-    );
-
-  rows = [
-    ...filteredMemberReceipts.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Receipt",
-      })
-    ),
-
-    ...or.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Receipt",
-      })
-    ),
-
-    ...filteredMemberPayments.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Payment",
-      })
-    ),
-
-    ...op.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Payment",
-      })
-    ),
-  ];
-
-  sourceLabel =
-    "existing receipt and payment tables";
-          } else if (financialReportSelection ==="Income & Expenditure - FR04") 
-        {const [
-  mj,
-  oj,
-  mr,
-  or,
-  mp,
-  op,
-  memberData,
-] = await Promise.all([
-  loadFinancialEndpoint("/member-journals"),
-  loadFinancialEndpoint("/other-journals"),
-  loadFinancialEndpoint("/member-receipts"),
-  loadFinancialEndpoint("/other-receipts"),
-  loadFinancialEndpoint("/member-payments"),
-  loadFinancialEndpoint("/other-payments"),
-  loadFinancialEndpoint("/members"),
-]);
-
-const members = Array.isArray(memberData)
-  ? memberData
-  : [];
-
-const memberBelongsToSelectedContext = (
-  record
-) => {
-  const member = members.find(
-    (item) =>
-      String(item?.memberCode || "")
-        .trim()
-        .toLowerCase() ===
-      String(
-        record?.memberCode ||
-        record?.member ||
-        ""
-      )
-        .trim()
-        .toLowerCase()
-  );
-
-  if (!member) {
-    return false;
-  }
-
-  const clusterMatches =
-    !selectedCluster ||
-    String(member?.clusterName || "").trim() ===
-      String(selectedCluster || "").trim();
-
-  const vazhvathramMatches =
-    !selectedVazhvathram ||
-    String(member?.vazhvathramName || "").trim() ===
-      String(selectedVazhvathram || "").trim();
-
-  return (
-    clusterMatches &&
-    vazhvathramMatches
-  );
-};
-
-const filteredMemberJournals =
-  mj.filter(memberBelongsToSelectedContext);
-
-const filteredMemberReceipts =
-  mr.filter(memberBelongsToSelectedContext);
-
-const filteredMemberPayments =
-  mp.filter(memberBelongsToSelectedContext);          
-        rows = [
-  ...filteredMemberJournals.map(
-    (r) => ({
-      ...r,
-      transactionType:
-        "Member Journal",
-    })
-  ),
-
-  ...oj.map(
-    (r) => ({
-      ...r,
-      transactionType:
-        "Other Journal",
-    })
-  ),
-
-  ...filteredMemberReceipts.map(
-    (r) => ({
-      ...r,
-      transactionType:
-        "Member Receipt",
-    })
-  ),
-
-  ...or.map(
-    (r) => ({
-      ...r,
-      transactionType:
-        "Other Receipt",
-    })
-  ),
-
-  ...filteredMemberPayments.map(
-    (r) => ({
-      ...r,
-      transactionType:
-        "Member Payment",
-    })
-  ),
-
-  ...op.map(
-    (r) => ({
-      ...r,
-      transactionType:
-        "Other Payment",
-    })
-  ),
-];       sourceLabel="existing journal, receipt and payment tables";
-                 } else if (
-          financialReportSelection ===
-          "Balance Sheet - FR05"
-        ) {
-          const [
-            mj,
-            oj,
-            mr,
-            or,
-            mp,
-            op,
-            memberData,
-          ] = await Promise.all([
-            loadFinancialEndpoint("/member-journals"),
-            loadFinancialEndpoint("/other-journals"),
-            loadFinancialEndpoint("/member-receipts"),
-            loadFinancialEndpoint("/other-receipts"),
-            loadFinancialEndpoint("/member-payments"),
-            loadFinancialEndpoint("/other-payments"),
-            loadFinancialEndpoint("/members"),
-          ]);
-
-          const members = Array.isArray(memberData)
-            ? memberData
-            : [];
-
-          const memberBelongsToSelectedContext = (
-            record
-          ) => {
-            const member = members.find(
-              (item) =>
-                String(item?.memberCode || "")
-                  .trim()
-                  .toLowerCase() ===
-                String(
-                  record?.memberCode ||
-                  record?.member ||
-                  ""
-                )
-                  .trim()
-                  .toLowerCase()
-            );
-
-            if (!member) {
-              return false;
-            }
-
-            const clusterMatches =
-              !selectedCluster ||
-              String(member?.clusterName || "").trim() ===
-                String(selectedCluster || "").trim();
-
-            const vazhvathramMatches =
-              !selectedVazhvathram ||
-              String(member?.vazhvathramName || "").trim() ===
-                String(selectedVazhvathram || "").trim();
-
-            return (
-              clusterMatches &&
-              vazhvathramMatches
-            );
-          };
-
-          const filteredMemberJournals =
-            mj.filter(memberBelongsToSelectedContext);
-
-          const filteredMemberReceipts =
-            mr.filter(memberBelongsToSelectedContext);
-
-          const filteredMemberPayments =
-            mp.filter(memberBelongsToSelectedContext);
-
-          rows = [
-            ...filteredMemberJournals.map(
-              (r) => ({
-                ...r,
-                transactionType:
-                  "Member Journal",
-              })
-            ),
-
-            ...oj.map(
-              (r) => ({
-                ...r,
-                transactionType:
-                  "Other Journal",
-              })
-            ),
-
-            ...filteredMemberReceipts.map(
-              (r) => ({
-                ...r,
-                transactionType:
-                  "Member Receipt",
-              })
-            ),
-
-            ...or.map(
-              (r) => ({
-                ...r,
-                transactionType:
-                  "Other Receipt",
-              })
-            ),
-
-            ...filteredMemberPayments.map(
-              (r) => ({
-                ...r,
-                transactionType:
-                  "Member Payment",
-              })
-            ),
-
-            ...op.map(
-              (r) => ({
-                ...r,
-                transactionType:
-                  "Other Payment",
-              })
-            ),
-          ];
-
-          sourceLabel =
-            "existing journal, receipt and payment tables";
-          } else if (
-  financialReportSelection ===
-  "Trial Balance - FR06"
-) {
-  const [
-    mj,
-    oj,
-    mr,
-    or,
-    mp,
-    op,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-journals"),
-    loadFinancialEndpoint("/other-journals"),
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/other-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(
-          record?.memberCode ||
-          record?.member ||
-          ""
-        )
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  const filteredMemberJournals =
-    mj.filter(memberBelongsToSelectedContext);
-
-  const filteredMemberReceipts =
-    mr.filter(memberBelongsToSelectedContext);
-
-  const filteredMemberPayments =
-    mp.filter(memberBelongsToSelectedContext);
-
-  rows = [
-    ...filteredMemberJournals.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Journal",
-      })
-    ),
-
-    ...oj.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Journal",
-      })
-    ),
-
-    ...filteredMemberReceipts.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Receipt",
-      })
-    ),
-
-    ...or.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Receipt",
-      })
-    ),
-
-    ...filteredMemberPayments.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Payment",
-      })
-    ),
-
-    ...op.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Payment",
-      })
-    ),
-  ];
-
-  sourceLabel =
-    "existing journal, receipt and payment tables";
-        } else if (
-  financialReportSelection ===
-  "Member Ledger - FR07"
-) {
-  const [
-    mr,
-    mp,
-    mj,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/member-journals"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const q = financialMember
-    .trim()
-    .toLowerCase();
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(
-          record?.memberCode ||
-          record?.member ||
-          ""
-        )
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  rows = [
-    ...mr.map(
-      (r) => ({
-        ...r,
-        transactionType: "Receipt",
-      })
-    ),
-
-    ...mp.map(
-      (r) => ({
-        ...r,
-        transactionType: "Payment",
-      })
-    ),
-
-    ...mj.map(
-      (r) => ({
-        ...r,
-        transactionType: "Journal",
-      })
-    ),
-  ]
-    .filter(memberBelongsToSelectedContext)
-    .filter(
-      (r) =>
-        !q ||
-        [
-          r.memberCode,
-          r.memberName,
-          r.member,
-        ].some(
-          (v) =>
-            String(v || "")
-              .toLowerCase()
-              .includes(q)
-        )
-    );
-
-  sourceLabel =
-    "existing member receipt, payment and journal tables";
-        } else if (
-  financialReportSelection ===
-  "Member Ledger (All Heads) - Previous Year - FR08"
-) {
-  const [
-    mr,
-    mp,
-    mj,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/member-journals"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const q = financialMember
-    .trim()
-    .toLowerCase();
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(
-          record?.memberCode ||
-          record?.member ||
-          ""
-        )
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  rows = [
-    ...mr.map(
-      (r) => ({
-        ...r,
-        transactionType: "Receipt",
-      })
-    ),
-
-    ...mp.map(
-      (r) => ({
-        ...r,
-        transactionType: "Payment",
-      })
-    ),
-
-    ...mj.map(
-      (r) => ({
-        ...r,
-        transactionType: "Journal",
-      })
-    ),
-  ]
-    .filter(memberBelongsToSelectedContext)
-    .filter(
-      (r) =>
-        !q ||
-        [
-          r.memberCode,
-          r.memberName,
-          r.member,
-        ].some(
-          (v) =>
-            String(v || "")
-              .toLowerCase()
-              .includes(q)
-        )
-    );
-
-  sourceLabel =
-    "existing member receipt, payment and journal tables";
-          } else if (
-  financialReportSelection ===
-  "Member Ledger (All Heads) - FR09"
-) {
-  const [
-    mr,
-    mp,
-    mj,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/member-journals"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const q = financialMember
-    .trim()
-    .toLowerCase();
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(
-          record?.memberCode ||
-          record?.member ||
-          ""
-        )
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  rows = [
-    ...mr.map(
-      (r) => ({
-        ...r,
-        transactionType: "Receipt",
-      })
-    ),
-
-    ...mp.map(
-      (r) => ({
-        ...r,
-        transactionType: "Payment",
-      })
-    ),
-
-    ...mj.map(
-      (r) => ({
-        ...r,
-        transactionType: "Journal",
-      })
-    ),
-  ]
-    .filter(memberBelongsToSelectedContext)
-    .filter(
-      (r) =>
-        !q ||
-        [
-          r.memberCode,
-          r.memberName,
-          r.member,
-        ].some(
-          (v) =>
-            String(v || "")
-              .toLowerCase()
-              .includes(q)
-        )
-    );
-  sourceLabel =
-    "existing member receipt, payment and journal tables";
-        } else if (
-  financialReportSelection ===
-  "Bank Loan Ledger - FR10 - New"
-) {
-  const [
-    mp,
-    op,
-    mr,
-    or,
-    memberData,
-  ] = await Promise.all([
-    loadFinancialEndpoint("/member-payments"),
-    loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/member-receipts"),
-    loadFinancialEndpoint("/other-receipts"),
-    loadFinancialEndpoint("/members"),
-  ]);
-
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const q =
-    financialBankLoanLedger
-      .trim()
-      .toLowerCase();
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(
-          record?.memberCode ||
-          record?.member ||
-          ""
-        )
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  const filteredMemberPayments =
-    mp.filter(
-      memberBelongsToSelectedContext
-    );
-
-  const filteredMemberReceipts =
-    mr.filter(
-      memberBelongsToSelectedContext
-    );
-
-  rows = [
-    ...filteredMemberPayments,
-    ...op,
-    ...filteredMemberReceipts,
-    ...or,
-  ].filter(
-    (r) =>
-      !q ||
-      JSON.stringify(r)
-        .toLowerCase()
-        .includes(q)
-  );
-
-  sourceLabel =
-    "existing receipt and payment tables";
-          
-        } else if (financialReportSelection === "Audit Front Page - FR11") { rows=await loadFinancialEndpoint("/auditors"); sourceLabel="existing auditor details table"; }
-        else if (financialReportSelection === "Homeless Entries") { setFinancialReportStatus("Homeless Entries: no dedicated database table exists in the current project, so no data was invented."); return; }
-        rows=filterFinancialDateRange(rows); setFinancialReportResults(rows); setFinancialReportStatus(`${financialReportSelection}: ${rows.length} record${rows.length===1?"":"s"} loaded from ${sourceLabel}.`);
-      } catch(error) { console.error("Financial Report execute error:",error); setFinancialReportResults([]); setFinancialReportStatus(`Unable to load Financial Report data. ${error.message}`); } finally { setFinancialReportLoading(false); }
-    };
-
-    const [cashBookLockChecking, setCashBookLockChecking] = useState(false);
-
-const getCashBookLockMonth = (dateValue) => {
-  if (!dateValue) return "";
-
-  const date = new Date(`${dateValue}T00:00:00`);
-
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date.toLocaleString("en-US", {
-    month: "long",
-  });
-};
-
-useEffect(() => {
-  if (
-    financialReportSelection !== "Cash Book - FR01" ||
-    !financialFromDate
-  ) {
-    setTransactionLockStatus(null);
-    setCashBookLockChecking(false);
-    return;
-  }
-
-  const month = getCashBookLockMonth(financialFromDate);
-
-  if (!month) {
-    setTransactionLockStatus(null);
-    setCashBookLockChecking(false);
-    return;
-  }
-
-  const checkCashBookLock = async () => {
-    try {
-      setCashBookLockChecking(true);
-      await loadTransactionLockStatus(month);
-    } finally {
-      setCashBookLockChecking(false);
-    }
-  };
-
-  checkCashBookLock();
-}, [financialReportSelection, financialFromDate]);
-const selectedFinancialMember = memberRecords.find(
-  (member) =>
-    String(member?.memberCode || "").trim().toLowerCase() ===
-    String(financialMember || "").trim().toLowerCase()
-);
-
-    const renderFinancialReportResults = () => {
-  if (!financialReportResults.length) return null;
-
-  const getValue = (record, names) => {
-    for (const name of names) {
-      const value = record?.[name];
-      if (value !== undefined && value !== null && String(value).trim() !== "") {
-        return value;
-      }
-    }
-    return "";
-  };
-
-  const formatDate = (value) => {
-    if (!value) return "";
-    const text = String(value);
-
-    if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
-      const [y, m, d] = text.substring(0, 10).split("-");
-      return `${d}-${m}-${y}`;
-    }
-
-    return text;
-  };
-
-  const reportTitle = financialReportSelection || "Financial Report";
-  /*
-   * CASH BOOK - FR01
-   * Displayed in the same report-style structure as the reference.
-   */
-  if (financialReportSelection === "Cash Book - FR01") {
-    const receipts = financialReportResults.filter((r) =>
-      ["Member Receipt", "Other Receipt"].includes(r.transactionType)
-    );
-
-    const payments = financialReportResults.filter((r) =>
-      ["Member Payment", "Other Payment"].includes(r.transactionType)
-    );
-
-    const journals = financialReportResults.filter((r) =>
-      ["Member Journal", "Other Journal"].includes(r.transactionType)
-    );
-
-    const getMemberName = (r) =>
-      getValue(r, [
-        "memberName",
-        "member",
-        "member_name",
-        "memberCode",
-        "name",
-        "particulars",
-      ]);
-
-const getPaymentParticular = (r) => {
-  if (
-    r.transactionType === "Member Payment" ||
-    r.transactionType === "Payment"
-  ) {
-    const values = [
-      r.purpose,
-      r.loanType,
-      r.subPurpose,
-      r.particulars,
-      r.memberName,
-      r.member,
-      r.memberCode,
-    ];
-
-    return (
-      values.find(
-        (value) =>
-          value !== undefined &&
-          value !== null &&
-          String(value).trim() !== "" &&
-          String(value).trim().toLowerCase() !== "select"
-      ) || ""
-    );
-  }
-
-  return getValue(r, [
-    "particulars",
-    "name",
-    "memberName",
-    "member",
-    "memberCode",
-  ]);
-};
-
-    
-
-    const getReceiptNo = (r) =>
-      getValue(r, [
-        "receiptNo",
-        "receiptNumber",
-        "recNo",
-        "recNumber",
-        "voucherNo",
-      ]);
-      const getAmount = (r) => {
-  if (
-    r.transactionType === "Member Receipt"
-  ) {
-    return [
-      r.regularSavings,
-      r.bulletSavings,
-      r.specialSavingsAmount,
-      r.specialSavingsMoreAmount,
-      r.livelihoodLoanSupport1,
-      r.serviceCost1,
-      r.livelihoodLoanSupport2,
-      r.serviceCost2,
-      r.housingLoan,
-      r.housingServiceCost,
-    ].reduce(
-      (sum, value) => sum + (parseFloat(value) || 0),
-      0
-    );
-  }
-
-  if (
-    r.transactionType === "Member Payment" ||
-    r.transactionType === "Payment"
-  ) {
-    const directAmount = getValue(r, [
-      "amount",
-      "total",
-      "paymentAmount",
-    ]);
-
-    if (directAmount !== "") {
-      return directAmount;
-    }
-
-    return [
-      r.savings,
-      r.savingsIncentive,
-      r.bulletSavings,
-      r.socialSecurityAmount,
-      r.specialSavingsAmount,
-      r.specialSavingsMoreAmount,
-      r.specialSavingsIncentive,
-      r.loanAmount,
-      r.instalmentAmount,
-    ].reduce(
-      (sum, value) => sum + (parseFloat(value) || 0),
-      0
-    );
-  }
-
-  return getValue(r, [
-    "amount",
-    "total",
-    "receiptAmount",
-    "paymentAmount",
-  ]);
-};
-     
-    const getDate = (r) =>
-      formatDate(
-        getValue(r, [
-          "receiptDate",
-          "voucherDate",
-          "journalDate",
-          "date",
-        ])
-      );
-
-   const totalAmount = (rows) =>
-  rows.reduce((sum, r) => {
-    const value = Number(getAmount(r));
-    return sum + (Number.isFinite(value) ? value : 0);
-  }, 0);
-    const savingsTotal = totalAmount(receipts);
-
-const donationTotal = receipts.reduce((sum, r) => {
-  const value = Number(
-    getValue(r, [
-      "donation",
-    ])
-  );
-
-  return sum + (Number.isFinite(value) ? value : 0);
-}, 0);
-
-const overallReceiptTotal =
-  savingsTotal + donationTotal;
-    const openingCash = 0;
-
-const closingCash =
-  openingCash + overallReceiptTotal - totalAmount(payments);
-
-    return (
-      <div
-        style={{
-          marginTop: "14px",
-          border: "1px solid #777",
-          background: "#fff",
-          overflowX: "auto",
-          padding: "10px",
-        }}
-      >
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "18px",
-            marginBottom: "8px",
-          }}
-        >
-          Cash Book From {financialFromDate} To {financialToDate}
-        </div>
-        {financialFromDate && (
-  <div
-    style={{
-      textAlign: "center",
-      fontWeight: "bold",
-      marginBottom: "12px",
-      fontSize: "16px",
-    }}
-  >
-    {cashBookLockChecking
-      ? "Checking Lock Status..."
-      : `${getCashBookLockMonth(financialFromDate)}: ${
-          transactionLockStatus
-            ? "🔒 Locked"
-            : "🔓 Not Locked"
-        }`}
-  </div>
-)}
-
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "14px",
-          }}
-        >
-          Receipts
-        </div>
-
-        <table
-          className="legacy-table"
-          style={{
-            width: "100%",
-            minWidth: "0",
-            tableLayout: "auto",
-            borderCollapse: "collapse",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <thead>
-  <tr>
-    <th rowSpan="2">Member / Particulars</th>
-    <th rowSpan="2">Rec. No.</th>
-    <th rowSpan="2">Date</th>
-
-    <th colSpan="3">Savings</th>
-
-    <th colSpan="2">Livelihood Loan Support 1</th>
-
-    <th colSpan="2">Livelihood Loan Support 2</th>
-    <th colSpan="4">A/C</th>
-    <th rowSpan="2">Total</th>
-  </tr>
-
-  <tr>
-    <th>Regular</th>
-    <th>Special</th>
-    <th>Prepaid / More</th>
-
-    <th>Principal</th>
-    <th>Service Cost</th>
-
-    <th>Principal</th>
-    <th>Service Cost</th>
-
-    <th>A/C No. 1</th>
-    <th>Amount 1</th>
-    <th>A/C No. 2</th>
-    <th>Amount 2</th>
-  </tr>
-</thead>
-
-          <tbody>
-            {receipts.map((r, index) => (
-              <tr key={r.id ?? `receipt-${index}`}>
-  <td>{getMemberName(r)}</td>
-
-  <td>{getReceiptNo(r)}</td>
-
-  <td>{getDate(r)}</td>
-
-  {/* Savings */}
-  <td>
-    {getValue(r, [
-      "regularSavings",
-      "regularSaving",
-      "regSavings",
-    ])}
-  </td>
-
-  <td>
-    {getValue(r, [
-      "specialSavingsAmount",
-    ])}
-  </td>
-
-  <td>
-    {getValue(r, [
-      "specialSavingsMoreAmount",
-    ])}
-  </td>
-
-  {/* Livelihood Loan Support 1 */}
-  <td>
-    {getValue(r, [
-      "livelihoodLoanSupport1",
-      "livelihoodSupport1",
-      "livelihood1",
-      "loanSupport1",
-    ])}
-  </td>
-
-  <td>
-    {getValue(r, [
-      "serviceCost1",
-    ])}
-  </td>
-
-  {/* Livelihood Loan Support 2 */}
-  <td>
-    {getValue(r, [
-      "livelihoodLoanSupport2",
-      "livelihoodSupport2",
-      "livelihood2",
-      "loanSupport2",
-    ])}
-  </td>
-   <td>
-  {getValue(r, [
-    "serviceCost2",
-  ])}
-</td>
-
-<td>
-  {getValue(r, [
-    "accountNo",
-  ])}
-</td>
-
-<td>
-  {getValue(r, [
-    "amount",
-    "accountAmount",
-  ])}
-</td>
-     <td>
-     </td>
-
-     <td>
-     </td>
-
-<td>
-  {Number(getAmount(r) || 0) +
-    Number(getValue(r, ["donation"]) || 0)}
-</td>
- 
-</tr>
-            ))}
-            <tr>
-              <td colSpan="14" style={{
-                fontWeight: "bold",
-                 textAlign: "right",
-              }}
-           >
-            Total
-        </td>
-
-  <td style={{ fontWeight: "bold" }}>
-    {overallReceiptTotal}
-  </td>
-</tr>
-
-            
-          </tbody>
-        </table>
-
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            margin: "18px 0 10px",
-          }}
-        >
-          Payments
-        </div>
-
-        <table
-          className="legacy-table"
-          style={{
-            width: "100%",
-            minWidth: "700px",
-            borderCollapse: "collapse",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>Member / Particulars</th>
-              <th>Rec. No.</th>
-              <th>Vr. No.</th>
-              <th>Vr. Date</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {payments.map((r, index) => (
-              <tr key={r.id ?? `payment-${index}`}>
-                <td>{getPaymentParticular(r) || "Cash"}</td>
-                <td>{getReceiptNo(r)}</td>
-                <td>
-                  {getValue(r, [
-                    "voucherNo",
-                    "vrNo",
-                    "paymentVoucherNo",
-                  ])}
-                </td>
-                <td>{getDate(r)}</td>
-                <td>{getAmount(r)}</td>
-              </tr>
-            ))}
-           <tr>
-  <td
-    colSpan="4"
-    style={{
-      fontWeight: "bold",
-      textAlign: "right",
-    }}
-  >
-    Total
-  </td>
-
-  <td style={{ fontWeight: "bold" }}>
-    {overallReceiptTotal}
-  </td>
-</tr>
-          </tbody>
-        </table>
-
-        {journals.length > 0 && (
-          <>
-            <div
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                margin: "18px 0 10px",
-              }}
-            >
-              Journals
-            </div>
-
-            <table
-              className="legacy-table"
-              style={{
-                width: "100%",
-                minWidth: "700px",
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th>Member / Particulars</th>
-                  <th>Journal No.</th>
-                  <th>Date</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {journals.map((r, index) => (
-                  <tr key={r.id ?? `journal-${index}`}>
-                    <td>{getMemberName(r)}</td>
-                    <td>
-                      {getValue(r, [
-                        "journalNo",
-                        "voucherNo",
-                        "jrNo",
-                      ])}
-                    </td>
-                    <td>{getDate(r)}</td>
-                    <td>{getAmount(r)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
-        <div
-          style={{
-          marginTop: "18px",
-          borderTop: "1px solid #777",
-          paddingTop: "10px",
-          fontWeight: "bold",
-          }}
-          >
-          <div>
-            Opening Cash
-            <span style={{ float: "right" }}>
-              {openingCash}
-            </span>
-          </div>
-          <div style={{ marginTop: "8px" }}>
-            Cash in Hand
-            <span style={{ float: "right" }}>
-              {closingCash}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-        /*
-   * BANK BOOK - FR02A
-   * Account-number-wise Receipts & Payments report.
-   */
-  if (
-    financialReportSelection ===
-    "Bank Book - Acct No. wise - FR02A"
-  ) {
-    const bankRows = financialReportResults;
-
-    const accountRows = bankRows.reduce((result, record) => {
-      const accountCode =
-        String(
-          record?.accountCode ||
-          record?.accountNo ||
-          record?.accountType ||
-          ""
-        ).trim();
-
-      const accountName =
-        String(
-          record?.accountName ||
-          record?.memberName ||
-          record?.receiptType ||
-          record?.voucherType ||
-          record?.subLedger ||
-          record?.accountType ||
-          "Bank Account"
-        ).trim();
-
-      const key = `${accountCode}|||${accountName}`;
-
-      if (!result[key]) {
-        result[key] = {
-          accountCode,
-          accountName,
-          receipts: 0,
-          payments: 0,
-        };
-      }
-
-      const receiptAmount = Number(record?.receiptAmount || 0);
-      const paymentAmount = Number(record?.paymentAmount || 0);
-
-      if (Number.isFinite(receiptAmount)) {
-        result[key].receipts += receiptAmount;
-      }
-
-      if (Number.isFinite(paymentAmount)) {
-        result[key].payments += paymentAmount;
-      }
-
-      return result;
-    }, {});
-
-    const reportRows = Object.values(accountRows);
-
-    const totalReceipts = reportRows.reduce(
-      (sum, row) => sum + row.receipts,
-      0
-    );
-
-    const totalPayments = reportRows.reduce(
-      (sum, row) => sum + row.payments,
-      0
-    );
-
-    return (
-      <div
-        style={{
-          marginTop: "14px",
-          border: "1px solid #777",
-          background: "#fff",
-          overflowX: "auto",
-          padding: "10px",
-        }}
-      >
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "18px",
-            marginBottom: "8px",
-          }}
-        >
-          Bank Book - Acct No. wise - FR02A
-        </div>
-
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "14px",
-          }}
-        >
-          From {financialFromDate} To {financialToDate}
-        </div>
-
-        <table
-          className="legacy-table"
-          style={{
-            width: "100%",
-            minWidth: "700px",
-            borderCollapse: "collapse",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>A/C Code</th>
-              <th>A/C Name</th>
-              <th>Receipts</th>
-              <th>Payments</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {reportRows.map((row, index) => (
-              <tr key={`${row.accountCode}-${row.accountName}-${index}`}>
-                <td>{row.accountCode}</td>
-                <td>{row.accountName}</td>
-                <td>{row.receipts.toFixed(2)}</td>
-                <td>{row.payments.toFixed(2)}</td>
-              </tr>
-            ))}
-
-            <tr>
-              <td
-                colSpan="2"
-                style={{ fontWeight: "bold", textAlign: "right" }}
-              >
-                Total
-              </td>
-
-              <td style={{ fontWeight: "bold" }}>
-                {totalReceipts.toFixed(2)}
-              </td>
-
-              <td style={{ fontWeight: "bold" }}>
-                {totalPayments.toFixed(2)}
-              </td>
-            </tr>
-
-            <tr>
-              <td
-                colSpan="2"
-                style={{ fontWeight: "bold", textAlign: "right" }}
-              >
-                Difference
-              </td>
-
-              <td
-                colSpan="2"
-                style={{ fontWeight: "bold", textAlign: "center" }}
-              >
-                {(totalReceipts - totalPayments).toFixed(2)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  /*
-   * ALL OTHER FINANCIAL REPORTS
-   * Every selected report will display its complete available
-   * PostgreSQL data instead of the old generic broken layout.
-   */
-  const rows = financialReportResults;
-
-  const preferredKeys = [
-    "memberCode",
-    "memberName",
-    "member",
-    "name",
-    "receiptNo",
-    "receiptNumber",
-    "voucherNo",
-    "journalNo",
-    "receiptDate",
-    "voucherDate",
-    "journalDate",
-    "date",
-    "accountNo",
-    "accountType",
-    "amount",
-    "total",
-    "transactionType",
-    "source",
-  ];
-
-  const allKeys = Array.from(
-    new Set(
-      rows.flatMap((record) => Object.keys(record || {}))
-    )
-  ).filter((key) => key !== "id");
-
-  const keys = [
-    ...preferredKeys.filter((key) => allKeys.includes(key)),
-    ...allKeys.filter((key) => !preferredKeys.includes(key)),
-  ];
-
-  return (
-    <div
-      style={{
-        marginTop: "14px",
-        border: "1px solid #777",
-        background: "#fff",
-        overflowX: "auto",
-        padding: "10px",
-      }}
-    >
-      <div
-        style={{
-          textAlign: "center",
-          fontWeight: "bold",
-          fontSize: "18px",
-          marginBottom: "10px",
-        }}
-      >
-        {reportTitle}
-      </div>
-
-      <div
-        style={{
-          textAlign: "center",
-          fontWeight: "bold",
-          marginBottom: "14px",
-        }}
-      >
-        From {financialFromDate} To {financialToDate}
-      </div>
-
-      <table
-        className="legacy-table"
-        style={{
-          width: "100%",
-          minWidth: "900px",
-          borderCollapse: "collapse",
-        }}
-      >
-        <thead>
-          <tr>
-            {keys.map((key) => (
-              <th key={key}>
-                {key
-                  .replace(/([A-Z])/g, " $1")
-                  .replace(/^./, (letter) => letter.toUpperCase())}
-              </th>
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {rows.map((record, index) => (
-            <tr key={record.id ?? index}>
-              {keys.map((key) => (
-                <td key={key}>
-                  {key.toLowerCase().includes("date")
-                    ? formatDate(record?.[key])
-                    : String(record?.[key] ?? "")}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-    let body;
-
-    if (item === "Master") {
-      body = (
-        <>
-          <div className="legacy-report-title">{base.title}</div>
-          <select
-            className="legacy-report-list"
-            size={20}
-            value={masterReportSelection}
-            onChange={(event) => setMasterReportSelection(event.target.value)}
-          >
-            {base.options.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-          <div className="legacy-report-row">
-  <strong>From Date</strong>
-  <select
-    value={masterFromDate}
-    onChange={(event) => {
-      setMasterFromDate(event.target.value);
-      setMasterReportStatus("");
-      setMasterReportResults([]);
-    }}
-  >
-    <option value="">Select Date</option>
-    {reportAvailableDates.map((date) => (
-      <option key={`master-from-${date}`} value={date}>
-        {date}
-      </option>
-    ))}
-  </select>
-</div>
-
-<div className="legacy-report-row">
-  <strong>To Date</strong>
-  <select
-    value={masterToDate}
-    onChange={(event) => {
-      setMasterToDate(event.target.value);
-      setMasterReportStatus("");
-      setMasterReportResults([]);
-    }}
-  >
-    <option value="">Select Date</option>
-    {reportAvailableDates.map((date) => (
-      <option key={`master-to-${date}`} value={date}>
-        {date}
-      </option>
-    ))}
-  </select>
-</div>    
-          <div className="legacy-report-actions">
-             <Button
-               onClick={() =>
-                 openResultInNewTab({
-                   page: "masterReport",
-                   type: "all",
-                 })
-               }
-               >
-               Execute
-             </Button>
-          </div>
-          {masterReportStatus && (
-            <div style={{ padding: "8px", fontWeight: "bold", textAlign: "center" }}>
-              {masterReportStatus}
-            </div>
-          )}
-          {renderMasterReportResults()}
-        </>
-      );
-    } else if (item === "Opening Bal.") {
-      const openingBalanceSubledgers = [
-        "Poverty Reduction Fund 1",
-        "Poverty Reduction Fund 2",
-        "Poverty Reduction Fund 3",
-        "Housing Upgradation",
-        "Other Activity",
-      ];
-
-            const runOpeningBalanceReport = async () => {
-        setOpeningBalanceLoading(true);
-        setOpeningBalanceStatus("");
-        setOpeningBalanceResults([]);
-
-        try {
-          /*
-           * =========================================================
-           * OPENING BALANCE - COMMON DATABASE ENGINE
-           * =========================================================
-           * Load all existing PostgreSQL source tables once.
-           * Individual OB reports will use these records below.
-           */
-
-          const [
-            membersData,
-            vazhvathramsData,
-            clustersData,
-            groupsData,
-            bankAccountsData,
-            memberReceiptsData,
-            memberPaymentsData,
-            memberJournalsData,
-            otherReceiptsData,
-            otherPaymentsData,
-            otherJournalsData,
-            fixedDepositsData,
-            debtsData,
-            savingsData,
-            livelihoodsData,
-            housingsData,
-            sbAccountStatusesData,
-            sbAccountApprovalsData,
-            bankDetailsData,
-          ] = await Promise.all([
-            apiRequest("/members"),
-            apiRequest("/vazhvathrams"),
-            apiRequest("/clusters"),
-            apiRequest("/groups"),
-            apiRequest("/bank-accounts"),
-            apiRequest("/member-receipts"),
-            apiRequest("/member-payments"),
-            apiRequest("/member-journals"),
-            apiRequest("/other-receipts"),
-            apiRequest("/other-payments"),
-            apiRequest("/other-journals"),
-            apiRequest("/fixed-deposits"),
-            apiRequest("/debts"),
-            apiRequest("/savings"),
-            apiRequest("/livelihoods"),
-            apiRequest("/housings"),
-            apiRequest("/sb-account-statuses"),
-            apiRequest("/sb-account-approvals"),
-            apiRequest("/bank-details"),
-          ]);
-
-          const members = Array.isArray(membersData)
-            ? membersData
-            : [];
-
-          const vazhvathrams = Array.isArray(vazhvathramsData)
-            ? vazhvathramsData
-            : [];
-
-          const clusters = Array.isArray(clustersData)
-            ? clustersData
-            : [];
-
-          const groups = Array.isArray(groupsData)
-            ? groupsData
-            : [];
-
-          const bankAccounts = Array.isArray(bankAccountsData)
-            ? bankAccountsData
-            : [];
-
-          const memberReceipts = Array.isArray(memberReceiptsData)
-            ? memberReceiptsData
-            : [];
-
-          const memberPayments = Array.isArray(memberPaymentsData)
-            ? memberPaymentsData
-            : [];
-
-          const memberJournals = Array.isArray(memberJournalsData)
-            ? memberJournalsData
-            : [];
-
-          const otherReceipts = Array.isArray(otherReceiptsData)
-            ? otherReceiptsData
-            : [];
-
-          const otherPayments = Array.isArray(otherPaymentsData)
-            ? otherPaymentsData
-            : [];
-
-          const otherJournals = Array.isArray(otherJournalsData)
-            ? otherJournalsData
-            : [];
-
-          const fixedDeposits = Array.isArray(fixedDepositsData)
-            ? fixedDepositsData
-            : [];
-
-          const debts = Array.isArray(debtsData)
-            ? debtsData
-            : [];
-
-          const savings = Array.isArray(savingsData)
-            ? savingsData
-            : [];
-
-          const livelihoods = Array.isArray(livelihoodsData)
-            ? livelihoodsData
-            : [];
-
-          const housings = Array.isArray(housingsData)
-            ? housingsData
-            : [];
-
-          const sbAccountStatuses = Array.isArray(
-            sbAccountStatusesData
-          )
-            ? sbAccountStatusesData
-            : [];
-
-          const sbAccountApprovals = Array.isArray(
-            sbAccountApprovalsData
-          )
-            ? sbAccountApprovalsData
-            : [];
-
-          const bankDetails = Array.isArray(bankDetailsData)
-            ? bankDetailsData
-            : [];
-
-          /*
-           * =========================================================
-           * COMMON HELPERS
-           * =========================================================
-           */
-
-          const textValue = (value) =>
-            value === null || value === undefined
-              ? ""
-              : String(value).trim();
-
-          const numberValue = (value) => {
-            if (
-              value === null ||
-              value === undefined ||
-              value === ""
-            ) {
-              return 0;
-            }
-
-            const number = Number(
-              String(value).replace(/,/g, "")
-            );
-
-            return Number.isFinite(number) ? number : 0;
-          };
-
-          const firstValue = (record, fields) => {
-            for (const field of fields) {
-              if (
-                record &&
-                record[field] !== undefined &&
-                record[field] !== null &&
-                String(record[field]).trim() !== ""
-              ) {
-                return record[field];
-              }
-            }
-
-            return "";
-          };
-
-          const memberCode = (record) =>
-            textValue(
-              firstValue(record, [
-                "memberCode",
-                "code",
-                "memberNo",
-                "memberNumber",
-              ])
-            );
-
-          const memberName = (record) =>
-            textValue(
-              firstValue(record, [
-                "memberName",
-                "name",
-                "member",
-              ])
-            );
-
-          const groupName = (record) =>
-            textValue(
-              firstValue(record, [
-                "groupName",
-                "group",
-                "vazhvathramName",
-              ])
-            );
-
-          const vazhvathramName = (record) =>
-            textValue(
-              firstValue(record, [
-                "vazhvathramName",
-                "vazhvathram",
-                "clusterName",
-              ])
-            );
-
-          const clusterName = (record) =>
-            textValue(
-              firstValue(record, [
-                "clusterName",
-                "cluster",
-              ])
-            );
-
-          const recordDate = (record) =>
-            textValue(
-              firstValue(record, [
-                "date",
-                "transactionDate",
-                "receiptDate",
-                "paymentDate",
-                "journalDate",
-                "accountDate",
-                "createdDate",
-              ])
-            );
-
-          const debitAmount = (record) =>
-            numberValue(
-              firstValue(record, [
-                "debit",
-                "debitAmount",
-                "amountDebit",
-              ])
-            );
-
-          const creditAmount = (record) =>
-            numberValue(
-              firstValue(record, [
-                "credit",
-                "creditAmount",
-                "amountCredit",
-              ])
-            );
-
-          const amountValue = (record) =>
-            numberValue(
-              firstValue(record, [
-                "amount",
-                "balance",
-                "openingBalance",
-                "loanAmount",
-                "presentLoanOutstanding",
-              ])
-            );
-
-          /*
-           * =========================================================
-           * COMMON TRANSACTION COLLECTION
-           * =========================================================
-           */
-
-          const allMemberTransactions = [
-            ...memberReceipts.map((record) => ({
-              ...record,
-              transactionType: "Member Receipt",
-            })),
-
-            ...memberPayments.map((record) => ({
-              ...record,
-              transactionType: "Member Payment",
-            })),
-
-            ...memberJournals.map((record) => ({
-              ...record,
-              transactionType: "Member Journal",
-            })),
-          ];
-
-          const allOtherTransactions = [
-            ...otherReceipts.map((record) => ({
-              ...record,
-              transactionType: "Other Receipt",
-            })),
-
-            ...otherPayments.map((record) => ({
-              ...record,
-              transactionType: "Other Payment",
-            })),
-
-            ...otherJournals.map((record) => ({
-              ...record,
-              transactionType: "Other Journal",
-            })),
-          ];
-
-          const allTransactions = [
-            ...allMemberTransactions,
-            ...allOtherTransactions,
-          ];
-
-          /*
-           * =========================================================
-           * SOURCE SUMMARY
-           * =========================================================
-           */
-
-          console.log(
-            "Opening Balance PostgreSQL source data:",
-            {
-              members: members.length,
-              vazhvathrams: vazhvathrams.length,
-              clusters: clusters.length,
-              groups: groups.length,
-              bankAccounts: bankAccounts.length,
-              memberReceipts: memberReceipts.length,
-              memberPayments: memberPayments.length,
-              membersData: members,
-              memberReceiptsData: memberReceipts,
-              memberJournals: memberJournals.length,
-              otherReceipts: otherReceipts.length,
-              otherPayments: otherPayments.length,
-              otherJournals: otherJournals.length,
-              fixedDeposits: fixedDeposits.length,
-              debts: debts.length,
-              savings: savings.length,
-              livelihoods: livelihoods.length,
-              housings: housings.length,
-              sbAccountStatuses: sbAccountStatuses.length,
-              sbAccountApprovals: sbAccountApprovals.length,
-              bankDetails: bankDetails.length,
-              allTransactions: allTransactions.length,
-            }
-          );
-
-          /*
-           * =========================================================
-           * TEMPORARY COMMON RESULT
-           * =========================================================
-           * The individual OB-01 ... OB-16 report builders will be
-           * added in the next part.
-           */
-           let rows = [];
-
-if (
-  openingBalanceSelection ===
-  "OB 01 - Member Confirmation - vazhvathram"
-) {
-  const normalize = (value) =>
-    String(value ?? "")
-      .trim()
-      .toLowerCase();
-
-  const findGroupForMember = (member) => {
-    const code = normalize(memberCode(member));
-    const name = normalize(memberName(member));
-
-    if (!code && !name) {
-      return null;
-    }
-
-    // First try direct fields in the member record.
-    const directGroup =
-      member?.groupName ||
-      member?.group ||
-      member?.groupCode ||
-      member?.groupId ||
-      "";
-
-    if (String(directGroup).trim()) {
-      const directText = normalize(directGroup);
-
-      const matched = groups.find((group) => {
-        const groupCode = normalize(
-          group?.groupCode ||
-          group?.code ||
-          group?.groupId ||
-          group?.id
-        );
-
-        const groupNameValue = normalize(
-          group?.groupName ||
-          group?.name
-        );
-
-        return (
-          directText === groupCode ||
-          directText === groupNameValue
-        );
-      });
-
-      if (matched) {
-        return matched;
-      }
-    }
-
-    // Try matching the member code/name against the complete
-    // PostgreSQL group record.
-    const matchedByRecord = groups.find((group) => {
-      const groupText = JSON.stringify(
-        group || {}
-      ).toLowerCase();
-
-      return (
-        (code && groupText.includes(code)) ||
-        (name && groupText.includes(name))
-      );
-    });
-
-    if (matchedByRecord) {
-      return matchedByRecord;
-    }
-
-    // The member codes in this project follow the pattern
-    // 0010101, 0010102, etc. Use the first 5 characters
-    // as the group reference when groupCode is available.
-    const possibleGroupCode =
-      code.length >= 5
-        ? code.substring(0, 5)
-        : "";
-
-    if (possibleGroupCode) {
-      const matchedByCode = groups.find((group) => {
-        const groupCode = normalize(
-          group?.groupCode ||
-          group?.code ||
-          group?.groupId
-        );
-
-        return groupCode === possibleGroupCode;
-      });
-
-      if (matchedByCode) {
-        return matchedByCode;
-      }
-    }
-
-    return null;
-  };
-
-  rows = members.map((record) => {
-    const matchedGroup =
-      findGroupForMember(record);
-
-    const group =
-      matchedGroup?.groupName ||
-      matchedGroup?.name ||
-      matchedGroup?.groupCode ||
-      "";
-
-    const vazhvathram =
-      record?.vazhvathramName ||
-      record?.vazhvathram ||
-      record?.vazhvathramCode ||
-      matchedGroup?.vazhvathramName ||
-      matchedGroup?.vazhvathram ||
-      matchedGroup?.vazhvathramCode ||
-      selectedVazhvathram ||
-      "";
-
-    return {
-      "Member Code": memberCode(record),
-      "Member Name": memberName(record),
-      "Group": group,
-      "vazhvathram": vazhvathram,
-    };
-  });
-  } else if (
-  openingBalanceSelection ===
-  "OB 02 - Balance Sheet - vazhvathram"
-) {
-  // =========================================================
-  // OB 02 - BALANCE SHEET - VAZHVATHRAM
-  // DATABASE DRIVEN
-  // =========================================================
-
-  const normalizeOB02 = (value) =>
-    String(value ?? "")
-      .trim()
-      .toLowerCase();
-
-  const numberOB02 = (value) => {
-    if (
-      value === null ||
-      value === undefined ||
-      value === ""
-    ) {
-      return 0;
-    }
-
-    const number = Number(
-      String(value)
-        .replace(/,/g, "")
-        .replace(/[₹$]/g, "")
-        .trim()
-    );
-
-    return Number.isFinite(number)
-      ? number
-      : 0;
-  };
-
-  const selectedVazText =
-    normalizeOB02(selectedVazhvathram);
-
-  const selectedVazRecord =
-      vazhvathramRecords.find((record) => {
-      const code = normalizeOB02(
-        record?.vazhvathramCode ||
-        record?.code ||
-        record?.id
-      );
-
-      const name = normalizeOB02(
-        record?.vazhvathramName ||
-        record?.name
-      );
-
-      return (
-        code === selectedVazText ||
-        name === selectedVazText
-      );
-    }) || null;
-
-  const vazCode =
-    selectedVazRecord?.vazhvathramCode ||
-    selectedVazRecord?.code ||
-    selectedVazhvathram ||
-    "";
-
-  const vazName =
-  selectedVazRecord?.vazhvathramName ||
-  selectedVazRecord?.name ||
-  selectedVazhvathram ||
-  "";
-
-  const belongsToVazOB02 = (record) => {
-    const text = normalizeOB02(
-      JSON.stringify(record || {})
-    );
-
-    if (!selectedVazText) {
-      return true;
-    }
-
-    return (
-      text.includes(selectedVazText) ||
-      (vazCode &&
-        text.includes(
-          normalizeOB02(vazCode)
-        )) ||
-      (vazName &&
-        text.includes(
-          normalizeOB02(vazName)
-        ))
-    );
-  };
-
-  const financialRecords = [
-    ...(Array.isArray(memberReceipts)
-      ? memberReceipts
-      : []),
-    ...(Array.isArray(memberPayments)
-      ? memberPayments
-      : []),
-    ...(Array.isArray(otherReceipts)
-      ? otherReceipts
-      : []),
-    ...(Array.isArray(otherPayments)
-      ? otherPayments
-      : []),
-    ...(Array.isArray(memberJournals)
-      ? memberJournals
-      : []),
-    ...(Array.isArray(otherJournals)
-      ? otherJournals
-      : []),
-    ...(Array.isArray(bankAccounts)
-      ? bankAccounts
-      : []),
-    ...(Array.isArray(fixedDeposits)
-      ? fixedDeposits
-      : []),
-  ].filter(belongsToVazOB02);
-
-  const accountNameOB02 = (record) => {
-    const values = [
-      record?.generalLedger,
-      record?.genLedger,
-      record?.generalLedgerName,
-      record?.accountName,
-      record?.ledgerName,
-      record?.subLedger,
-      record?.subledger,
-      record?.subLedgerMain,
-      record?.subLed1,
-      record?.subLed2,
-      record?.subLed3,
-      record?.subLed4,
-      record?.subLed5,
-      record?.subLed6,
-      record?.particulars,
-      record?.description,
-    ];
-
-    const value = values.find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        String(item).trim() !== ""
-    );
-
-    return String(value || "").trim();
-  };
-
-  const accountCodeOB02 = (record) => {
-    const values = [
-      record?.generalLedgerCode,
-      record?.genLedgerCode,
-      record?.accountCode,
-      record?.ledgerCode,
-      record?.subLedgerCode,
-      record?.subledgerCode,
-      record?.code,
-    ];
-
-    const value = values.find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        String(item).trim() !== ""
-    );
-
-    return String(value || "").trim();
-  };
-
-  const amountOB02 = (record) => {
-    const values = [
-      record?.amount,
-      record?.total,
-      record?.amountMain,
-      record?.amount1,
-      record?.amount2,
-      record?.amount3,
-      record?.amount4,
-      record?.amount5,
-      record?.amount6,
-      record?.receiptAmount,
-      record?.paymentAmount,
-      record?.fdAmount,
-      record?.balance,
-      record?.openingBalance,
-      record?.currentBalance,
-    ];
-
-    const value = values.find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        item !== ""
-    );
-
-    return numberOB02(value);
-  };
-
-  const typeOB02 = (record) =>
-    normalizeOB02(
-      record?.debitCredit ||
-      record?.type ||
-      record?.type1 ||
-      record?.transactionType ||
-      ""
-    );
-
-  const ledgerMapOB02 = new Map();
-
-  financialRecords.forEach((record) => {
-    const name = accountNameOB02(record);
-
-    if (!name) {
-      return;
-    }
-
-    const code = accountCodeOB02(record);
-
-    const key =
-      `${code}|${name}`.toLowerCase();
-
-    const existing =
-      ledgerMapOB02.get(key) || {
-        code,
-        name,
-        debit: 0,
-        credit: 0,
-        balance: 0,
-      };
-
-    const amount =
-      amountOB02(record);
-
-    const type =
-      typeOB02(record);
-
-    if (
-      type.includes("credit") ||
-      type === "cr"
-    ) {
-      existing.credit += amount;
-    } else {
-      existing.debit += amount;
-    }
-
-    existing.balance =
-      existing.debit -
-      existing.credit;
-
-    ledgerMapOB02.set(
-      key,
-      existing
-    );
-  });
-
-  const ledgerRowsOB02 =
-    Array.from(
-      ledgerMapOB02.values()
-    );
-
-  const liabilityRows =
-    ledgerRowsOB02.filter(
-      (row) => row.balance < 0
-    );
-
-  const assetRows =
-    ledgerRowsOB02.filter(
-      (row) => row.balance >= 0
-    );
-
-  const maxRows = Math.max(
-    liabilityRows.length,
-    assetRows.length
-  );
-
-  rows = Array.from(
-    { length: maxRows },
-    (_, index) => {
-      const liability =
-        liabilityRows[index];
-
-      const asset =
-        assetRows[index];
-
-      return {
-        vazhvathramCode: vazCode,
-        vazhvathramName: vazName,
-
-        liabilityCode:
-          liability?.code || "",
-
-        liabilityName:
-          liability?.name || "",
-
-        liabilityAmount:
-          liability
-            ? Math.abs(liability.balance)
-            : 0,
-
-        assetCode:
-          asset?.code || "",
-
-        assetName:
-          asset?.name || "",
-
-        assetAmount:
-          asset
-            ? asset.balance
-            : 0,
-      };
-    }
-  );
-
-  const liabilityTotal =
-    liabilityRows.reduce(
-      (total, row) =>
-        total + Math.abs(row.balance),
-      0
-    );
-
-  const assetTotal =
-    assetRows.reduce(
-      (total, row) =>
-        total + row.balance,
-      0
-    );
-
-  rows.push({
-    vazhvathramCode: vazCode,
-    vazhvathramName: vazName,
-
-    liabilityCode: "",
-    liabilityName: "Total",
-    liabilityAmount: liabilityTotal,
-
-    assetCode: "",
-    assetName: "Total",
-    assetAmount: assetTotal,
-  });
-
-  setOpeningBalanceResults(rows);
-
-  setOpeningBalanceStatus(
-    `OB 02 - Balance Sheet - vazhvathram: ${ledgerRowsOB02.length} database account records loaded.`
-  );
-  
-} else if (
-  openingBalanceSelection ===
-  "OB 03 - Bank Loan - vazhvathram"
-) {
-  // =========================================================
-  // OB 03 - BANK LOAN - VAZHVATHRAM
-  // =========================================================
-
-  const normalizeOB03 = (value) =>
-    String(value ?? "")
-      .trim()
-      .toLowerCase();
-
-  const numberOB03 = (value) => {
-    if (
-      value === null ||
-      value === undefined ||
-      value === ""
-    ) {
-      return 0;
-    }
-
-    const number = Number(
-      String(value)
-        .replace(/,/g, "")
-        .replace(/[₹$]/g, "")
-        .trim()
-    );
-
-    return Number.isFinite(number)
-      ? number
-      : 0;
-  };
-
-  // ---------------------------------------------------------
-  // SELECTED VAZHVATHRAM
-  // ---------------------------------------------------------
-
-  const selectedVazText =
-    normalizeOB03(selectedVazhvathram);
-
-  const selectedVazRecord =
-  vazhvathramRecords.find((record) => {
-      const code = normalizeOB03(
-        record?.vazhvathramCode ||
-        record?.code ||
-        record?.id
-      );
-
-      const name = normalizeOB03(
-        record?.vazhvathramName ||
-        record?.name
-      );
-
-      return (
-        code === selectedVazText ||
-        name === selectedVazText
-      );
-    }) || null;
-
-  const vazCode =
-    selectedVazRecord?.vazhvathramCode ||
-    selectedVazRecord?.code ||
-    selectedVazhvathram ||
-    "";
-
-  const vazName =
-    selectedVazRecord?.vazhvathramName ||
-    selectedVazRecord?.name ||
-    "";
-
-  // ---------------------------------------------------------
-  // FIND MEMBER FOR EACH RECEIPT
-  // ---------------------------------------------------------
-
-  const findMemberOB03 = (receipt) => {
-    const receiptMemberCode =
-      normalizeOB03(
-        receipt?.memberCode
-      );
-
-    const receiptMemberName =
-      normalizeOB03(
-        receipt?.memberName
-      );
-
-    return (
-      members.find((member) => {
-        const memberCode =
-          normalizeOB03(
-            member?.memberCode ||
-            member?.code ||
-            member?.memberId ||
-            member?.id
-          );
-
-        const memberName =
-          normalizeOB03(
-            member?.memberName ||
-            member?.name
-          );
-
-        return (
-          (receiptMemberCode &&
-            memberCode ===
-              receiptMemberCode) ||
-          (!receiptMemberCode &&
-            receiptMemberName &&
-            memberName ===
-              receiptMemberName)
-        );
-      }) || null
-    );
-  };
-
-  // ---------------------------------------------------------
-  // CHECK WHETHER MEMBER BELONGS TO SELECTED VAZHVATHRAM
-  // ---------------------------------------------------------
-
-  const memberBelongsToVazOB03 =
-    (member) => {
-      if (!member) {
-        return false;
-      }
-
-      const memberVazCode =
-        normalizeOB03(
-          member?.vazhvathramCode ||
-          member?.vazhvathram
-        );
-
-      const memberVazName =
-        normalizeOB03(
-          member?.vazhvathramName ||
-          member?.vazhvathramName
-        );
-
-      const selectedCode =
-        normalizeOB03(vazCode);
-
-      const selectedName =
-        normalizeOB03(vazName);
-
-      if (
-        memberVazCode &&
-        selectedCode
-      ) {
-        return (
-          memberVazCode ===
-          selectedCode
-        );
-      }
-
-      if (
-        memberVazName &&
-        selectedName
-      ) {
-        return (
-          memberVazName ===
-          selectedName
-        );
-      }
-
-      return false;
-    };
-
-  // ---------------------------------------------------------
-  // READ MEMBER RECEIPTS
-  // ---------------------------------------------------------
-
-  const loanRowsOB03 = [];
-
-  const receiptsOB03 =
-    Array.isArray(memberReceipts)
-      ? memberReceipts
-      : [];
-
-  receiptsOB03.forEach(
-    (receipt) => {
-      const member =
-        findMemberOB03(receipt);
-
-      if (
-        !memberBelongsToVazOB03(
-          member
-        )
-      ) {
-        return;
-      }
-
-      // -----------------------------------------------------
-      // LIVELIHOOD LOAN SUPPORT 1
-      // -----------------------------------------------------
-
-      const loan1 =
-        numberOB03(
-          receipt?.livelihoodLoanSupport1
-        );
-
-      if (loan1 > 0) {
-        loanRowsOB03.push({
-          "S.No":
-            loanRowsOB03.length + 1,
-
-          "Vazhvathram Code":
-            vazCode,
-
-          "Vazhvathram Name":
-            vazName,
-
-          "Member Code":
-            receipt?.memberCode ||
-            member?.memberCode ||
-            "",
-
-          "Member Name":
-            receipt?.memberName ||
-            member?.memberName ||
-            "",
-
-          "Loan Type":
-            "Livelihood Loan Support 1",
-
-          "Loan Date":
-            receipt?.receiptDate ||
-            "",
-
-          "Loan Amount":
-            loan1.toFixed(2),
-
-          "Receipt No":
-            receipt?.receiptNo ||
-            "",
-
-          "Account No":
-            receipt?.accountNo ||
-            "",
-
-          "Branch":
-            receipt?.branch ||
-            "",
-        });
-      }
-
-      // -----------------------------------------------------
-      // LIVELIHOOD LOAN SUPPORT 2
-      // -----------------------------------------------------
-
-      const loan2 =
-        numberOB03(
-          receipt?.livelihoodLoanSupport2
-        );
-
-      if (loan2 > 0) {
-        loanRowsOB03.push({
-          "S.No":
-            loanRowsOB03.length + 1,
-
-          "Vazhvathram Code":
-            vazCode,
-
-          "Vazhvathram Name":
-            vazName,
-
-          "Member Code":
-            receipt?.memberCode ||
-            member?.memberCode ||
-            "",
-
-          "Member Name":
-            receipt?.memberName ||
-            member?.memberName ||
-            "",
-
-          "Loan Type":
-            "Livelihood Loan Support 2",
-
-          "Loan Date":
-            receipt?.receiptDate ||
-            "",
-
-          "Loan Amount":
-            loan2.toFixed(2),
-
-          "Receipt No":
-            receipt?.receiptNo ||
-            "",
-
-          "Account No":
-            receipt?.accountNo ||
-            "",
-
-          "Branch":
-            receipt?.branch ||
-            "",
-        });
-      }
-
-      // -----------------------------------------------------
-      // HOUSING LOAN
-      // -----------------------------------------------------
-
-      const housingLoan =
-        numberOB03(
-          receipt?.housingLoan
-        );
-
-      if (housingLoan > 0) {
-        loanRowsOB03.push({
-          "S.No":
-            loanRowsOB03.length + 1,
-
-          "Vazhvathram Code":
-            vazCode,
-
-          "Vazhvathram Name":
-            vazName,
-
-          "Member Code":
-            receipt?.memberCode ||
-            member?.memberCode ||
-            "",
-
-          "Member Name":
-            receipt?.memberName ||
-            member?.memberName ||
-            "",
-
-          "Loan Type":
-            "Housing Loan",
-
-          "Loan Date":
-            receipt?.receiptDate ||
-            "",
-
-          "Loan Amount":
-            housingLoan.toFixed(2),
-
-          "Receipt No":
-            receipt?.receiptNo ||
-            "",
-
-          "Account No":
-            receipt?.accountNo ||
-            "",
-
-          "Branch":
-            receipt?.branch ||
-            "",
-        });
-      }
-    }
-  );
-
-  // ---------------------------------------------------------
-  // RESULT
-  // ---------------------------------------------------------
-
-  rows = loanRowsOB03;
-
-  setOpeningBalanceResults(
-    rows
-  );
-
-  setOpeningBalanceStatus(
-    `OB 03 - Bank Loan - vazhvathram: ${
-      rows.length
-    } loan record${
-      rows.length === 1
-        ? ""
-        : "s"
-    } loaded from PostgreSQL.`
-  );} else if (
-  openingBalanceSelection ===
-  "OB 04 - Income and Expenditure - vazhvathram"
-) {
-  // =========================================================
-  // OB 04 - INCOME & EXPENDITURE ACCOUNT
-  // =========================================================
-
-  const normalizeOB = (value) =>
-    String(value ?? "")
-      .trim()
-      .toLowerCase();
-
-  const selectedVazCode =
-    normalizeOB(selectedVazhvathram);
-
-  const selectedVaz = vazhvathrams.find(
-    (record) => {
-      const code = normalizeOB(
-        record?.vazhvathramCode ||
-        record?.code ||
-        record?.id
-      );
-
-      const name = normalizeOB(
-        record?.vazhvathramName ||
-        record?.name
-      );
-
-      return (
-        code === selectedVazCode ||
-        name === selectedVazCode
-      );
-    }
-  );
-
-  const vazCode =
-    selectedVaz?.vazhvathramCode ||
-    selectedVaz?.code ||
-    selectedVazhvathram ||
-    "";
-
-  const vazName =
-    selectedVaz?.vazhvathramName ||
-    selectedVaz?.name ||
-    "";
-
-  const belongsToVaz = (record) => {
-  const text =
-    JSON.stringify(record || {})
-      .toLowerCase();
-
-  const code =
-    normalizeOB(vazCode);
-
-  const name =
-    normalizeOB(vazName);
-
-  return (
-    !code ||
-    text.includes(code) ||
-    (name && text.includes(name))
-  );
-};
-
-// ---------------------------------------------------------
-// MEMBER TRANSACTIONS — use Member → Cluster/Vazhvathram
-// relationship instead of searching the whole JSON text.
-// ---------------------------------------------------------
-const memberBelongsToVaz = (record) => {
-  const memberCode = String(
-    record?.memberCode ||
-    record?.member ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
-
-  if (!memberCode) {
-    return false;
-  }
-
-  const member = members.find(
-    (item) =>
-      String(item?.memberCode || "")
-        .trim()
-        .toLowerCase() === memberCode
-  );
-
-  if (!member) {
-    return false;
-  }
-
-  const clusterMatches =
-    !selectedCluster ||
-    String(member?.clusterName || "").trim() ===
-      String(selectedCluster || "").trim();
-
-  const vazhvathramMatches =
-    !selectedVazhvathram ||
-    String(member?.vazhvathramName || "").trim() ===
-      String(selectedVazhvathram || "").trim();
-
-  return (
-    clusterMatches &&
-    vazhvathramMatches
-  );
-};
-
-  const incomeRecords = [
-  ...memberReceipts.filter(memberBelongsToVaz),
-  ...otherReceipts.filter(belongsToVaz),
-];
-
-const expenditureRecords = [
-  ...memberPayments.filter(memberBelongsToVaz),
-  ...otherPayments.filter(belongsToVaz),
-];
-
-  const incomeRows =
-    incomeRecords.map(
-      (record) => ({
-        expenditure: "",
-        expenditureAmount: "",
-        income:
-          firstValue(
-            record?.particulars,
-            record?.description,
-            record?.accountName,
-            record?.subLedger,
-            record?.subledger
-          ),
-        incomeAmount:
-          numberValue(
-            record?.total ||
-            record?.amount ||
-            record?.receiptAmount
-          ),
-      })
-    );
-
-  const expenditureRows =
-    expenditureRecords.map(
-      (record) => ({
-        expenditure:
-          firstValue(
-            record?.particulars,
-            record?.description,
-            record?.accountName,
-            record?.subLedger,
-            record?.subledger
-          ),
-        expenditureAmount:
-          numberValue(
-            record?.total ||
-            record?.amount ||
-            record?.paymentAmount
-          ),
-        income: "",
-        incomeAmount: "",
-      })
-    );
-
-  const maxRows = Math.max(
-    incomeRows.length,
-    expenditureRows.length
-  );
-
-    rows = Array.from(
-    { length: maxRows },
-    (_, index) => ({
-      expenditure:
-        expenditureRows[index]
-          ?.expenditure || "",
-
-      expenditureAmount:
-        expenditureRows[index]
-          ?.expenditureAmount || 0,
-
-      income:
-        incomeRows[index]
-          ?.income || "",
-
-      incomeAmount:
-        incomeRows[index]
-          ?.incomeAmount || 0,
-    })
-  );
-
-} else if (
-  openingBalanceSelection ===
-  "OB 05 - Balance Sheet Consolidation - vazhvathram"
-) {
-  // =========================================================
-  // OB 05 - BALANCE SHEET CONSOLIDATION - VAZHVATHRAM
-  // =========================================================
-
-  const normalizeOB05 = (value) =>
-    String(value ?? "")
-      .trim()
-      .toLowerCase();
-
-  const numberOB05 = (value) => {
-    if (
-      value === null ||
-      value === undefined ||
-      value === ""
-    ) {
-      return 0;
-    }
-
-    const number = Number(
-      String(value)
-        .replace(/,/g, "")
-        .replace(/[₹$]/g, "")
-        .trim()
-    );
-
-    return Number.isFinite(number)
-      ? number
-      : 0;
-  };
-
-  // ---------------------------------------------------------
-  // SELECTED VAZHVATHRAM
-  // ---------------------------------------------------------
-
-  const selectedVazText =
-    normalizeOB05(selectedVazhvathram);
-
-  const selectedVazRecord =
-    vazhvathrams.find((record) => {
-      const code = normalizeOB05(
-        record?.vazhvathramCode ||
-        record?.code ||
-        record?.id
-      );
-
-      const name = normalizeOB05(
-        record?.vazhvathramName ||
-        record?.name
-      );
-
-      return (
-        code === selectedVazText ||
-        name === selectedVazText
-      );
-    }) || null;
-
-  const vazCode =
-    selectedVazRecord?.vazhvathramCode ||
-    selectedVazRecord?.code ||
-    selectedVazhvathram ||
-    "";
-
-  const vazName =
-  selectedVazRecord?.vazhvathramName ||
-  selectedVazRecord?.name ||
-  selectedVazhvathram ||
-  "";
-
-  // ---------------------------------------------------------
-  // MEMBER → SELECTED CLUSTER / VAZHVATHRAM
-  // ---------------------------------------------------------
-
-  const memberBelongsToSelectedVazOB05 = (record) => {
-    const memberCode = normalizeOB05(
-      record?.memberCode ||
-      record?.member
-    );
-
-    if (!memberCode) {
-      return false;
-    }
-
-    const member = members.find(
-      (item) =>
-        normalizeOB05(
-          item?.memberCode
-        ) === memberCode
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      normalizeOB05(
-        member?.clusterName
-      ) ===
-        normalizeOB05(
-          selectedCluster
-        );
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      normalizeOB05(
-        member?.vazhvathramName
-      ) ===
-        normalizeOB05(
-          selectedVazhvathram
-        );
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
-  };
-
-  // ---------------------------------------------------------
-  // OTHER TRANSACTIONS → SELECTED VAZHVATHRAM
-  // ---------------------------------------------------------
-
-  const otherBelongsToSelectedVazOB05 = (record) => {
-    const text = normalizeOB05(
-      JSON.stringify(record || {})
-    );
-
-    if (!selectedVazText) {
-      return true;
-    }
-
-    return (
-      text.includes(selectedVazText) ||
-      (
-        vazCode &&
-        text.includes(
-          normalizeOB05(vazCode)
-        )
-      ) ||
-      (
-        vazName &&
-        text.includes(
-          normalizeOB05(vazName)
-        )
-      )
-    );
-  };
-
-  // ---------------------------------------------------------
-  // CONSOLIDATED FINANCIAL RECORDS
-  // ---------------------------------------------------------
-
-  const financialRecordsOB05 = [
-    ...(Array.isArray(memberReceipts)
-      ? memberReceipts.filter(
-          memberBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(memberPayments)
-      ? memberPayments.filter(
-          memberBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(memberJournals)
-      ? memberJournals.filter(
-          memberBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(otherReceipts)
-      ? otherReceipts.filter(
-          otherBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(otherPayments)
-      ? otherPayments.filter(
-          otherBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(otherJournals)
-      ? otherJournals.filter(
-          otherBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(bankAccounts)
-      ? bankAccounts.filter(
-          otherBelongsToSelectedVazOB05
-        )
-      : []),
-
-    ...(Array.isArray(fixedDeposits)
-      ? fixedDeposits.filter(
-          otherBelongsToSelectedVazOB05
-        )
-      : []),
-  ];
-
-  // ---------------------------------------------------------
-  // ACCOUNT NAME
-  // ---------------------------------------------------------
-
-  const accountNameOB05 = (record) => {
-    const values = [
-      record?.generalLedger,
-      record?.genLedger,
-      record?.generalLedgerName,
-      record?.accountName,
-      record?.ledgerName,
-      record?.subLedger,
-      record?.subledger,
-      record?.subLedgerMain,
-      record?.subLed1,
-      record?.subLed2,
-      record?.subLed3,
-      record?.subLed4,
-      record?.subLed5,
-      record?.subLed6,
-      record?.particulars,
-      record?.description,
-    ];
-
-    const value = values.find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        String(item).trim() !== ""
-    );
-
-    return String(value || "").trim();
-  };
-
-  // ---------------------------------------------------------
-  // ACCOUNT CODE
-  // ---------------------------------------------------------
-
-  const accountCodeOB05 = (record) => {
-    const values = [
-      record?.generalLedgerCode,
-      record?.genLedgerCode,
-      record?.accountCode,
-      record?.ledgerCode,
-      record?.subLedgerCode,
-      record?.subledgerCode,
-      record?.code,
-    ];
-
-    const value = values.find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        String(item).trim() !== ""
-    );
-
-    return String(value || "").trim();
-  };
-
-  // ---------------------------------------------------------
-  // AMOUNT
-  // ---------------------------------------------------------
-      const amountOB05 = (record) => {
-  // Member Journal can contain multiple debit/credit amounts.
-  const journalAmounts = [
-    record?.amt1,
-    record?.amt2,
-    record?.amt3,
-    record?.amt4,
-    record?.amt5,
-    record?.amt6,
-  ];
-
-  const hasJournalAmount = journalAmounts.some(
-    (value) =>
-      value !== null &&
-      value !== undefined &&
-      String(value).trim() !== ""
-  );
-
-  if (hasJournalAmount) {
-    return journalAmounts.reduce(
-      (total, value) =>
-        total + numberOB05(value),
-      0
-    );
-  }
-
-  // Prefer the transaction's total when it exists.
-  const totalValue =
-    record?.total !== null &&
-    record?.total !== undefined &&
-    String(record?.total).trim() !== ""
-      ? record.total
-      : null;
-
-  if (totalValue !== null) {
-    return numberOB05(totalValue);
-  }
-
-  // Other possible amount fields.
-  const values = [
-    record?.amount,
-    record?.amountMain,
-    record?.receiptAmount,
-    record?.paymentAmount,
-    record?.fdAmount,
-    record?.balance,
-    record?.openingBalance,
-    record?.currentBalance,
-  ];
-
-  const value = values.find(
-    (item) =>
-      item !== null &&
-      item !== undefined &&
-      String(item).trim() !== ""
-  );
-
-  return numberOB05(value);
-};
-
-  // ---------------------------------------------------------
-  // DEBIT / CREDIT
-  // ---------------------------------------------------------
-
-  const typeOB05 = (record) =>
-    normalizeOB05(
-      record?.debitCredit ||
-      record?.type ||
-      record?.type1 ||
-      record?.transactionType ||
-      ""
-    );
-
-  // ---------------------------------------------------------
-  // CONSOLIDATE SAME LEDGERS
-  // ---------------------------------------------------------
-
-  const ledgerMapOB05 = new Map();
-
-  financialRecordsOB05.forEach((record) => {
-    const name =
-      accountNameOB05(record);
-
-    if (!name) {
-      return;
-    }
-
-    const code =
-      accountCodeOB05(record);
-
-    const key =
-      `${code}|${name}`.toLowerCase();
-
-    const existing =
-      ledgerMapOB05.get(key) || {
-        code,
-        name,
-        debit: 0,
-        credit: 0,
-        balance: 0,
-      };
-
-    const amount =
-      amountOB05(record);
-
-    const type =
-      typeOB05(record);
-
-    if (
-      type.includes("credit") ||
-      type === "cr"
-    ) {
-      existing.credit += amount;
-    } else {
-      existing.debit += amount;
-    }
-
-    existing.balance =
-      existing.debit -
-      existing.credit;
-
-    ledgerMapOB05.set(
-      key,
-      existing
-    );
-  });
-
-  const ledgerRowsOB05 =
-    Array.from(
-      ledgerMapOB05.values()
-    );
-
-  // ---------------------------------------------------------
-  // LIABILITIES / ASSETS
-  // ---------------------------------------------------------
-
-  const liabilityRowsOB05 =
-    ledgerRowsOB05.filter(
-      (row) => row.balance < 0
-    );
-
-  const assetRowsOB05 =
-    ledgerRowsOB05.filter(
-      (row) => row.balance >= 0
-    );
-
-  const maxRowsOB05 =
-    Math.max(
-      liabilityRowsOB05.length,
-      assetRowsOB05.length
-    );
-
-  rows = Array.from(
-    { length: maxRowsOB05 },
-    (_, index) => {
-      const liability =
-        liabilityRowsOB05[index];
-
-      const asset =
-        assetRowsOB05[index];
-
-      return {
-        vazhvathramCode:
-          vazCode,
-
-        vazhvathramName:
-          vazName,
-
-        liabilityCode:
-          liability?.code || "",
-
-        liabilityName:
-          liability?.name || "",
-
-        liabilityAmount:
-          liability
-            ? Math.abs(
-                liability.balance
-              )
-            : 0,
-
-        assetCode:
-          asset?.code || "",
-
-        assetName:
-          asset?.name || "",
-
-        assetAmount:
-          asset
-            ? asset.balance
-            : 0,
-      };
-    }
-  );
-
-  const liabilityTotalOB05 =
-    liabilityRowsOB05.reduce(
-      (total, row) =>
-        total +
-        Math.abs(row.balance),
-      0
-    );
-
-  const assetTotalOB05 =
-    assetRowsOB05.reduce(
-      (total, row) =>
-        total + row.balance,
-      0
-    );
-
-  rows.push({
-    vazhvathramCode:
-      vazCode,
-
-    vazhvathramName:
-      vazName,
-
-    liabilityCode: "",
-    liabilityName: "Total",
-    liabilityAmount:
-      liabilityTotalOB05,
-
-    assetCode: "",
-    assetName: "Total",
-    assetAmount:
-      assetTotalOB05,
-  });
-
-} else {
-  rows = [];
-}
-          
-          setOpeningBalanceResults(rows);
-
-          setOpeningBalanceStatus(
-            `${openingBalanceSelection}: ${rows.length} record${
-              rows.length === 1 ? "" : "s"
-            } loaded from PostgreSQL.`
-          );
-        } catch (error) {
-          console.error(
-            "Opening Balance report error:",
-            error
-          );
-
-          setOpeningBalanceResults([]);
-
-          setOpeningBalanceStatus(
-            `Unable to load Opening Balance data. ${
-              error?.message || error
-            }`
-          );
-        } finally {
-          setOpeningBalanceLoading(false);
-        }
-      };
-
-      const renderOpeningBalanceResults = () => {
-  if (!openingBalanceResults.length) {
-    return null;
-  }
-
-  const records = openingBalanceResults;
-
-  /*
-   * ============================================================
-   * OB 02 - BALANCE SHEET
-   * ============================================================
-   */
-
-  if (
-  openingBalanceSelection ===
-    "OB 02 - Balance Sheet - vazhvathram" ||
-  openingBalanceSelection ===
-    "OB 05 - Balance Sheet Consolidation - vazhvathram"
-) {
-    const record = records[0] || {};
-
-    const amount = (value) => {
-      const number = Number(value);
-
-      if (!Number.isFinite(number)) {
-        return "0";
-      }
-
-      return number.toFixed(0);
-    };
-
-    const financialYearEnd = "31-03-2026";
-
-    const vazCode =
-      record.vazhvathramCode ||
-      record.vazCode ||
-      "";
-
-    const vazName =
-      record.vazhvathramName ||
-      record.vazName ||
-      selectedVazhvathram ||
-     "";
-
-    return (
-      <div
-        style={{
-          marginTop: "14px",
-          background: "#fff",
-          padding: "18px",
-          overflowX: "auto",
-          fontFamily: "Times New Roman, serif",
-        }}
-      >
-
-        {/* REPORT TITLE */}
-
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "20px",
-            lineHeight: "1.25",
-            marginBottom: "2px",
-          }}
-        >
-          {openingBalanceSelection ===
-             "OB 05 - Balance Sheet Consolidation - vazhvathram"
-              ? "OB 05 - Balance Sheet Consolidation as on"
-              : "OB 02 - Balance Sheet as on"}{" "}
-              {financialYearEnd}
-        </div>
-
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "20px",
-            marginBottom: "18px",
-          }}
-        >
-          vazhvathram : {vazCode}-{vazName}
-        </div>
-
-
-        {/* BALANCE SHEET */}
-
-        <table
-          style={{
-            margin: "0 auto",
-            borderCollapse: "collapse",
-            fontSize: "16px",
-            minWidth: "390px",
-          }}
-        >
-          <thead>
-            <tr>
-
-              <th
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                Liabilities
-              </th>
-
-              <th
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                Rs.
-              </th>
-
-              <th
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                Assets
-              </th>
-
-              <th
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                Rs.
-              </th>
-
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {/* ROW 1 */}
-
-            <tr>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-                {record.liability1Code
-                  ? `${record.liability1Code} - ${record.liability1Name || ""}`
-                  : ""}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                }}
-              >
-                {amount(record.liability1Amount)}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-                {record.asset1Code
-                  ? `${record.asset1Code} - ${record.asset1Name || ""}`
-                  : ""}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                }}
-              >
-                {amount(record.asset1Amount)}
-              </td>
-
-            </tr>
-
-
-            {/* ROW 2 */}
-
-            <tr>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-                {record.liability2Code
-                  ? `${record.liability2Code} - ${record.liability2Name || ""}`
-                  : ""}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                }}
-              >
-                {amount(record.liability2Amount)}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-                {record.asset2Code
-                  ? `${record.asset2Code} - ${record.asset2Name || ""}`
-                  : ""}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                }}
-              >
-                {amount(record.asset2Amount)}
-              </td>
-
-            </tr>
-
-
-            {/* ROW 3 */}
-
-            <tr>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                }}
-              >
-                {record.asset3Code
-                  ? `${record.asset3Code} - ${record.asset3Name || ""}`
-                  : ""}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                }}
-              >
-                {amount(record.asset3Amount)}
-              </td>
-
-            </tr>
-
-
-            {/* TOTAL */}
-
-            <tr>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  fontWeight: "bold",
-                }}
-              >
-                Total
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
-              >
-                {amount(record.liabilityTotal)}
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  fontWeight: "bold",
-                }}
-              >
-                Total
-              </td>
-
-              <td
-                style={{
-                  border: "1px solid #777",
-                  padding: "4px 8px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
-              >
-                {amount(record.assetTotal)}
-              </td>
-
-            </tr>
-
-          </tbody>
-        </table>
-
-      </div>
-    );
-  }
-
-
-  /*
-   * ============================================================
-   * OTHER OPENING BALANCE REPORTS
-   * ============================================================
-   */
-
-  const keys = Array.from(
-    new Set(
-      records.flatMap(
-        (record) => Object.keys(record || {})
-      )
-    )
-  ).filter((key) => key !== "id");
-
-  if (!keys.length) {
-    return null;
-  }
-
-  return (
-    <div
-      style={{
-        marginTop: "14px",
-        border: "1px solid #777",
-        background: "#fff",
-        overflowX: "auto",
-        padding: "10px",
-      }}
-    >
-      <div
-        style={{
-          textAlign: "center",
-          fontWeight: "bold",
-          fontSize: "18px",
-          marginBottom: "10px",
-        }}
-      >
-        {openingBalanceSelection}
-      </div>
-
-      <div
-        style={{
-          textAlign: "center",
-          fontWeight: "bold",
-          marginBottom: "14px",
-        }}
-      >
-        Subledger: {openingBalanceSubledger}
-      </div>
-
-      <table
-        className="legacy-table"
-        style={{
-          width: "100%",
-          minWidth: "900px",
-          borderCollapse: "collapse",
-        }}
-      >
-        <thead>
-          <tr>
-            {keys.map((key) => (
-              <th key={key}>
-                {key
-                  .replace(
-                    /([A-Z])/g,
-                    " $1"
-                  )
-                  .replace(
-                    /^./,
-                    (letter) =>
-                      letter.toUpperCase()
-                  )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {records.map(
-            (record, index) => (
-              <tr
-                key={
-                  record.id ??
-                  index
-                }
-              >
-                {keys.map(
-                  (key) => (
-                    <td key={key}>
-                      {String(
-                        record?.[key] ??
-                        ""
-                      )}
-                    </td>
-                  )
-                )}
-              </tr>
-            )
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-      
-      body = legacyCard(
-        <>
-          <select
-            className="legacy-report-list"
-            size={12}
-            value={openingBalanceSelection}
-            onChange={(event) => {
-              setOpeningBalanceSelection(event.target.value);
-              setOpeningBalanceStatus("");
-            }}
-          >
-            {base.options.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-
-          <div className="legacy-report-section-label">Subledger</div>
-          <div className="legacy-report-center">
-            <select
-              className="legacy-report-list"
-              size={5}
-              value={openingBalanceSubledger}
-              onChange={(event) => {
-                setOpeningBalanceSubledger(event.target.value);
-                setOpeningBalanceStatus("");
-              }}
-            >
-              {openingBalanceSubledgers.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                  page: "openingBalance",
-                  type: "all",
-                })
-              }
-              >
-              Execute
-            </Button>
-          </div>
-          {openingBalanceStatus && (
-            <div
-              style={{
-                marginTop: "10px",
-                padding: "8px",
-                border: "1px solid #777",
-                background: "#f4f4f4",
-                textAlign: "center",
-                fontWeight: "bold",
-              }}
-            >
-              {openingBalanceStatus}
-            </div>
-          )}
-                    {renderOpeningBalanceResults()}
-        </>
-      );
-    } else if (item === "Financial") {
-      body = legacyCard(
-  <>
-    <div className="legacy-report-panel">
-      <div className="legacy-report-subtitle">
-        For Member Ledger
-      </div>
-
-      <div className="legacy-fields">
-<label>
-  Member
-  <select
-    value={financialMember}
-  onChange={(e) => {
-  const selectedMemberCode = e.target.value;
-
-  setFinancialMember(selectedMemberCode);
-sessionStorage.setItem("financialMember", selectedMemberCode);
-
-setFinancialFromDate("");
-setFinancialToDate("");
-
-setFinancialReportStatus("");
-setFinancialReportResults([]);
-  }}
-  >
-    <option value="">Select Member</option>
-
-{[
-  ...getContextMembers(),
-  ...(financialMember &&
-  !getContextMembers().some(
-    (member) =>
-      String(member.memberCode || "").trim() ===
-      String(financialMember || "").trim()
-  )
-    ? memberRecords.filter(
-        (member) =>
-          String(member.memberCode || "").trim() ===
-          String(financialMember || "").trim()
-      )
-    : []),
-].map((member) => (
-  <option
-    key={member.memberCode}
-    value={member.memberCode}
-  >
-    {member.memberCode} - {member.memberName || member.name || ""}
-  </option>
-))}
-  </select>
-</label>
-
-        <label>
-          Sub Ledger
-          <select>
-            <option>Regular Savings</option>
-            <option>Special Savings</option>
-            <option>Bullet Savings</option>
-            <option>Livelihood Loan Support 1</option>
-            <option>Livelihood Loan Support 2</option>
-            <option>Housing Loan</option>
-          </select>
-        </label>
-
-        <label>
-          Bank Loan Ledger
-          <select>
-            <option>SHG Linkage - Bank</option>
-            <option>Sahaya Loan - Covid Reponse - Bank</option>
-            <option>ROC - Bank</option>
-            <option>SGSY RF - Bank</option>
-            <option>Housing Loan - HOPE</option>
-          </select>
-        </label>
-      </div>
-
-      <div className="legacy-report-subtitle">
-        For Bank Book
-      </div>
-
-      <div className="legacy-fields">
-        <label>
-          Acct Type
-          <select>
-            <option>Savings Bank AC</option>
-            <option>Loan A/C</option>
-          </select>
-        </label>
-
-        <label>
-          Bank and Branch
-          <select></select>
-        </label>
-
-        <label>
-          Acct No
-          <select>
-            <option>5243664550</option>
-          </select>
-        </label>
-      </div>
-    </div>
-
-    <ListBox
-      options={base.options}
-      size={9}
-      value={financialReportSelection}
-      onChange={(event) => {
-        setFinancialReportSelection(event.target.value);
-        setFinancialReportStatus("");
-        setFinancialReportResults([]);
-      }}
-    />
-
-    {dates}
-
-    <div className="legacy-check">
-      <label>
-        <input type="checkbox" />
-        Regional Language
-      </label>
-    </div>
-
-    <div className="legacy-report-actions">
-      <Button />
-    </div>
-  </>
-);
-    } else if (item === "Journals") {
-      body = legacyCard(
-  <>
-    <ListBox
-      options={base.options}
-      size={9}
-      value={journalReportSelection}
-      onChange={(event) => {
-        setJournalReportSelection(event.target.value);
-        setJournalReportStatus("");
-        setJournalReportResults([]);
-      }}
-    />
-
-    <div className="legacy-report-row">
-      <strong>From Date</strong>
-      <select
-        value={journalFromDate}
-        onChange={(event) => {
-          setJournalFromDate(event.target.value);
-          setJournalReportStatus("");
-          setJournalReportResults([]);
-        }}
-      >
-        <option value="">Select Date</option>
-        {reportAvailableDates.map((date) => (
-          <option key={`journal-from-${date}`} value={date}>
-            {date}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    <div className="legacy-report-row">
-      <strong>To Date</strong>
-      <select
-        value={journalToDate}
-        onChange={(event) => {
-          setJournalToDate(event.target.value);
-          setJournalReportStatus("");
-          setJournalReportResults([]);
-        }}
-      >
-        <option value="">Select Date</option>
-        {reportAvailableDates.map((date) => (
-          <option key={`journal-to-${date}`} value={date}>
-            {date}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    <div className="legacy-report-actions">
-      <Button />
-    </div>
-
-    {journalReportStatus && (
-      <div
-        style={{
-          marginTop: "10px",
-          padding: "8px",
-          border: "1px solid #777",
-          background: "#f4f4f4",
-          textAlign: "center",
-          fontWeight: "bold",
-        }}
-      >
-        {journalReportStatus}
-      </div>
-    )}
-
-    {renderJournalReportResults()}
-  </>
-);
-    }else if (item === "MIS") {
-  body = legacyCard(
-    <>
-      <ListBox
-        options={base.options}
-        size={13}
-        value={misReportSelection}
-        onChange={(event) => {
-          setMisReportSelection(event.target.value);
-          setMisReportStatus("");
-          setMisReportResults([]);
-        }}
-      />
-
-      <div className="legacy-report-two-col">
-        <div>
-          <div className="legacy-report-section-label">
-            Subledger
-          </div>
-
-          <ListBox
-            options={[
-              "Livelihood Loan Support 1",
-              "Livelihood Loan Support 2",
-              "Housing Loan",
-            ]}
-            size={3}
-            value={misReportSubledger}
-            onChange={(event) => {
-              setMisReportSubledger(event.target.value);
-              setMisReportStatus("");
-              setMisReportResults([]);
-            }}
-          />
-        </div>
-
-        <div>
-          <div className="legacy-report-section-label">
-            MONTH
-          </div>
-
-          <ListBox
-            options={months}
-            size={5}
-            value={misReportMonth}
-            onChange={(event) => {
-              setMisReportMonth(event.target.value);
-              setMisReportStatus("");
-              setMisReportResults([]);
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="legacy-report-actions">
-        <Button />
-      </div>
-
-      {misReportLoading && (
-        <div
-          style={{
-            marginTop: "10px",
-            padding: "8px",
-            border: "1px solid #777",
-            background: "#f4f4f4",
-            textAlign: "center",
-            fontWeight: "bold",
-          }}
-        >
-          Loading MIS report...
-        </div>
-      )}
-
-      {misReportStatus && (
-        <div
-          style={{
-            marginTop: "10px",
-            padding: "8px",
-            border: "1px solid #777",
-            background: "#f4f4f4",
-            textAlign: "center",
-            fontWeight: "bold",
-          }}
-        >
-          {misReportStatus}
-        </div>
-      )}
-
-      {misReportResults.length > 0 && (
-        <div
-          style={{
-            marginTop: "15px",
-            overflowX: "auto",
-          }}
-        >
-          <h2 style={{ textAlign: "center" }}>
-            {misReportSelection}
-            {" - "}
-            {misReportSubledger}
-            {" - "}
-            {misReportMonth}
-          </h2>
-
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              background: "#fff",
-            }}
-          >
-            <thead>
-              <tr>
-                {Object.keys(misReportResults[0]).map((key) => (
-                  <th
-                    key={key}
-                    style={{
-                      border: "1px solid #777",
-                      padding: "8px",
-                      background: "#e9e9e9",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {key}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {misReportResults.map((record, index) => (
-                <tr key={index}>
-                  {Object.keys(misReportResults[0]).map((key) => (
-                    <td
-                      key={key}
-                      style={{
-                        border: "1px solid #777",
-                        padding: "8px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {record[key] ?? ""}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </>
-  );
-    
-    }   else if (item === "MIS-SSP") {
-      body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-row"><strong>Select Year</strong><select><option>Current Year</option><option>Previous Year</option></select></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["Social Security Programme - Member Life", "Social Security Programme - Spouse Life", "Social Security Programme - Livestock", "Social Security Programme - Health", "Social Security Programme - Pension","Social Security Programme - Endowment","Social Security Programme - Crop","Tata - AIA - Member","Tata - AIA - Spouse","Nalam","Mut.Help Prog. Risk share Contr.- Member Life","Mut.Help Prog. Risk share Contr.Spouse Life","Mut.Help Prog. Risk share Contr.- Health","Mut.Help Prog. Risk share Contr.- Livestock","Mut.Help Prog. Risk share Contr.- Crop","Mut.Help Prog. Funeral Fund","Mut.Help Prog.Admin Fund","Mut.Help Prog. Risk Share Contr.-Mem Li OA","Mut.Help Prog.Risk Share Contr. - Spo Li OA","Mut.Help Prog. - Benefit-Member Life","Mut.Help Prog. -Benefit - Spouse Life","Mut.Help Prog.-Benefit - Health","Mut.Help Prog.-Benefit -LiveStock","Mut.Help prog. - Benefit - Crop","Mut.Help prog. - Benefit - Funeral Fund","Mut.Help prog. - Benefit -Mem Life Old Age","Mut.Help prog. - Benefit - Spo Life Old Age","Social Secu. Prog.-Benefit- Health"]} size={6}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
-    } else if (item === "Dem. Sheet") {
-      body = <div className="legacy-report-simple"><h1>Demand Sheet</h1><div className="legacy-report-card demand-card"><div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div><div className="legacy-report-row"><strong>Meeting Date</strong><input type="date"/></div><div className="legacy-report-row"><strong>Members</strong><select><option>Without Locked Members</option><option>With Locked Members</option></select></div><div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div><div className="legacy-report-actions"><Button /></div></div></div>;
-    } else if (item === "Confirmation") {
-      body = <div className="legacy-report-simple confirmation-page"><h1>Member Confirmation Sheet</h1><p className="legacy-red-note">Run this report by selecting date which is end of Month to integrate Monthly Auto Journals</p><div className="confirmation-date"><strong>Meeting Date</strong><ListBox options={[""]} size={8}/></div><p className="legacy-red-warning">Monthly Auto Journals are not passed. Please pass Auto Journals / Temp Journals to display the date.</p></div>;
-    } else if (item === "Schedule") {
-      body = <div className="legacy-report-card schedule-card"><div className="legacy-report-title">Schedule</div><div className="legacy-report-row"><strong>Fed./Block Code</strong><input value="372" readOnly/><label className="inline-check"><input type="checkbox"/> All Sub Ledgers</label></div><div className="legacy-report-row"><strong>General Ledger</strong><select><option>Administrative Expenses - 4410</option><option>Advance Receivables - 2220</option><option>Allocation Funds - Federation - 1330</option><option>Current Assets -2110</option><option>Donations - 3320</option><option>External Audit Fees - 4520</option><option>Fixed Assets-2010</option><option>General And Corpus Fund - 1010</option><option>Group Level Allocation For Development od Members - 4510</option><option>Income From Livelihood Activities - 3110</option><option>Interest Income From Banks - 3210</option><option>Loan support from HOPE - 1250</option><option>Member Deposit - 1120</option><option>Member Deposit To Federation - 2020</option><option>Member Incentives - 4120</option><option>Mut.Help Prog Benefit - 1380</option><option>Mut Help Prog. Risk Share Contribution - 1370</option><option>Other Payables - 1340</option><option>Payables - Federation - 1320</option><option>Prog. Support For Poverty Reduction - Federation - 1230</option><option>Programme Cost For Livelihood Activities - 4210</option><option>Programme Expenses - 4110</option><option>Programme Fund For Poverty Reduction -Members - 2210</option><option>Programme Support For Poverty Reduction - Bank - 1220</option><option>Programme Support Loss Provision - 3330</option><option>Programme Support On Loss Provision - 1410</option><option>Revolving Fund - 1110</option><option>Risk/Mutuality Fund - 1420</option><option>Savings - 1130</option><option>Scholarship Fund - 1350</option><option>SHG - Bank Linkage Charges - 4420</option><option>Social Secu.Prog.Benefit - 1390</option><option>Social Security Scheme - Payables - 1310</option><option>Specified Prog. Activity - 1430</option><option>Subscription And Donations - 4310</option><option>Subscription And Enteance Fee - 3310</option><option>Sustainable Health Care Initiative - 1360</option></select></div><div className="legacy-report-row"><strong>Sub Ledger</strong><select><option>Bank Charges Not Related to SHG-Bank Linkage - 4415</option><option>Postage, Telegram & Telephone - 4414</option><option>Printing and Stationeries - 4413</option><option>Training and meeting Expense at Group Level - 4412</option><option>Travlel Expense - 4411</option></select></div><div className="legacy-report-row"><strong>As on Date</strong><input type="date"/><label className="inline-check"><input type="checkbox"/> All Details</label></div><div className="legacy-report-actions"><Button> vazhvathram </Button><Button> Cluster </Button><Button> Block/Fed. </Button></div></div>;
-    } else if (item === "Bank Link.") {
-      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Subledger</div><ListBox options={["SHG", "Covid Loan - Bank", "ROC", "Federation Loan","HOPE-Housing"]} size={3}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={7}/></div></div><div className="legacy-report-actions"><Button /></div></>);
-    } else if (item === "Grading") {
-      body = <div className="legacy-report-card grading-card"><div className="legacy-report-title">PEARLS Institutional Rating</div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3}/></div><div><div className="legacy-report-section-label">Month</div><MonthBox size={6}/></div></div><div className="legacy-report-section-label">Language</div><select><option>English</option><option>தமிழ் (Tamil)</option><option>(Telugu)</option><option>ଓଡ଼ିଆ (Odia)</option><option>தமிழ் (Tamil)</option><option>తెలుగు (Telugu)</option><option>മലയാളം (Malayalam)</option> <option>मराठी (Marathi)</option><option>हिन्दी (Hindi)</option><option>অসমীয় (Assamese)</option></select><div className="legacy-report-actions"><Button>Generate Rating</Button></div></div>;
-    } else if (item === "Analytics") {
-      body = <div className="legacy-report-card analytics-card"><div className="legacy-report-title">Savings Forecast</div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3}/></div><div><div className="legacy-report-section-label">Forecast Head</div><ListBox options={["Regular Savings (1131)", "Special Savings (1132)", "Repayment LH1 Principal (2211)", "Repayment LH2 Principal (2212)", "Repayment LH3 Principal (2213)"]} size={5}/></div></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Historical Data</div><ListBox options={["All from FY2017", "Last 3 Financial Years"]} size={2}/></div><div><div className="legacy-report-section-label">Projection Type</div><ListBox options={["Monthly", "Annual"]} size={2}/></div></div><div className="legacy-report-section-label">Projection Period</div><select><option>1 Year</option><option>2 Years</option><option>3 Years</option><option>4 Years</option><option>5 Year</option><option>6 Year</option><option>7 Year</option><option>8 Year</option><option>9 Year</option><option>10 Year</option></select><div className="legacy-report-actions"><Button>Generate Forecast</Button></div><div className="accuracy-label">— Test Accuracy of this Model —</div><div className="legacy-report-row"><strong>Test Period</strong><select><option>-- Select --</option><option>1 Year (Current FY)</option><option>2 Year</option><option>3 Year</option></select></div><div className="legacy-report-actions"><Button>Test Model Accuracy</Button></div></div>;
-    } else if (item === "vazhvathram") {
-      body = legacyCard(<><ListBox options={base.options} size={11}/><div className="legacy-report-two-col amount-row"><div><div className="legacy-report-section-label">From Amt</div><input/></div><div><div className="legacy-report-section-label">To Amt</div><input/></div></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">Sub Ledger</div><ListBox options={["Livelihood Loan Support 1", "Livelihood Loan Support 2", "Housing Loan", "Savings"]} size={4}/></div><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div></div><div className="legacy-report-actions"><Button /></div></>);
-    } else if (item === "Cluster") {
-      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-section-label">MONTH</div><div className="legacy-report-center"><MonthBox size={5}/></div><div className="legacy-report-actions"><Button /></div></>);
-    } else if (item === "Block") {
-      body = legacyCard(<><ListBox options={base.options} size={14}/><div className="legacy-report-row"><strong>No. of Members: From</strong><span className="inline-inputs"><input/><strong>To</strong><input/></span></div><div className="legacy-report-two-col"><div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5}/></div><div><div className="legacy-report-section-label">Scheme</div><select><option></option></select></div></div><div className="legacy-report-actions"><Button /></div></>);
-    } else {
-      body = legacyCard(<><ListBox options={base.options} size={10}/><div className="legacy-report-actions"><Button /></div></>);
-    }
-
-    // BLOCK REPORT DATABASE CONNECTION (additive; preserves the original Block report UI)
-    const [blockReportSelection, setBlockReportSelection] = useState("BR 01 - Data Entry Status Report - vazhvathram");
-    const [blockFromMembers, setBlockFromMembers] = useState("");
-    const [blockToMembers, setBlockToMembers] = useState("");
-    const [blockMonth, setBlockMonth] = useState("April");
-    const [blockScheme, setBlockScheme] = useState("");
-    const [blockReportResults, setBlockReportResults] = useState([]);
-    const [blockReportLoading, setBlockReportLoading] = useState(false);
-    const [blockReportStatus, setBlockReportStatus] = useState("");
-
-    const runBlockReport = async () => {
-      setBlockReportLoading(true);
-      setBlockReportStatus("");
-      setBlockReportResults([]);
-      try {
-        const [clusters, vazhvathrams, members, receipts, payments, journals] = await Promise.all([
-          loadFinancialEndpoint("/clusters"),
-          loadFinancialEndpoint("/vazhvathrams"),
-          loadFinancialEndpoint("/members"),
-          loadFinancialEndpoint("/member-receipts"),
-          loadFinancialEndpoint("/member-payments"),
-          loadFinancialEndpoint("/member-journals"),
-        ]);
-
-        let data = members;
-        const report = blockReportSelection.toUpperCase();
-        if (report.includes("DATA ENTRY")) {
-          data = members;
-        } else if (report.includes("RECEIPTS") || report.includes("DEMAND") || report.includes("COLLECTION")) {
-          data = receipts;
-        } else if (report.includes("PAYMENT") || report.includes("REPAYMENT") || report.includes("DISBURSEMENT")) {
-          data = payments;
-        } else if (report.includes("JOURNAL")) {
-          data = journals;
-        } else if (report.includes("CLUSTER") || report.includes("SUMMARY")) {
-          data = clusters;
-        } else if (report.includes("Vazhvathram".toUpperCase())) {
-          data = vazhvathrams;
-        } else {
-          data = members;
-        }
-
-        let rows = Array.isArray(data) ? data : [];
-        rows = filterReportRecordsByContext(
-  rows,
-  members
-);
-        const fromCount = Number(blockFromMembers);
-        const toCount = Number(blockToMembers);
-        if (Number.isFinite(fromCount) && blockFromMembers.trim() !== "") {
-          rows = rows.filter((row) => {
-            const count = Number(row.memberCount ?? row.membersCount ?? row.noOfMembers ?? row.numberOfMembers);
-            return !Number.isNaN(count) && count >= fromCount;
-          });
-        }
-        if (Number.isFinite(toCount) && blockToMembers.trim() !== "") {
-          rows = rows.filter((row) => {
-            const count = Number(row.memberCount ?? row.membersCount ?? row.noOfMembers ?? row.numberOfMembers);
-            return !Number.isNaN(count) && count <= toCount;
-          });
-        }
-
-        if (blockScheme.trim()) {
-          const scheme = blockScheme.trim().toLowerCase();
-          rows = rows.filter((row) => Object.values(row || {}).some((value) => String(value ?? "").toLowerCase().includes(scheme)));
-        }
-
-        setBlockReportResults(rows.slice(0, 500));
-        setBlockReportStatus(`${blockReportSelection} loaded from database for ${blockMonth} (${rows.length} record(s)).`);
-      } catch (error) {
-        console.error("Block report error:", error);
-        setBlockReportStatus(error?.message || "Unable to load Block report from database.");
-      } finally {
-        setBlockReportLoading(false);
-      }
-    };
-
-    // ANALYTICS DATABASE VIEW (additive override; original Analytics page remains above)
-    if (item === "Analytics") {
-      body = legacyCard(
-        <>
-          <div className="legacy-report-title">Savings Forecast</div>
-          <div className="legacy-report-two-col">
-            <div><div className="legacy-report-section-label">Level</div><ListBox options={["Federation", "Cluster", "vazhvathram (Group)"]} size={3} value={analyticsLevel} onChange={(e) => setAnalyticsLevel(e.target.value)} /></div>
-            <div><div className="legacy-report-section-label">Forecast Head</div><ListBox options={["Regular Savings (1131)", "Special Savings (1132)", "Repayment LH1 Principal (2211)", "Repayment LH2 Principal (2212)", "Repayment LH3 Principal (2213)"]} size={5} value={analyticsForecastHead} onChange={(e) => setAnalyticsForecastHead(e.target.value)} /></div>
-          </div>
-          <div className="legacy-report-two-col">
-            <div><div className="legacy-report-section-label">Historical Data</div><ListBox options={["All from FY2017", "Last 3 Financial Years"]} size={2} value={analyticsHistoricalData} onChange={(e) => setAnalyticsHistoricalData(e.target.value)} /></div>
-            <div><div className="legacy-report-section-label">Projection Type</div><ListBox options={["Monthly", "Annual"]} size={2} value={analyticsProjectionType} onChange={(e) => setAnalyticsProjectionType(e.target.value)} /></div>
-          </div>
-          <div className="legacy-report-section-label">Projection Period</div>
-          <select value={analyticsProjectionPeriod} onChange={(e) => setAnalyticsProjectionPeriod(e.target.value)}><option>1 Year</option><option>2 Years</option><option>3 Years</option><option>4 Years</option><option>5 Year</option><option>6 Year</option><option>7 Year</option><option>8 Year</option><option>9 Year</option><option>10 Year</option></select>
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                  page: "analyticsForecast",
-                  type: "all",
-                })
-              }
-              >
-              Generate Forecast
-            </Button>
-          </div>
-          <div className="accuracy-label">— Test Accuracy of this Model —</div>
-          <div className="legacy-report-row"><strong>Test Period</strong><select value={analyticsTestPeriod} onChange={(e) => setAnalyticsTestPeriod(e.target.value)}><option>-- Select --</option><option>1 Year (Current FY)</option><option>2 Year</option><option>3 Year</option></select></div>
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                  page: "analyticsAccuracy",
-                  type: "all",
-                })
-              }
-              >
-              Test Model Accuracy
-            </Button>
-          </div>
-          {analyticsStatus && <div className="legacy-report-status">{analyticsStatus}</div>}
-          {analyticsResults.length > 0 && <div className="legacy-report-results"><table><thead><tr>{Object.keys(analyticsResults[0]).map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{analyticsResults.map((row, index) => <tr key={index}>{Object.keys(row).map((key) => <td key={key}>{String(row[key])}</td>)}</tr>)}</tbody></table></div>}
-        </>
-      );
-    }
-
-
-    // BLOCK REPORT DATABASE VIEW (additive override; original Block page remains above)
-    if (item === "Block") {
-      body = legacyCard(
-        <>
-          <ListBox options={base.options} size={14} value={blockReportSelection} onChange={(event) => { setBlockReportSelection(event.target.value); setBlockReportStatus(""); setBlockReportResults([]); }} />
-          <div className="legacy-report-row">
-            <strong>No. of Members: From</strong>
-            <span className="inline-inputs"><input value={blockFromMembers} onChange={(event) => setBlockFromMembers(event.target.value)} /><strong>To</strong><input value={blockToMembers} onChange={(event) => setBlockToMembers(event.target.value)} /></span>
-          </div>
-          <div className="legacy-report-two-col">
-            <div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5} value={blockMonth} onChange={(event) => setBlockMonth(event.target.value)} /></div>
-            <div><div className="legacy-report-section-label">Scheme</div><select value={blockScheme} onChange={(event) => setBlockScheme(event.target.value)}><option value=""></option><option>Regular Savings</option><option>Special Savings</option><option>Livelihood Loan Support 1</option><option>Livelihood Loan Support 2</option><option>Housing Loan</option></select></div>
-          </div>
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                  page: "block",
-                  type: "all",
-                })
-              }
-              >
-              Execute
-            </Button>
-          </div>
-          {blockReportStatus && <div className="legacy-report-status">{blockReportStatus}</div>}
-          {blockReportResults.length > 0 && (
-            <div className="legacy-report-results"><table><thead><tr>{Array.from(new Set(blockReportResults.flatMap((row) => Object.keys(row || {})))).filter((key) => key !== "id").slice(0, 10).map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{blockReportResults.map((row, index) => { const keys = Array.from(new Set(blockReportResults.flatMap((entry) => Object.keys(entry || {})))).filter((key) => key !== "id").slice(0, 10); return <tr key={row?.id ?? index}>{keys.map((key) => <td key={key}>{String(row?.[key] ?? "")}</td>)}</tr>; })}</tbody></table></div>
-          )}
-        </>
-      );
-    }
-
-
-    const runVazhvathramReport = async () => {
-      setVazReportLoading(true);
-      setVazReportStatus("");
-      setVazReportResults([]);
-      try {
-        const endpoints = {
-          "members": "/members",
-          "vazhvathrams": "/vazhvathrams",
-          "receipts": "/member-receipts",
-          "payments": "/member-payments",
-          "journals": "/member-journals"
-        };
-        const [members, vazhvathrams, receipts, payments, journals] = await Promise.all(
-          Object.values(endpoints).map((endpoint) => apiRequest(endpoint))
-        );
-        const selected = String(vazReportSelection || "").toLowerCase();
-        let rows = Array.isArray(members) ? members : [];
-        if (selected.includes("vazhvathram") || selected.includes("group")) {
-          rows = Array.isArray(vazhvathrams) ? vazhvathrams : [];
-        } else if (selected.includes("receipt")) {
-          rows = Array.isArray(receipts) ? receipts : [];
-        } else if (selected.includes("payment")) {
-          rows = Array.isArray(payments) ? payments : [];
-        } else if (selected.includes("journal")) {
-          rows = Array.isArray(journals) ? journals : [];
-        }
-        const subText = String(vazSubLedger || "").toLowerCase();
-        const from = Number(String(vazFromAmt).replace(/,/g, ""));
-        const to = Number(String(vazToAmt).replace(/,/g, ""));
-  const contextRows = filterReportRecordsByContext(
-  rows,
-  Array.isArray(members) ? members : []
-);
-
-const filtered = contextRows.filter((row) => {
-          const text = Object.values(row || {}).join(" ").toLowerCase();
-          const amountValue = Object.entries(row || {})
-            .filter(([key]) => /amount|amt|value|balance/i.test(key))
-            .map(([, value]) => Number(String(value).replace(/,/g, "")))
-            .find((value) => Number.isFinite(value));
-          const subOk = !subText || text.includes(subText.split(" - ")[0]);
-          const fromOk = !Number.isFinite(from) || !vazFromAmt || (Number.isFinite(amountValue) && amountValue >= from);
-          const toOk = !Number.isFinite(to) || !vazToAmt || (Number.isFinite(amountValue) && amountValue <= to);
-          return subOk && fromOk && toOk;
-        });
-        setVazReportResults(filtered.slice(0, 500));
-        setVazReportStatus(`${filtered.length} database record(s) loaded for ${vazMonth}.`);
-      } catch (error) {
-        setVazReportStatus(error.message || "Unable to load Vazhvathram report data.");
-      } finally {
-        setVazReportLoading(false);
-      }
-    };
-
-
-    // VAZHVATHRAM DATABASE VIEW (additive override; original Vazhvathram page remains above)
-    if (item === "vazhvathram") {
-      body = legacyCard(
-        <>
-          <ListBox options={base.options} size={11} value={vazReportSelection} onChange={(e) => { setVazReportSelection(e.target.value); setVazReportResults([]); setVazReportStatus(""); }} />
-          <div className="legacy-report-two-col amount-row">
-            <div><div className="legacy-report-section-label">From Amt</div><input value={vazFromAmt} onChange={(e) => setVazFromAmt(e.target.value)} /></div>
-            <div><div className="legacy-report-section-label">To Amt</div><input value={vazToAmt} onChange={(e) => setVazToAmt(e.target.value)} /></div>
-          </div>
-          <div className="legacy-report-two-col">
-            <div><div className="legacy-report-section-label">Sub Ledger</div><ListBox options={["Livelihood Loan Support 1", "Livelihood Loan Support 2", "Housing Loan", "Savings"]} size={4} value={vazSubLedger} onChange={(e) => setVazSubLedger(e.target.value)} /></div>
-            <div><div className="legacy-report-section-label">MONTH</div><MonthBox size={5} value={vazMonth} onChange={(e) => setVazMonth(e.target.value)} /></div>
-          </div>
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                  page: "vazhvathramReport",
-                  type: "all",
-                })
-              }
-              >
-              Execute
-            </Button>
-          </div>
-          {vazReportStatus && <div className="legacy-report-status">{vazReportStatus}</div>}
-          {vazReportResults.length > 0 && <div className="legacy-report-results"><table><thead><tr>{Object.keys(vazReportResults[0]).filter((key) => key !== "id").map((key) => <th key={key}>{key}</th>)}</tr></thead><tbody>{vazReportResults.map((row, index) => <tr key={index}>{Object.keys(row).filter((key) => key !== "id").map((key) => <td key={key}>{String(row[key] ?? "")}</td>)}</tr>)}</tbody></table></div>}
-        </>
-      );
-    }
-
-    // MIS-SSP DATABASE VIEW (additive override; original MIS-SSP page remains above)
-    if (item === "MIS-SSP") {
-      body = legacyCard(
-        <>
-          <ListBox
-            options={base.options}
-            size={11}
-            value={misSspReportSelection}
-            onChange={(event) => {
-              setMisSspReportSelection(event.target.value);
-              setMisSspReportStatus("");
-              setMisSspReportResults([]);
-            }}
-          />
-          <div className="legacy-report-row">
-            <strong>Select Year</strong>
-            <select value={misSspYear} onChange={(event) => setMisSspYear(event.target.value)}>
-              <option>Current Year</option>
-              <option>Previous Year</option>
-            </select>
-          </div>
-          <div className="legacy-report-two-col">
-            <div>
-              <div className="legacy-report-section-label">Subledger</div>
-              <select value={misSspSubledger} onChange={(event) => setMisSspSubledger(event.target.value)}>
-                <option>Social Security Programme - Member Life</option>
-                <option>Social Security Programme - Spouse Life</option>
-                <option>Social Security Programme - Livestock</option>
-                <option>Social Security Programme - Health</option>
-                <option>Social Security Programme - Pension</option>
-                <option>Social Security Programme - Endowment</option>
-                <option>Social Security Programme - Crop</option>
-                <option>Tata - AIA - Member</option>
-                <option>Tata - AIA - Spouse</option>
-                <option>Nalam</option>
-              </select>
-            </div>
-            <div>
-              <div className="legacy-report-section-label">MONTH</div>
-              <select value={misSspMonth} onChange={(event) => setMisSspMonth(event.target.value)}>
-                {Object.keys({ January: 0, February: 1, March: 2, April: 3, May: 4, June: 5, July: 6, August: 7, September: 8, October: 9, November: 10, December: 11 }).map((month) => (
-                  <option key={month}>{month}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="legacy-report-actions">
-            <Button>Execute</Button>
-          </div>
-          {misSspReportStatus && (
-            <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
-              {misSspReportLoading ? "Loading MIS-SSP Report..." : misSspReportStatus}
-            </div>
-          )}
-          {renderMISSSPReportResults()}
-        </>
-      );
-    }
-
-    // GRADING DB VIEW (additive override; original Grading page remains above)
-    if (item === "Grading") {
-      body = <div className="legacy-report-card grading-card">
-        <div className="legacy-report-title">PEARLS Institutional Rating</div>
-        <div className="legacy-report-two-col">
-          <div><div className="legacy-report-section-label">Level</div><select value={gradingLevel} onChange={(e) => { setGradingLevel(e.target.value); setGradingReportStatus(""); setGradingReportResults([]); }}><option>Federation</option><option>Cluster</option><option>vazhvathram (Group)</option></select></div>
-          <div><div className="legacy-report-section-label">Month</div><select value={gradingMonth} onChange={(e) => { setGradingMonth(e.target.value); setGradingReportStatus(""); setGradingReportResults([]); }}>{["April","May","June","July","August","September","October","November","December","January","February","March"].map((m) => <option key={m}>{m}</option>)}</select></div>
-        </div>
-        <div className="legacy-report-section-label">Language</div>
-        <select value={gradingLanguage} onChange={(e) => setGradingLanguage(e.target.value)}><option>English</option><option>தமிழ் (Tamil)</option><option>తెలుగు (Telugu)</option><option>മലയാളം (Malayalam)</option><option>मराठी (Marathi)</option><option>हिन्दी (Hindi)</option><option>অসমীয় (Assamese)</option></select>
-        <div className="legacy-report-actions"><Button>Generate Rating</Button></div>
-        {gradingReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{gradingReportLoading ? "Loading Grading Report..." : gradingReportStatus}</div>}
-        {renderGradingReportResults()}
-      </div>;
-    }
-
-    // DEMAND SHEET DB VIEW (additive override; original Demand Sheet page remains above)
-    if (item === "Dem. Sheet") {
-      body = <div className="legacy-report-simple">
-        <h1>Demand Sheet</h1>
-        <div className="legacy-report-card demand-card">
-          <div className="legacy-report-row"><strong>vazhvathram Code</strong><input disabled value="0010101" readOnly/></div>
-          <div className="legacy-report-row"><strong>Meeting Date</strong><input type="date" value={demandMeetingDate} onChange={(event) => { setDemandMeetingDate(event.target.value); setDemandReportStatus(""); setDemandReportResults([]); }}/></div>
-          <div className="legacy-report-row"><strong>Members</strong><select value={demandMemberMode} onChange={(event) => { setDemandMemberMode(event.target.value); setDemandReportStatus(""); setDemandReportResults([]); }}><option>Without Locked Members</option><option>With Locked Members</option></select></div>
-          <div className="legacy-check"><label><input type="checkbox"/> Regional Language</label></div>
-          <div className="legacy-report-actions"><Button>Execute</Button></div>
-          {demandReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{demandReportLoading ? "Loading Demand Sheet..." : demandReportStatus}</div>}
-          {renderDemandSheetResults()}
-        </div>
-      </div>;
-    }
-
-
-    // CONFIRMATION DB VIEW (additive override; original Confirmation page remains above)
-    if (item === "Confirmation") {
-      body = <div className="legacy-report-simple confirmation-page">
-        <h1>Member Confirmation Sheet</h1>
-        <p className="legacy-red-note">Run this report by selecting date which is end of Month to integrate Monthly Auto Journals</p>
-        <div className="confirmation-date">
-          <strong>Meeting Date</strong>
-          <input type="date" value={confirmationMeetingDate} onChange={(event) => { setConfirmationMeetingDate(event.target.value); setConfirmationReportStatus(""); setConfirmationReportResults([]); }} />
-        </div>
-        <div className="legacy-report-actions"><Button>Execute</Button></div>
-        {confirmationReportStatus && (
-          <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>
-            {confirmationReportLoading ? "Loading Confirmation Report..." : confirmationReportStatus}
-          </div>
-        )}
-        {renderConfirmationReportResults()}
-      </div>;
-    }
-
-    // SCHEDULE DB VIEW (additive override; original Schedule page remains above)
-    if (item === "Schedule") {
-      body = <div className="legacy-report-card schedule-card">
-        <div className="legacy-report-title">Schedule</div>
-        <div className="legacy-report-row"><strong>Fed./Block Code</strong><input value={scheduleFedBlockCode} onChange={(event) => setScheduleFedBlockCode(event.target.value)} /><label className="inline-check"><input type="checkbox" checked={scheduleAllSubLedgers} onChange={(event) => setScheduleAllSubLedgers(event.target.checked)} /> All Sub Ledgers</label></div>
-        <div className="legacy-report-row"><strong>General Ledger</strong><select value={scheduleGeneralLedger} onChange={(event) => { setScheduleGeneralLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Administrative Expenses - 4410","Advance Receivables - 2220","Allocation Funds - Federation - 1330","Current Assets -2110","Donations - 3320","External Audit Fees - 4520","Fixed Assets-2010","General And Corpus Fund - 1010","Group Level Allocation For Development od Members - 4510","Income From Livelihood Activities - 3110","Interest Income From Banks - 3210","Loan support from HOPE - 1250","Member Deposit - 1120","Member Deposit To Federation - 2020","Member Incentives - 4120","Mut.Help Prog Benefit - 1380","Mut Help Prog. Risk Share Contribution - 1370","Other Payables - 1340","Payables - Federation - 1320","Prog. Support For Poverty Reduction - Federation - 1230","Programme Cost For Livelihood Activities - 4210","Programme Expenses - 4110","Programme Fund For Poverty Reduction -Members - 2210","Programme Support For Poverty Reduction - Bank - 1220","Programme Support Loss Provision - 3330","Programme Support On Loss Provision - 1410","Revolving Fund - 1110","Risk/Mutuality Fund - 1420","Savings - 1130","Scholarship Fund - 1350","SHG - Bank Linkage Charges - 4420","Social Secu.Prog.Benefit - 1390","Social Security Scheme - Payables - 1310","Specified Prog. Activity - 1430","Subscription And Donations - 4310","Subscription And Enteance Fee - 3310","Sustainable Health Care Initiative - 1360"].map((option) => <option key={option}>{option}</option>)}</select></div>
-        <div className="legacy-report-row"><strong>Sub Ledger</strong><select value={scheduleSubLedger} onChange={(event) => { setScheduleSubLedger(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }}>{["Bank Charges Not Related to SHG-Bank Linkage - 4415","Postage, Telegram & Telephone - 4414","Printing and Stationeries - 4413","Training and meeting Expense at Group Level - 4412","Travlel Expense - 4411"].map((option) => <option key={option}>{option}</option>)}</select></div>
-        <div className="legacy-report-row"><strong>As on Date</strong><input type="date" value={scheduleAsOnDate} onChange={(event) => { setScheduleAsOnDate(event.target.value); setScheduleReportStatus(""); setScheduleReportResults([]); }} /><label className="inline-check"><input type="checkbox" checked={scheduleAllDetails} onChange={(event) => setScheduleAllDetails(event.target.checked)} /> All Details</label></div>
-        <div className="legacy-report-actions"><Button>Execute</Button></div>
-        {scheduleReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{scheduleReportLoading ? "Loading Schedule Report..." : scheduleReportStatus}</div>}
-        {renderScheduleReportResults()}
-      </div>;
-    }
-
-    // BANK LINK DATABASE VIEW (additive override; original Bank Link page remains above)
-    if (item === "Bank Link.") {
-      body = legacyCard(
-        <>
-          <ListBox
-            options={base.options}
-            size={14}
-            value={bankLinkReportSelection}
-            onChange={(event) => {
-              setBankLinkReportSelection(event.target.value);
-              setBankLinkReportStatus("");
-              setBankLinkReportResults([]);
-            }}
-          />
-          <div className="legacy-report-two-col">
-            <div>
-              <div className="legacy-report-section-label">Subledger</div>
-              <select value={bankLinkSubledger} onChange={(event) => { setBankLinkSubledger(event.target.value); setBankLinkReportStatus(""); setBankLinkReportResults([]); }}>
-                {["SHG", "Covid Loan - Bank", "ROC", "Federation Loan", "HOPE-Housing"].map((option) => <option key={option}>{option}</option>)}
-              </select>
-            </div>
-            <div>
-              <div className="legacy-report-section-label">MONTH</div>
-              <select value={bankLinkMonth} onChange={(event) => { setBankLinkMonth(event.target.value); setBankLinkReportStatus(""); setBankLinkReportResults([]); }}>
-                {months.map((month) => <option key={month}>{month}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                  page: "bankLinkReport",
-                  type: "all",
-                })
-              }
-              >
-              Execute
-            </Button>
-          </div>
-          {bankLinkReportStatus && <div style={{marginTop:"10px",padding:"8px",border:"1px solid #777",background:"#f4f4f4",textAlign:"center",fontWeight:"bold"}}>{bankLinkReportLoading ? "Loading Bank Link Report..." : bankLinkReportStatus}</div>}
-          {renderBankLinkReportResults()}
-        </>
-      );
-    }
-
-    // CLUSTER REPORT DATABASE CONNECTION (additive; keeps the original report layout)
-    const [clusterReportSelection, setClusterReportSelection] = useState("CL 01 - Cluster Details");
-    const [clusterMonth, setClusterMonth] = useState("April");
-    const [clusterReportResults, setClusterReportResults] = useState([]);
-    const [clusterReportLoading, setClusterReportLoading] = useState(false);
-    const [clusterReportStatus, setClusterReportStatus] = useState("");
-
-    const runClusterReport = async () => {
-      setClusterReportLoading(true);
-      setClusterReportStatus("");
-      setClusterReportResults([]);
-      try {
-        const [clusters, vazhvathrams, members] = await Promise.all([
-          loadFinancialEndpoint("/clusters"),
-          loadFinancialEndpoint("/vazhvathrams"),
-          loadFinancialEndpoint("/members"),
-        ]);
-
-        let data = [];
-        if (clusterReportSelection.includes("Cluster Details")) {
-          data = clusters;
-        } else if (clusterReportSelection.includes("vazhvathram")) {
-          data = vazhvathrams;
-        } else {
-          data = members;
-        }
-
-        let rows = Array.isArray(data) ? data : [];
-
-// Apply selected Cluster → Vazhvathram context
-rows = filterReportRecordsByContext(
-  rows,
-  Array.isArray(members) ? members : []
-);
-        setClusterReportResults(rows.slice(0, 500));
-        setClusterReportStatus(`${clusterReportSelection} loaded from database (${rows.length} record(s)).`);
-      } catch (error) {
-        console.error("Cluster report error:", error);
-        setClusterReportStatus(error?.message || "Unable to load Cluster report from database.");
-      } finally {
-        setClusterReportLoading(false);
-      }
-    };
-
-    const renderClusterReportResults = () => {
-      if (!clusterReportResults.length) return null;
-      const keys = Array.from(new Set(clusterReportResults.flatMap((record) => Object.keys(record || {}))))
-        .filter((key) => key !== "id")
-        .slice(0, 10);
-      return (
-        <div style={{ marginTop: "12px", overflowX: "auto" }}>
-          <div className="legacy-report-subtitle">Cluster Database Results</div>
-          <table className="legacy-table">
-            <thead><tr>{keys.map((key) => <th key={key}>{key}</th>)}</tr></thead>
-            <tbody>
-              {clusterReportResults.map((record, index) => (
-                <tr key={record?.id ?? index}>
-                  {keys.map((key) => <td key={key}>{String(record?.[key] ?? "")}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    // JOURNAL REPORT DB VIEW (additive override; original Journal page remains above)
-    if (false && item === "Journals") {
-      body = legacyCard(
-        <>
-          <ListBox options={base.options} size={9}/>
-          {dates}
-          <div className="legacy-report-actions"><Button /></div>
-          {journalReportDbBody}
-        </>
-      );
-    }
-
-    // CLUSTER DATABASE VIEW (additive override; original Cluster branch remains above)
-    if (item === "Cluster") {
-      body = legacyCard(
-        <>
-          <ListBox
-            options={[
-              "CL 01 - Cluster Details",
-              "CL 02 - vazhvathram Details",
-              "CL 03 - Member Details",
-            ]}
-            size={14}
-            value={clusterReportSelection}
-            onChange={(event) => {
-              setClusterReportSelection(event.target.value);
-              setClusterReportStatus("");
-              setClusterReportResults([]);
-            }}
-          />
-          <div className="legacy-report-section-label">MONTH</div>
-          <div className="legacy-report-center">
-            <select value={clusterMonth} onChange={(event) => setClusterMonth(event.target.value)}>
-              {months.map((month) => <option key={month}>{month}</option>)}
-            </select>
-          </div>
-          <div className="legacy-report-actions">
-            <Button
-               onClick={() =>
-                 openResultInNewTab({
-                    page: "clusterReport",
-                    type: "all",
-                   })
-                 }
-               >
-                Execute
-             </Button>
-           </div>
-          {clusterReportStatus && (
-            <div style={{ marginTop: "10px", padding: "8px", border: "1px solid #777", background: "#f4f4f4", textAlign: "center", fontWeight: "bold" }}>
-              {clusterReportStatus}
-            </div>
-          )}
-          {renderClusterReportResults()}
-        </>
-      );
-    }
-
-    // CLUSTER REPORT FULL OPTIONS + DATABASE (additive; restores all original Cluster report entries)
-    const runClusterReportFull = async (reportName) => {
-      setClusterReportLoading(true);
-      setClusterReportStatus("");
-      setClusterReportResults([]);
-      try {
-        const [clusters, vazhvathrams, members, receipts, payments, journals] = await Promise.all([
-          apiRequest("/clusters"),
-          apiRequest("/vazhvathrams"),
-          apiRequest("/members"),
-          apiRequest("/member-receipts"),
-          apiRequest("/member-payments"),
-          apiRequest("/member-journals")
-        ]);
-        let data = [];
-        if (reportName.includes("CR 01") || reportName.includes("CR 02") || reportName.includes("Cluster") || reportName.includes("Clusterwise") || reportName.includes("Cluster Wise")) {
-          data = clusters;
-        } else if (reportName.includes("CR 03") || reportName.includes("CR 04") || reportName.includes("CR 05") || reportName.includes("CR 06") || reportName.includes("CR 07") || reportName.includes("CR 08") || reportName.includes("CR 09") || reportName.includes("CR 10") || reportName.includes("CR 15") || reportName.includes("CR 16")) {
-          data = [...receipts, ...payments, ...journals];
-        } else if (reportName.includes("CR 13") || reportName.includes("CR 14")) {
-          data = members;
-        } else if (reportName.startsWith("BL")) {
-          data = vazhvathrams;
-        } else {
-          data = members;
-        }
-        const rows = Array.isArray(data) ? data : [];
-        setClusterReportResults(rows.slice(0, 500));
-        setClusterReportStatus(`${reportName} loaded from database (${rows.length} record(s)).`);
-      } catch (error) {
-        console.error("Cluster report error:", error);
-        setClusterReportStatus(error?.message || "Unable to load Cluster report from database.");
-      } finally {
-        setClusterReportLoading(false);
-      }
-    };
-
-    const clusterFullOptions = base.options;
-    const clusterDisplayedSelection = clusterFullOptions.includes(clusterReportSelection)
-      ? clusterReportSelection
-      : clusterFullOptions[0];
-
-    if (item === "Cluster") {
-      body = legacyCard(
-        <>
-          <ListBox
-            options={clusterFullOptions}
-            size={14}
-            value={clusterDisplayedSelection}
-            onChange={(event) => {
-              setClusterReportSelection(event.target.value);
-              setClusterReportStatus("");
-              setClusterReportResults([]);
-            }}
-          />
-          <div className="legacy-report-section-label">MONTH</div>
-          <div className="legacy-report-center">
-            <MonthBox size={5} value={clusterMonth} onChange={(event) => setClusterMonth(event.target.value)} />
-          </div>
-          <div className="legacy-report-actions">
-            <Button
-              onClick={() =>
-                openResultInNewTab({
-                   page: "clusterReportFull",
-                   type: "all",
-                 })
-                }
-              >
-               Execute
-            </Button>
-          </div>
-          {clusterReportStatus && (
-            <div className="legacy-report-status">{clusterReportStatus}</div>
-          )}
-          {renderClusterReportResults()}
-        </>
-      );
-    }
-
-    return (
-      <div className="save-page reports-page">
-        <TopBar />
-        <div className="main-container">
-          <ReportsMenu
-            reportItems={reportItems}
-            setPage={setPage}
-            openUploadImages={openUploadImages}
-            />
-          <div className="content legacy-report-content">
-            {body}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // =========================================================
   // REPORTS HOME PAGE
   // =========================================================
@@ -34452,7 +34470,27 @@ rows = filterReportRecordsByContext(
   ? page.slice("report:".length)
   : "";
 if (page.startsWith("report:")) {
-  return <ReportPage item={reportName} />;
+  return (
+    <ReportPage
+      item={reportName}
+      memberRecords={memberRecords}
+      bankAccountRecords={bankAccountRecords}
+      filterReportRecordsByContext={filterReportRecordsByContext}
+      getContextMembers={getContextMembers}
+      getMemberDisplayName={getMemberDisplayName}
+      openResultInNewTab={openResultInNewTab}
+      loadTransactionLockStatus={loadTransactionLockStatus}
+      setTransactionLockStatus={setTransactionLockStatus}
+      transactionLockStatus={transactionLockStatus}
+      selectedCluster={selectedCluster}
+      selectedVazhvathram={selectedVazhvathram}
+      vazhvathramRecords={vazhvathramRecords}
+      reportItems={reportItems}
+      setPage={setPage}
+      openUploadImages={openUploadImages}
+      TopBar={TopBar}
+    />
+  );
 }
   if (page === "reportsHome") {
     return (
