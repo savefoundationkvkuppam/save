@@ -2842,15 +2842,8 @@ const [financialToDate, setFinancialToDate] = useState(() => {
     const [financialReportResults, setFinancialReportResults] = useState([]);
     const [financialReportLoading, setFinancialReportLoading] = useState(false);
     const [financialReportStatus, setFinancialReportStatus] = useState("");
-  useEffect(() => {
-  if (!financialReportResults.length) return;
-
-  const reportElement = document.getElementById(
-    "financial-report-result"
-  );
-
-  if (!reportElement) return;
-
+  const financialReportWindowRef = useRef(null);
+  const handleFinancialExecute = () => {
   const newTab = window.open("", "_blank");
 
   if (!newTab) {
@@ -2863,21 +2856,66 @@ const [financialToDate, setFinancialToDate] = useState(() => {
     <html>
       <head>
         <title>Financial Report</title>
-        <style>
-          body {
-            margin: 20px;
-            font-family: Arial, sans-serif;
-          }
-        </style>
       </head>
       <body>
-        ${reportElement.innerHTML}
+        <p>Loading Financial Report...</p>
       </body>
     </html>
   `);
 
   newTab.document.close();
-}, [financialReportResults]);
+
+  financialReportWindowRef.current = newTab;
+
+  runFinancialReport();
+};
+  useEffect(() => {
+  const newTab = financialReportWindowRef.current;
+
+  if (!newTab || financialReportLoading) return;
+
+  const reportElement = document.getElementById(
+    "financial-report-result"
+  );
+
+  if (!reportElement) return;
+
+  const styles = Array.from(
+    document.querySelectorAll('link[rel="stylesheet"], style')
+  )
+    .map((node) => node.outerHTML)
+    .join("");
+
+  newTab.document.open();
+
+  newTab.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>Financial Report</title>
+        ${styles}
+        <style>
+          body {
+            margin: 20px;
+            background: white;
+          }
+        </style>
+      </head>
+      <body>
+        ${reportElement.outerHTML}
+      </body>
+    </html>
+  `);
+
+  newTab.document.close();
+
+  financialReportWindowRef.current = null;
+}, [
+  financialReportLoading,
+  financialReportStatus,
+  financialReportResults
+]);
     const selectedFinancialMemberCode = financialMember;
 useEffect(() => {
   console.log(
@@ -11976,8 +12014,8 @@ setFinancialReportResults([]);
     </div>
 
     <div className="legacy-report-actions">
-      <Button onClick={runFinancialReport}>Execute</Button>
-    </div>
+  <Button onClick={handleFinancialExecute}>Execute</Button>
+</div>
   </>
 );
     } else if (item === "Journals") {
