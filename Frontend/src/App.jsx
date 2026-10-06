@@ -11940,7 +11940,7 @@ setFinancialReportResults([]);
     </div>
 
     <div className="legacy-report-actions">
-      <Button />
+      <Button onClick={runFinancialReport}>Execute</Button>
     </div>
   </>
 );
