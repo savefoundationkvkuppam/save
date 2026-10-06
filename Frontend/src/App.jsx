@@ -11742,15 +11742,17 @@ const expenditureRecords = [
   }
 
   return (
-    <div
-      style={{
-        marginTop: "14px",
-        border: "1px solid #777",
-        background: "#fff",
-        overflowX: "auto",
-        padding: "10px",
-      }}
-    >
+<div
+  style={{
+    marginTop: "14px",
+    border: "1px solid #777",
+    background: "#fff",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "6px",
+    overflowX: "hidden",
+  }}
+>
       <div
         style={{
           textAlign: "center",
