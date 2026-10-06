@@ -8791,17 +8791,15 @@ const closingCash =
 
     return (
 <div
-        style={{
-  marginTop: "8px",
-  border: "1px solid #777",
-  background: "#fff",
-  width: "100%",
-  boxSizing: "border-box",
-  overflow: "hidden",
-  padding: "4px",
-  fontSize: "10px",
-}}
-  >
+  className="cash-book-report"
+  style={{
+    marginTop: "8px",
+    border: "1px solid #777",
+    background: "#fff",
+    overflow: "hidden",
+    padding: "6px",
+  }}
+>
         <div
           style={{
             textAlign: "center",
