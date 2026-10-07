@@ -2896,11 +2896,56 @@ const [financialToDate, setFinancialToDate] = useState(() => {
         <title>Financial Report</title>
         ${styles}
         <style>
-          body {
-            margin: 20px;
-            background: white;
-          }
-        </style>
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-family: Arial, sans-serif;
+  }
+
+  body {
+    overflow-x: auto;
+  }
+
+  .cash-book-report {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 1500px !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  .cash-book-report table {
+    width: 100% !important;
+    min-width: 1500px !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  .cash-book-report th,
+  .cash-book-report td {
+    padding: 5px 4px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    vertical-align: middle !important;
+  }
+</style>
       </head>
       <body>
         ${reportElement.outerHTML}
@@ -8793,18 +8838,22 @@ const closingCash =
 <div
   className="cash-book-report"
   style={{
-    marginTop: "8px",
-    border: "1px solid #777",
-    background: "#fff",
-    overflow: "hidden",
-    padding: "6px",
-  }}
+  marginTop: "8px",
+  border: "1px solid #777",
+  background: "#fff",
+  overflowX: "auto",
+  overflowY: "visible",
+  width: "100%",
+  maxWidth: "100%",
+  boxSizing: "border-box",
+  padding: "12px",
+}}
 >
         <div
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            fontSize: "14px",
+            fontSize: "20px",
             marginBottom: "4px",
           }}
         >
@@ -8816,7 +8865,7 @@ const closingCash =
       textAlign: "center",
       fontWeight: "bold",
       marginBottom: "5px",
-      fontSize: "12px",
+      fontSize: "15px",
     }}
   >
     {cashBookLockChecking
@@ -8829,26 +8878,29 @@ const closingCash =
   </div>
 )}
 
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "5px",
-          }}
-        >
+<div
+  style={{
+    textAlign: "center",
+    fontWeight: "bold",
+    marginBottom: "8px",
+    fontSize: "18px",
+  }}
+>
           Receipts
         </div>
  <table
   className="legacy-table"
   cellPadding="2"
-  style={{
-    width: "100%",
-    tableLayout: "auto",
-    borderCollapse: "collapse",
-    fontSize: "9px",
-    lineHeight: "1",
-    wordBreak: "break-word",
-  }}
+ style={{
+  width: "100%",
+  minWidth: "1500px",
+  tableLayout: "auto",
+  borderCollapse: "collapse",
+  fontSize: "11px",
+  lineHeight: "1.25",
+  wordBreak: "break-word",
+  overflowWrap: "anywhere",
+}}
 >
           <thead>
   <tr>
@@ -8991,7 +9043,8 @@ const closingCash =
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            margin: "18px 0 10px",
+            margin: "20px 0 12px",
+            fontSize: "18px",
           }}
         >
           Payments
@@ -9001,8 +9054,13 @@ const closingCash =
           className="legacy-table"
           style={{
             width: "100%",
+            minWidth: "900px",
+            tableLayout: "auto",
             borderCollapse: "collapse",
-            fontSize: "10px",
+            fontSize: "12x",
+            lineHeight: "1.3",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
           }}
         >
           <thead>
@@ -9065,8 +9123,12 @@ const closingCash =
               className="legacy-table"
               style={{
                 width: "100%",
+                minWidth: "700px",
                 borderCollapse: "collapse",
-                fontSize: "10px",
+                fontSize: "12px",
+                lineHeight:"1.3",
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
               }}
             >
               <thead>
