@@ -2933,7 +2933,7 @@ const [financialToDate, setFinancialToDate] = useState(() => {
     min-width: 0 !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     line-height: 1.25 !important;
   }
 
@@ -8900,7 +8900,7 @@ const closingCash =
   maxWidth: "100%",
   tableLayout: "fixed",
   borderCollapse: "collapse",
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: "1.25",
   wordBreak: "break-word",
   overflowWrap: "anywhere",
