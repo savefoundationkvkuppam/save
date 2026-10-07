@@ -2921,17 +2921,17 @@ const [financialToDate, setFinancialToDate] = useState(() => {
   .cash-book-report {
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 1500px !important;
     margin: 0 !important;
-    padding: 12px !important;
+    padding: 10px !important;
     overflow: visible !important;
     box-sizing: border-box !important;
   }
 
   .cash-book-report table {
     width: 100% !important;
-    min-width: 1500px !important;
-    table-layout: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
     border-collapse: collapse !important;
     font-size: 11px !important;
     line-height: 1.25 !important;
@@ -2939,12 +2939,17 @@ const [financialToDate, setFinancialToDate] = useState(() => {
 
   .cash-book-report th,
   .cash-book-report td {
-    padding: 5px 4px !important;
+    padding: 5px 3px !important;
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
     vertical-align: middle !important;
+    text-align: center;
   }
+  .cash-book-report td:first-child,
+  .cash-book-report th:first-child {
+  text-align: left !important;
+ }
 </style>
       </head>
       <body>
@@ -8841,7 +8846,6 @@ const closingCash =
   marginTop: "8px",
   border: "1px solid #777",
   background: "#fff",
-  overflowX: "auto",
   overflowY: "visible",
   width: "100%",
   maxWidth: "100%",
@@ -8893,8 +8897,8 @@ const closingCash =
   cellPadding="2"
  style={{
   width: "100%",
-  minWidth: "1500px",
-  tableLayout: "auto",
+  maxWidth: "100%",
+  tableLayout: "fixed",
   borderCollapse: "collapse",
   fontSize: "11px",
   lineHeight: "1.25",
@@ -8902,6 +8906,28 @@ const closingCash =
   overflowWrap: "anywhere",
 }}
 >
+    <colgroup>
+      <col style={{ width: "13%" }} />
+      <col style={{ width: "5%" }} />
+      <col style={{ width: "7%" }} />
+
+      <col style={{ width: "6%" }} />
+      <col style={{ width: "6%" }} />
+      <col style={{ width: "7%" }} />
+
+      <col style={{ width: "7%" }} />
+      <col style={{ width: "7%" }} />
+
+      <col style={{ width: "7%" }} />
+      <col style={{ width: "7%" }} />
+
+      <col style={{ width: "5%" }} />
+      <col style={{ width: "6%" }} />
+      <col style={{ width: "5%" }} />
+      <col style={{ width: "6%" }} />
+
+      <col style={{ width: "6%" }} />
+    </colgroup>
           <thead>
   <tr>
     <th rowSpan="2">Member / Particulars</th>
