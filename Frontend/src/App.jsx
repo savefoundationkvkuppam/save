@@ -9473,7 +9473,6 @@ return (
     </span>
   </div>
 </div>    
-    );
   <div
   style={{
     textAlign: "center",
@@ -9486,6 +9485,7 @@ return (
   <br />
   Raised Farming Development Programme
 </div>
+  );
   }
         /*
    * BANK BOOK - FR02A
