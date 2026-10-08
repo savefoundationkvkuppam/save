@@ -2920,7 +2920,7 @@ useEffect(() => {
           }
 
           body {
-            overflow-x: auto;
+            overflow: hidden;
           }
 
           .cash-book-report {
@@ -2942,29 +2942,46 @@ useEffect(() => {
   overflow: visible !important;
 }
           .cash-book-report table {
-            width: 100% !important;
-            max-width: none !important;
-            min-width: 1200px !important;
-            table-layout: auto !important;
-            border-collapse: collapse !important;
-            font-size: 12px !important;
-          }
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          table-layout: fixed !important;
+          border-collapse: collapse !important;
+          font-size: 9px !important;
+          line-height: 1.05 !important;
+       }
 
-          .cash-book-report th,
-          .cash-book-report td {
-            padding: 5px 3px !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            overflow-wrap: anywhere !important;
-            vertical-align: middle !important;
-            text-align: center;
-          }
+.cash-book-report th,
+.cash-book-report td {
+  padding: 3px 2px !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+ .cash-book-report td:first-child,
+ .cash-book-report th:first-child {
+ text-align: left !important;
+ }
+.cash-book-report {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 6px !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
 
-          .cash-book-report td:first-child,
-          .cash-book-report th:first-child {
-            text-align: left !important;
-          }
-          
+.cash-book-report table {
+  margin: 0 !important;
+}
+
+.cash-book-report h1,
+.cash-book-report h2,
+.cash-book-report h3 {
+  margin: 3px 0 !important;
+}
         </style>
       </head>
 
@@ -9091,28 +9108,28 @@ return (
   overflowWrap: "anywhere",
 }}
 >
-    <colgroup>
-      <col style={{ width: "13%" }} />
-      <col style={{ width: "5%" }} />
-      <col style={{ width: "7%" }} />
+   <colgroup>
+  <col style={{ width: "16%" }} />
+  <col style={{ width: "5%" }} />
+  <col style={{ width: "7%" }} />
 
-      <col style={{ width: "6%" }} />
-      <col style={{ width: "6%" }} />
-      <col style={{ width: "7%" }} />
+  <col style={{ width: "6%" }} />
+  <col style={{ width: "6%" }} />
+  <col style={{ width: "7%" }} />
 
-      <col style={{ width: "7%" }} />
-      <col style={{ width: "7%" }} />
+  <col style={{ width: "7%" }} />
+  <col style={{ width: "7%" }} />
 
-      <col style={{ width: "7%" }} />
-      <col style={{ width: "7%" }} />
+  <col style={{ width: "7%" }} />
+  <col style={{ width: "7%" }} />
 
-      <col style={{ width: "5%" }} />
-      <col style={{ width: "6%" }} />
-      <col style={{ width: "5%" }} />
-      <col style={{ width: "6%" }} />
+  <col style={{ width: "5%" }} />
+  <col style={{ width: "6%" }} />
+  <col style={{ width: "5%" }} />
+  <col style={{ width: "6%" }} />
 
-      <col style={{ width: "6%" }} />
-    </colgroup>
+  <col style={{ width: "8%" }} />
+</colgroup>
           <thead>
   <tr>
     <th rowSpan="2">Member / Particulars</th>
