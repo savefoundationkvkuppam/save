@@ -2869,10 +2869,12 @@ const [financialToDate, setFinancialToDate] = useState(() => {
 
   runFinancialReport();
 };
-  useEffect(() => {
+useEffect(() => {
   const newTab = financialReportWindowRef.current;
 
-  if (!newTab || financialReportLoading) return;
+  if (!newTab) return;
+
+  if (financialReportLoading) return;
 
   const reportElement = document.getElementById(
     "financial-report-result"
@@ -2881,7 +2883,9 @@ const [financialToDate, setFinancialToDate] = useState(() => {
   if (!reportElement) return;
 
   const styles = Array.from(
-    document.querySelectorAll('link[rel="stylesheet"], style')
+    document.querySelectorAll(
+      'link[rel="stylesheet"], style'
+    )
   )
     .map((node) => node.outerHTML)
     .join("");
@@ -2896,62 +2900,62 @@ const [financialToDate, setFinancialToDate] = useState(() => {
         <title>Financial Report</title>
         ${styles}
         <style>
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
 
-  * {
-    box-sizing: border-box;
-  }
+          * {
+            box-sizing: border-box;
+          }
 
-  html,
-  body {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    background: white;
-    font-family: Arial, sans-serif;
-  }
+          html,
+          body {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background: white;
+            font-family: Arial, sans-serif;
+          }
 
-  body {
-    overflow-x: auto;
-  }
+          body {
+            overflow-x: auto;
+          }
 
-  .cash-book-report {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 10px !important;
-    overflow: visible !important;
-    box-sizing: border-box !important;
-  }
+          .cash-book-report {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            overflow: visible !important;
+          }
 
-  .cash-book-report table {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed !important;
-    border-collapse: collapse !important;
-    font-size: 12px !important;
-    line-height: 1.25 !important;
-  }
+          .cash-book-report table {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+            font-size: 12px !important;
+          }
 
-  .cash-book-report th,
-  .cash-book-report td {
-    padding: 5px 3px !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-    vertical-align: middle !important;
-    text-align: center;
-  }
-  .cash-book-report td:first-child,
-  .cash-book-report th:first-child {
-  text-align: left !important;
- }
-</style>
+          .cash-book-report th,
+          .cash-book-report td {
+            padding: 5px 3px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            vertical-align: middle !important;
+            text-align: center;
+          }
+
+          .cash-book-report td:first-child,
+          .cash-book-report th:first-child {
+            text-align: left !important;
+          }
+        </style>
       </head>
+
       <body>
         ${reportElement.outerHTML}
       </body>
@@ -2966,6 +2970,7 @@ const [financialToDate, setFinancialToDate] = useState(() => {
   financialReportStatus,
   financialReportResults
 ]);
+  
     const selectedFinancialMemberCode = financialMember;
 useEffect(() => {
   console.log(
