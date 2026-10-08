@@ -8665,16 +8665,44 @@ useEffect(() => {
   }
 
   const checkCashBookLock = async () => {
-    try {
-      setCashBookLockChecking(true);
-      await loadTransactionLockStatus(month);
-    } finally {
-      setCashBookLockChecking(false);
+  try {
+    setCashBookLockChecking(true);
+
+    if (!selectedVazhvathramCode) {
+      setTransactionLockStatus(null);
+      return;
     }
-  };
+
+    try {
+      const data = await apiRequest(
+        `/transaction-locks/status?vazhvathramCode=${encodeURIComponent(
+          selectedVazhvathramCode
+        )}&month=${encodeURIComponent(month)}`
+      );
+
+      setTransactionLockStatus(data || null);
+    } catch (error) {
+      if (String(error.message || "").includes("404")) {
+        setTransactionLockStatus(null);
+      } else {
+        console.error(
+          "Cash Book Transaction Lock status error:",
+          error
+        );
+        setTransactionLockStatus(null);
+      }
+    }
+  } finally {
+    setCashBookLockChecking(false);
+  }
+};
 
   checkCashBookLock();
-}, [financialReportSelection, financialFromDate]);
+}, [
+  financialReportSelection,
+  financialFromDate,
+  selectedVazhvathramCode,
+]);
 const selectedFinancialMember = memberRecords.find(
   (member) =>
     String(member?.memberCode || "").trim().toLowerCase() ===
@@ -8867,10 +8895,18 @@ const donationTotal = receipts.reduce((sum, r) => {
 
 const overallReceiptTotal =
   savingsTotal + donationTotal;
-    const openingCash = 0;
+    const totalAmount = (rows) =>
+  rows.reduce((sum, r) => {
+    const value = Number(getAmount(r));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+const totalReceiptsAmount = totalAmount(receipts);
+
+const totalPaymentsAmount = totalAmount(payments);
 
 const closingCash =
-  openingCash + overallReceiptTotal - totalAmount(payments);
+  totalReceiptsAmount - totalPaymentsAmount;
 
 /* =========================================================
    CASH BOOK HEADER INFORMATION
@@ -9049,7 +9085,7 @@ return (
 >
   {cashBookLockChecking
     ? "Checking Lock Status..."
-    : transactionLockStatus
+    : transactionLockStatus?.locked
     ? "(Locked)"
     : "(Not Locked)"}
 </div>
@@ -9498,13 +9534,13 @@ return (
       {closingCash}
     </span>
   </div>
-
   <div style={{ marginTop: "8px" }}>
-    Total (Not Locked)
-    <span style={{ float: "right" }}>
-      {closingCash}
-    </span>
-  </div>  
+  Total (
+  {transactionLockStatus?.locked ? "Locked" : "Not Locked"})
+  <span style={{ float: "right" }}>
+    {closingCash}
+  </span>
+</div>  
 <div
   style={{
     textAlign: "center",
