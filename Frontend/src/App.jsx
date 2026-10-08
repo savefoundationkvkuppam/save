@@ -8668,7 +8668,7 @@ useEffect(() => {
   try {
     setCashBookLockChecking(true);
 
-    if (!selectedVazhvathramCode) {
+    if (!reportVazhvathramCode) {
       setTransactionLockStatus(null);
       return;
     }
@@ -8676,7 +8676,7 @@ useEffect(() => {
     try {
       const data = await apiRequest(
         `/transaction-locks/status?vazhvathramCode=${encodeURIComponent(
-          selectedVazhvathramCode
+          reportVazhvathramCode
         )}&month=${encodeURIComponent(month)}`
       );
 
@@ -8701,7 +8701,7 @@ useEffect(() => {
 }, [
   financialReportSelection,
   financialFromDate,
-  selectedVazhvathramCode,
+  reportVazhvathramCode,
 ]);
 const selectedFinancialMember = memberRecords.find(
   (member) =>
