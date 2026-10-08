@@ -8645,6 +8645,28 @@ const getCashBookLockMonth = (dateValue) => {
     month: "long",
   });
 };
+  const cashBookVazhvathramRecord =
+  vazhvathramRecords.find(
+    (record) =>
+      String(record?.vazhvathramName || "")
+        .trim()
+        .toLowerCase() ===
+        String(selectedVazhvathram || "")
+          .trim()
+          .toLowerCase() &&
+      (
+        !selectedCluster ||
+        String(record?.clusterName || "")
+          .trim()
+          .toLowerCase() ===
+          String(selectedCluster || "")
+            .trim()
+            .toLowerCase()
+      )
+  ) || null;
+
+const cashBookVazhvathramCode =
+  cashBookVazhvathramRecord?.vazhvathramCode || "";
 
 useEffect(() => {
   if (
@@ -8668,7 +8690,7 @@ useEffect(() => {
   try {
     setCashBookLockChecking(true);
 
-    if (!reportVazhvathramCode) {
+    if (!cashBookVazhvathramCode) {
       setTransactionLockStatus(null);
       return;
     }
@@ -8676,7 +8698,7 @@ useEffect(() => {
     try {
       const data = await apiRequest(
         `/transaction-locks/status?vazhvathramCode=${encodeURIComponent(
-          reportVazhvathramCode
+          cashBookVazhvathramCode
         )}&month=${encodeURIComponent(month)}`
       );
 
@@ -8701,7 +8723,7 @@ useEffect(() => {
 }, [
   financialReportSelection,
   financialFromDate,
-  reportVazhvathramCode,
+  cashBookVazhvathramCode,
 ]);
 const selectedFinancialMember = memberRecords.find(
   (member) =>
