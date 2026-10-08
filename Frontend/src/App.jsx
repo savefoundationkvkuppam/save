@@ -2941,22 +2941,21 @@ useEffect(() => {
 .cash-book-report tr {
   overflow: visible !important;
 }
-          .cash-book-report table {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          table-layout: fixed !important;
-          border-collapse: collapse !important;
-          font-size: 9px !important;
-          line-height: 1.05 !important;
-       }
-
+.cash-book-report table {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+}
 .cash-book-report th,
 .cash-book-report td {
-  padding: 3px 2px !important;
+  padding: 4px 3px !important;
   white-space: normal !important;
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
   vertical-align: middle !important;
   text-align: center !important;
 }
@@ -2966,9 +2965,9 @@ useEffect(() => {
  }
 .cash-book-report {
   width: 100% !important;
-  max-width: 100% !important;
+  max-width: 1500px !important;
   margin: 0 auto !important;
-  padding: 6px !important;
+  padding: 8px 12px !important;
   overflow: visible !important;
   box-sizing: border-box !important;
 }
