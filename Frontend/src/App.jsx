@@ -8839,7 +8839,116 @@ const overallReceiptTotal =
 const closingCash =
   openingCash + overallReceiptTotal - totalAmount(payments);
 
-    return (
+/* =========================================================
+   CASH BOOK HEADER INFORMATION
+   ========================================================= */
+
+const selectedReportVazhvathramRecord =
+  vazhvathramRecords.find(
+    (record) =>
+      String(record?.vazhvathramName || "")
+        .trim()
+        .toLowerCase() ===
+        String(selectedVazhvathram || "")
+          .trim()
+          .toLowerCase() &&
+      (
+        !selectedCluster ||
+        String(record?.clusterName || "")
+          .trim()
+          .toLowerCase() ===
+          String(selectedCluster || "")
+            .trim()
+            .toLowerCase()
+      )
+  ) || null;
+
+const selectedReportClusterRecord =
+  clusterRecords.find(
+    (record) =>
+      String(record?.clusterName || "")
+        .trim()
+        .toLowerCase() ===
+        String(selectedCluster || "")
+          .trim()
+          .toLowerCase()
+  ) || null;
+
+const reportVazhvathramCode =
+  selectedReportVazhvathramRecord?.vazhvathramCode || "";
+
+const reportVazhvathramName =
+  selectedReportVazhvathramRecord?.vazhvathramName ||
+  selectedVazhvathram ||
+  "";
+
+const reportMeetingDate =
+  selectedReportVazhvathramRecord?.meetingDate ||
+  financialToDate ||
+  "";
+
+const reportClusterCode =
+  selectedReportClusterRecord?.clusterCode || "";
+
+const reportClusterName =
+  selectedReportClusterRecord?.clusterName ||
+  selectedCluster ||
+  "";
+
+/* =========================================================
+   RECEIPT COLUMN TOTALS
+   ========================================================= */
+
+const receiptColumnTotal = (fieldNames) =>
+  receipts.reduce((sum, record) => {
+    const value = Number(getValue(record, fieldNames));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+const regularSavingsTotal = receiptColumnTotal([
+  "regularSavings",
+  "regularSaving",
+  "regSavings",
+]);
+
+const specialSavingsTotal = receiptColumnTotal([
+  "specialSavingsAmount",
+]);
+
+const prepaidMoreTotal = receiptColumnTotal([
+  "specialSavingsMoreAmount",
+]);
+
+const livelihoodSupport1Total = receiptColumnTotal([
+  "livelihoodLoanSupport1",
+  "livelihoodSupport1",
+  "livelihood1",
+  "loanSupport1",
+]);
+
+const serviceCost1Total = receiptColumnTotal([
+  "serviceCost1",
+]);
+
+const livelihoodSupport2Total = receiptColumnTotal([
+  "livelihoodLoanSupport2",
+  "livelihoodSupport2",
+  "livelihood2",
+  "loanSupport2",
+]);
+
+const serviceCost2Total = receiptColumnTotal([
+  "serviceCost2",
+]);
+
+const accountAmount1Total = receiptColumnTotal([
+  "amount",
+  "accountAmount",
+]);
+
+const accountAmount2Total = 0;
+
+return (
 <div
   className="cash-book-report"
   style={{
@@ -8853,16 +8962,75 @@ const closingCash =
   padding: "12px",
 }}
 >
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "20px",
-            marginBottom: "4px",
-          }}
-        >
-          Cash Book From {financialFromDate} To {financialToDate}
-        </div>
+        {/* =====================================================
+    CASH BOOK HEADER
+===================================================== */}
+
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    fontWeight: "bold",
+    fontSize: "12px",
+    marginBottom: "6px",
+  }}
+>
+  <div style={{ textAlign: "left" }}>
+    Federation : 001 - SAVE Foundation
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    Uzhavar Kulu Code : {reportVazhvathramCode}
+    <br />
+    Uzhavar Kulu Name : {reportVazhvathramName}
+  </div>
+
+  <div style={{ textAlign: "right" }}>
+    Cluster :{" "}
+    {reportClusterCode
+      ? `${reportClusterCode} - ${reportClusterName}`
+      : reportClusterName}
+  </div>
+</div>
+
+<div
+  style={{
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: "20px",
+    marginBottom: "4px",
+  }}
+>
+  Cash Book From {formatDate(financialFromDate)} To{" "}
+  {formatDate(financialToDate)}
+</div>
+
+<div
+  style={{
+    textAlign: "center",
+    fontWeight: "bold",
+    marginBottom: "3px",
+    fontSize: "13px",
+  }}
+>
+  {cashBookLockChecking
+    ? "Checking Lock Status..."
+    : transactionLockStatus
+    ? "(Locked)"
+    : "(Not Locked)"}
+</div>
+
+<div
+  style={{
+    textAlign: "center",
+    fontWeight: "bold",
+    marginBottom: "8px",
+    fontSize: "13px",
+  }}
+>
+  Meeting Date : {formatDate(reportMeetingDate)}
+</div>
         {financialFromDate && (
   <div
     style={{
@@ -8944,25 +9112,82 @@ const closingCash =
   </tr>
 
   <tr>
-    <th>Regular</th>
-    <th>Special</th>
-    <th>Prepaid / More</th>
+  <th>
+    Regular
+    <br />
+    1131
+  </th>
 
-    <th>Principal</th>
-    <th>Service Cost</th>
+  <th>
+    Special
+    <br />
+    1132
+  </th>
 
-    <th>Principal</th>
-    <th>Service Cost</th>
+  <th>
+    Prepaid / More
+  </th>
 
-    <th>A/C No. 1</th>
-    <th>Amount 1</th>
-    <th>A/C No. 2</th>
-    <th>Amount 2</th>
-  </tr>
+  <th>
+    Principal
+    <br />
+    2211
+  </th>
+
+  <th>
+    Service Cost
+    <br />
+    3111
+  </th>
+
+  <th>
+    Principal
+    <br />
+    2212
+  </th>
+
+  <th>
+    Service Cost
+    <br />
+    3112
+  </th>
+
+  <th>
+    A/C No. 1
+  </th>
+
+  <th>
+    Amount 1
+  </th>
+
+  <th>
+    A/C No. 2
+  </th>
+
+  <th>
+    Amount 2
+  </th>
+</tr>
 </thead>
 
           <tbody>
-            {receipts.map((r, index) => (
+  <tr>
+    <td
+      colSpan="15"
+      style={{
+        fontWeight: "bold",
+        textAlign: "left",
+        padding: "6px 4px",
+      }}
+    >
+      Opening Cash
+      <span style={{ float: "right" }}>
+        {openingCash}
+      </span>
+    </td>
+  </tr>
+
+  {receipts.map((r, index) => (
               <tr key={r.id ?? `receipt-${index}`}>
   <td>{getMemberName(r)}</td>
 
@@ -9048,19 +9273,60 @@ const closingCash =
 </tr>
             ))}
             <tr>
-              <td colSpan="14" style={{
-                fontWeight: "bold",
-                 textAlign: "right",
-              }}
-           >
-            Total
-        </td>
+  <td
+    colSpan="3"
+    style={{
+      fontWeight: "bold",
+      textAlign: "right",
+    }}
+  >
+    Total
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {regularSavingsTotal}
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {specialSavingsTotal}
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {prepaidMoreTotal}
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {livelihoodSupport1Total}
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {serviceCost1Total}
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {livelihoodSupport2Total}
+  </td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {serviceCost2Total}
+  </td>
+
+  <td></td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {accountAmount1Total}
+  </td>
+
+  <td></td>
+
+  <td style={{ fontWeight: "bold" }}>
+    {accountAmount2Total}
+  </td>
 
   <td style={{ fontWeight: "bold" }}>
     {overallReceiptTotal}
   </td>
 </tr>
-
             
           </tbody>
         </table>
@@ -9083,7 +9349,7 @@ const closingCash =
             minWidth: "900px",
             tableLayout: "auto",
             borderCollapse: "collapse",
-            fontSize: "12x",
+            fontSize: "12px",
             lineHeight: "1.3",
             wordBreak: "break-word",
             overflowWrap: "anywhere",
@@ -9127,7 +9393,7 @@ const closingCash =
   </td>
 
   <td style={{ fontWeight: "bold" }}>
-    {overallReceiptTotal}
+    {totalAmount(payments)}
   </td>
 </tr>
           </tbody>
@@ -9186,28 +9452,40 @@ const closingCash =
           </>
         )}
         <div
-          style={{
-          marginTop: "18px",
-          borderTop: "1px solid #777",
-          paddingTop: "10px",
-          fontWeight: "bold",
-          }}
-          >
-          <div>
-            Opening Cash
-            <span style={{ float: "right" }}>
-              {openingCash}
-            </span>
-          </div>
-          <div style={{ marginTop: "8px" }}>
-            Cash in Hand
-            <span style={{ float: "right" }}>
-              {closingCash}
-            </span>
-          </div>
-        </div>
-      </div>
+  style={{
+    marginTop: "18px",
+    borderTop: "1px solid #777",
+    paddingTop: "10px",
+    fontWeight: "bold",
+  }}
+>
+  <div>
+    Cash in Hand
+    <span style={{ float: "right" }}>
+      {closingCash}
+    </span>
+  </div>
+
+  <div style={{ marginTop: "8px" }}>
+    Total (Not Locked)
+    <span style={{ float: "right" }}>
+      {closingCash}
+    </span>
+  </div>
+</div>    
     );
+  <div
+  style={{
+    textAlign: "center",
+    marginTop: "20px",
+    fontSize: "12px",
+    fontWeight: "bold",
+  }}
+>
+  Report Generated by Save Software
+  <br />
+  Raised Farming Development Programme
+</div>
   }
         /*
    * BANK BOOK - FR02A
