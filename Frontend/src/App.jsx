@@ -9409,7 +9409,7 @@ return (
   </td>
 
   <td style={{ fontWeight: "bold" }}>
-    {overallReceiptTotal}
+    {totalPaymentsAmount}
   </td>
 </tr>
             
