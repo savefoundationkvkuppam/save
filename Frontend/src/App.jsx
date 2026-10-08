@@ -9485,8 +9485,7 @@ return (
   Raised Farming Development Programme
 </div>
   );
-  }
-        /*
+   /*
    * BANK BOOK - FR02A
    * Account-number-wise Receipts & Payments report.
    */
