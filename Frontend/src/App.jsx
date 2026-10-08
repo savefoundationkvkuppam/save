@@ -8875,12 +8875,6 @@ const getPaymentParticular = (r) => {
           "date",
         ])
       );
-
-   const totalAmount = (rows) =>
-  rows.reduce((sum, r) => {
-    const value = Number(getAmount(r));
-    return sum + (Number.isFinite(value) ? value : 0);
-  }, 0);
     const savingsTotal = totalAmount(receipts);
 
 const donationTotal = receipts.reduce((sum, r) => {
