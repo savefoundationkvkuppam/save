@@ -2731,6 +2731,7 @@ const ReportPage = ({
   item,
   memberRecords,
   bankAccountRecords,
+  clusterRecords,
   filterReportRecordsByContext,
   getContextMembers,
   getMemberDisplayName,
@@ -34925,6 +34926,7 @@ if (page.startsWith("report:")) {
       item={reportName}
       memberRecords={memberRecords}
       bankAccountRecords={bankAccountRecords}
+      clusterRecords={clusterRecords}
       filterReportRecordsByContext={filterReportRecordsByContext}
       getContextMembers={getContextMembers}
       getMemberDisplayName={getMemberDisplayName}
