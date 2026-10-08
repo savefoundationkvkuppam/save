@@ -9471,8 +9471,7 @@ return (
     <span style={{ float: "right" }}>
       {closingCash}
     </span>
-  </div>
-</div>    
+  </div>  
   <div
   style={{
     textAlign: "center",
