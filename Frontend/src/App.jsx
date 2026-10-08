@@ -2930,12 +2930,22 @@ useEffect(() => {
             padding: 10px !important;
             overflow: visible !important;
           }
+.cash-book-report {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
 
+.cash-book-report table,
+.cash-book-report tbody,
+.cash-book-report tr {
+  overflow: visible !important;
+}
           .cash-book-report table {
             width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            table-layout: fixed !important;
+            max-width: none !important;
+            min-width: 1200px !important;
+            table-layout: auto !important;
             border-collapse: collapse !important;
             font-size: 12px !important;
           }
@@ -2954,6 +2964,7 @@ useEffect(() => {
           .cash-book-report th:first-child {
             text-align: left !important;
           }
+          
         </style>
       </head>
 
