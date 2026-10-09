@@ -229,7 +229,12 @@ if (resultPage === "debt") {
         setRows(Array.isArray(data) ? data : []);
         return;
       }
-
+      
+if (resultPage === "fixedDepositDetails") {
+  const data = await apiRequest("/fixed-deposits");
+  setRows(Array.isArray(data) ? data : []);
+  return;
+}
       if (resultPage === "auditorDetails") {
         const data = await apiRequest("/auditors");
         setRows(Array.isArray(data) ? data : []);
@@ -3121,6 +3126,106 @@ if (resultPage === "memberReceiptDetails") {
     </div>
   );
 }
+  
+if (resultPage === "fixedDepositDetails") {
+  return (
+    <div style={{ padding: "12px", fontFamily: "Times New Roman, serif" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "48px" }}>
+        Fixed Deposit Details
+      </h2>
+
+      <div style={{ overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            tableLayout: "fixed",
+            fontSize: "18px",
+            textAlign: "center",
+          }}
+        >
+          <thead>
+            <tr>
+              {[
+                "Branch Code",
+                "F.D. Number",
+                "F.D. Date",
+                "F.D. Amount",
+                "Intr Rate",
+                "Intr Amount",
+                "Maturity Date",
+                "Maturity Amount",
+                "Closed Date",
+              ].map((heading) => (
+                <th
+                  key={heading}
+                  style={{
+                    border: "1px solid #777",
+                    padding: "4px",
+                    lineHeight: "1.15",
+                    background: "#fff",
+                    color: "#000",
+                  }}
+                >
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={9} style={{ padding: "12px" }}>
+                  Loading...
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={9} style={{ padding: "12px" }}>
+                  No Fixed Deposit records found.
+                </td>
+              </tr>
+            ) : (
+              rows.map((record, index) => (
+                <tr key={record.id ?? index}>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.branchCode || record.branch || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.fdNumber || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.fdDate || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.fdAmount || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.interestRate || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.interestAmount || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.maturityDate || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.maturityAmount || ""}
+                  </td>
+                  <td style={{ border: "1px solid #777", padding: "5px" }}>
+                    {record.closedDate || ""}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
   if (resultPage === "auditorDetails") {
     return (
       <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
