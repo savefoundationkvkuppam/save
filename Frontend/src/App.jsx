@@ -2946,9 +2946,24 @@ if (resultPage === "memberReceiptDetails") {
       receiptNo: record.receiptNo ?? "",
       memberCode: record.memberCode ?? "",
       accountHead:
-        record.accountType && record.accountType !== "Select Acct Type"
-          ? record.accountType
-          : "Member Receipt",
+  record.accountType &&
+  record.accountType !== "Select Acct Type"
+    ? record.accountType
+    : [
+        ["Regular Savings", record.regularSavings],
+        ["Bullet Savings", record.bulletSavings],
+        ["Special Savings", record.specialSavingsAmount],
+        ["Livelihood Loan Support 1", record.livelihoodLoanSupport1],
+        ["Livelihood Loan Support 2", record.livelihoodLoanSupport2],
+        ["Housing Loan", record.housingLoan],
+        ["Donation", record.donation],
+        ["Jothi Fund", record.jothiFund],
+        ["Risk Fund", record.riskFund],
+        ["DRR Fund", record.drrFund],
+      ]
+        .filter((item) => Number(item[1]) > 0)
+        .map((item) => item[0])
+        .join(", ") || "Member Receipt",
       amount:
         Number(record.total) || calculatedAmount,
       receiptType: record.cash ?? "",
