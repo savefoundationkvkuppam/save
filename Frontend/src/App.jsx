@@ -37345,7 +37345,7 @@ if (!otherReceiptForm.subLedger.trim()) {
               resetFixedDepositForm();
             }}
           >Cancel</button>
-          <button onClick={() => setShowFixedDepositList((previous) => !previous)}>List</button>
+          <button type="button" onClick={() => openResultInNewTab({ page: "fixedDepositDetails" })} > List </button>
         </div>
 
         {showFixedDepositList && (
