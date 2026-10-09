@@ -2756,8 +2756,6 @@ if (resultPage === "taluk") {
 
         {loading ? (
           <p>Loading Auditor Details...</p>
-        ) : rows.length === 0 ? (
-          <p>No Auditor Details records found.</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table
