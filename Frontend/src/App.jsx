@@ -211,6 +211,13 @@ if (resultPage === "debt") {
         setRows(Array.isArray(data) ? data : []);
         return;
       }
+      
+      if (resultPage === "staffDetails") {
+        const data = await apiRequest("/staff-details");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
+
       if (resultPage === "auditorDetails") {
         const data = await apiRequest("/auditors");
         setRows(Array.isArray(data) ? data : []);
@@ -2796,6 +2803,52 @@ if (resultPage === "taluk") {
       </div>
     );
   }
+  
+  if (resultPage === "staffDetails") {
+    return (
+      <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>Staff details</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              margin: "0 auto",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+              width: "auto",
+            }}
+          >
+            <thead>
+              <tr>
+                {[
+                  "Sl No",
+                  "Staff Code as per MLeave Software",
+                  "Staff Name",
+                  "Role",
+                  "Dhan Staff / Federation Staff",
+                ].map((heading) => (
+                  <th key={heading} style={resultTableHeaderStyle}>
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((record, index) => (
+                <tr key={record.id || index}>
+                  <td style={resultTableCellStyle}>{index + 1}</td>
+                  <td style={resultTableCellStyle}>{record.mlLeaveCode || record.code || ""}</td>
+                  <td style={resultTableCellStyle}>{record.staffName || ""}</td>
+                  <td style={resultTableCellStyle}>{record.role || ""}</td>
+                  <td style={resultTableCellStyle}>{record.dhanFedStaff || ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
   if (resultPage === "auditorDetails") {
     return (
       <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
@@ -42195,8 +42248,14 @@ const districtOptions = [
               <button onClick={handleStaffAdd}>Add</button>
               <button onClick={handleStaffEdit}>Edit</button>
               <button onClick={staffMode === "edit" ? handleStaffUpdate : handleStaffSave} disabled={staffMode === "view"}>Save</button>
-              <button onClick={()=>{setStaffMode("view");setSelectedStaffId(null);}}>Cancel</button>
-              <button onClick={()=>setShowStaffList(previous=>!previous)}>List</button>
+              <button onClick={()=>{setStaffMode("view");setSelectedStaffId(null);}}>Cancel</button>          
+<button
+  type="button"
+  onClick={() => openResultInNewTab({ page: "staffDetails" })}
+>
+  List
+</button>
+
             </div>
             {showStaffList && (
               <div className="master-list">
