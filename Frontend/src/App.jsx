@@ -2898,22 +2898,68 @@ if (resultPage === "taluk") {
     );
   }
 if (resultPage === "memberReceiptDetails") {
-  const receiptRows = rows.map((record, index) => ({
-    recordNumber: record.recordNumber ?? record.id ?? index + 1,
-    receiptDate: record.receiptDate ?? "",
-    receiptNo: record.receiptNo ?? "",
-    memberCode: record.memberCode ?? "",
-    accountHead: record.accountType ?? "Member Receipt",
-    amount: Number( record.total ?? record.totalAmount ?? record.amount ?? 0 ) || 0,
-    receiptType: record.cash ?? "",
-    enteredBy: record.enteredBy ?? "",
-  }));
+  const receiptRows = rows.map((record, index) => {
+    const amountFields = [
+      "regularSavings",
+      "bulletSavings",
+      "specialSavingsAmount",
+      "specialSavingsMoreAmount",
+      "livelihoodLoanSupport1",
+      "serviceCost1",
+      "livelihoodLoanSupport2",
+      "serviceCost2",
+      "housingLoan",
+      "housingServiceCost",
+      "donation",
+      "jothiFund",
+      "riskFund",
+      "drrFund",
+      "subsEntFee",
+      "specifiedProgFund",
+      "memberLife",
+      "spouseLife",
+      "livestock",
+      "health",
+      "pension",
+      "endowment",
+      "crop",
+      "tataAiaMember",
+      "tataAiaSpouse",
+      "lifeMember",
+      "lifeSpouse",
+      "mutualHealth",
+      "mutualLivestock",
+      "mutualCrop",
+      "funeral",
+      "admin",
+      "nalam",
+    ];
+
+    const calculatedAmount = amountFields.reduce(
+      (sum, field) => sum + (Number(record[field]) || 0),
+      0
+    );
+
+    return {
+      recordNumber: record.recordNumber ?? record.id ?? index + 1,
+      receiptDate: record.receiptDate ?? "",
+      receiptNo: record.receiptNo ?? "",
+      memberCode: record.memberCode ?? "",
+      accountHead:
+        record.accountType && record.accountType !== "Select Acct Type"
+          ? record.accountType
+          : "Member Receipt",
+      amount:
+        Number(record.total) || calculatedAmount,
+      receiptType: record.cash ?? "",
+      enteredBy: record.enteredBy ?? "",
+    };
+  });
 
   const totalAmount = receiptRows.reduce(
     (sum, record) => sum + record.amount,
     0
   );
-
   return (
     <div style={{ padding: "20px" }}>
       <h2>Receipt Voucher : Member - (Vazhvathram Code : 0010101)</h2>
