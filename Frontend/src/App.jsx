@@ -2904,7 +2904,7 @@ if (resultPage === "memberReceiptDetails") {
     receiptNo: record.receiptNo ?? "",
     memberCode: record.memberCode ?? "",
     accountHead: record.accountType ?? "Member Receipt",
-    amount: Number(record.total) || 0,
+    amount: Number( record.total ?? record.totalAmount ?? record.amount ?? 0 ) || 0,
     receiptType: record.cash ?? "",
     enteredBy: record.enteredBy ?? "",
   }));
