@@ -205,8 +205,12 @@ if (resultPage === "debt") {
         setRows(Array.isArray(data) ? data : []);
         return;
       }
-
-
+      
+      if (resultPage === "auditorDetails") {
+        const data = await apiRequest("/auditors");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
       // =====================================================
       // BANK ACCOUNT LIST
       // =====================================================
@@ -2744,8 +2748,60 @@ if (resultPage === "taluk") {
       </div>
     );
   }
+  
+  if (resultPage === "auditorDetails") {
+    return (
+      <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>Auditor Details</h2>
 
-
+        {loading ? (
+          <p>Loading Auditor Details...</p>
+        ) : rows.length === 0 ? (
+          <p>No Auditor Details records found.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                margin: "0 auto",
+                borderCollapse: "collapse",
+                fontSize: "13px",
+                width: "auto",
+              }}
+            >
+              <thead>
+                <tr>
+                  {[
+                    "Fed Code",
+                    "Auditor Name",
+                    "Street 1",
+                    "Street 2",
+                    "Pin Code",
+                    "Phone",
+                  ].map((heading) => (
+                    <th key={heading} style={resultTableHeaderStyle}>
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id || index}>
+                    <td style={resultTableCellStyle}>{record.fedCode || ""}</td>
+                    <td style={resultTableCellStyle}>{record.auditorName || ""}</td>
+                    <td style={resultTableCellStyle}>{record.address1 || ""}</td>
+                    <td style={resultTableCellStyle}>{record.address2 || ""}</td>
+                    <td style={resultTableCellStyle}>{record.pincode || ""}</td>
+                    <td style={resultTableCellStyle}>{record.phone || ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
   return (
     <div
       style={{
@@ -41787,10 +41843,14 @@ const districtOptions = [
               <button onClick={handleAuditorEdit}>Edit</button>
               <button onClick={handleAuditorSave} disabled={auditorMode !== "add" && auditorMode !== "edit"}>Save</button>
               <button onClick={resetAuditorForm} disabled={auditorMode === "view"}>Cancel</button>
-              <button onClick={handleAuditorDelete}>Delete</button>
-              <button onClick={() => setShowAuditorList(value => !value)}>
-                {showAuditorList ? "Hide List" : "List"}
-              </button>
+              <button onClick={handleAuditorDelete}>Delete</button>              
+<button
+  type="button"
+  onClick={() => openResultInNewTab({ page: "auditorDetails" })}
+>
+  List
+</button>
+
             </div>
           </div>
 
