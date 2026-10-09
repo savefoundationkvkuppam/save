@@ -206,6 +206,11 @@ if (resultPage === "debt") {
         return;
       }
       
+      if (resultPage === "addUserDetails") {
+        const data = await apiRequest("/add-users");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
       if (resultPage === "auditorDetails") {
         const data = await apiRequest("/auditors");
         setRows(Array.isArray(data) ? data : []);
@@ -2749,6 +2754,48 @@ if (resultPage === "taluk") {
     );
   }
   
+  if (resultPage === "addUserDetails") {
+    return (
+      <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>Password Details</h2>
+
+        {loading ? (
+          <p>Loading Password Details...</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                margin: "0 auto",
+                borderCollapse: "collapse",
+                fontSize: "13px",
+                width: "100%",
+              }}
+            >
+              <thead>
+                <tr>
+                  {["Sl No", "User Name", "Password", "Cluster Name"].map((heading) => (
+                    <th key={heading} style={resultTableHeaderStyle}>
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id || index}>
+                    <td style={resultTableCellStyle}>{index + 1}</td>
+                    <td style={resultTableCellStyle}>{record.userCode || record.name || ""}</td>
+                    <td style={resultTableCellStyle}>{record.password || ""}</td>
+                    <td style={resultTableCellStyle}>{record.cluster || ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
   if (resultPage === "auditorDetails") {
     return (
       <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
@@ -41999,8 +42046,13 @@ const districtOptions = [
               <button onClick={handleAddUserEdit}>Edit</button>
               <button onClick={handleAddUserSave} disabled={addUserMode !== "add" && addUserMode !== "edit"}>Save</button>
               <button onClick={resetAddUserForm} disabled={addUserMode === "view"}>Cancel</button>
-              <button onClick={handleAddUserDelete}>Delete</button>
-              <button onClick={() => setShowAddUserList(value => !value)}>{showAddUserList ? "Hide List" : "List"}</button>
+              <button onClick={handleAddUserDelete}>Delete</button>            
+<button
+  type="button"
+  onClick={() => openResultInNewTab({ page: "addUserDetails" })}
+>
+  List
+</button>
             </div>
           </div>
 
