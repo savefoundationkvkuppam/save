@@ -2669,12 +2669,15 @@ if (resultPage === "taluk") {
   );
 }
   
+
   if (resultPage === "branchDetails") {
     return (
-      <div style={{ padding: "24px", fontFamily: "Arial, sans-serif" }}>
-        <h2 style={{ textAlign: "center" }}>Branch Details</h2>
+      <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>
+          MA 13 - Branch Details
+        </h2>
 
-        <p>
+        <p style={{ textAlign: "center" }}>
           <strong>Cluster:</strong> {cluster || "Not selected"}
           {"  "}
           <strong>Vazhvathram:</strong> {vazhvathram || "Not selected"}
@@ -2690,6 +2693,7 @@ if (resultPage === "taluk") {
               style={{
                 width: "100%",
                 borderCollapse: "collapse",
+                fontSize: "14px",
               }}
             >
               <thead>
@@ -2698,8 +2702,14 @@ if (resultPage === "taluk") {
                     "Bank Name",
                     "Branch Code",
                     "Branch Name",
+                    "Street 1",
+                    "Street 2",
                     "District",
-                    "IFSC Code",
+                    "State",
+                    "Phone",
+                    "IFS Code",
+                    "Mapped Branch Code",
+                    "Mapped Standard Branch Name",
                   ].map((heading) => (
                     <th key={heading} style={resultTableHeaderStyle}>
                       {heading}
@@ -2713,8 +2723,18 @@ if (resultPage === "taluk") {
                     <td style={resultTableCellStyle}>{record.bankName || ""}</td>
                     <td style={resultTableCellStyle}>{record.branchCode || ""}</td>
                     <td style={resultTableCellStyle}>{record.branchName || ""}</td>
+                    <td style={resultTableCellStyle}>{record.address1 || ""}</td>
+                    <td style={resultTableCellStyle}>{record.address2 || ""}</td>
                     <td style={resultTableCellStyle}>{record.district || ""}</td>
+                    <td style={resultTableCellStyle}>{record.state || ""}</td>
+                    <td style={resultTableCellStyle}>{record.phone || ""}</td>
                     <td style={resultTableCellStyle}>{record.ifscCode || ""}</td>
+                    <td style={resultTableCellStyle}>
+                      {record.mappedBranchCode || ""}
+                    </td>
+                    <td style={resultTableCellStyle}>
+                      {record.mappedStandardBranchName || ""}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -2724,6 +2744,7 @@ if (resultPage === "taluk") {
       </div>
     );
   }
+
 
   return (
     <div
