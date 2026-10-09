@@ -1015,15 +1015,38 @@ if (resultPage === "taluk") {
     );
   }
 
+
   // BANK DETAILS MASTER RESULT
   if (resultPage === "bankDetails") {
     return (
-      <div style={{ padding: "8px", fontFamily: "Times New Roman, serif" }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: "20px",
+          background: "#ffffff",
+          fontFamily: "Arial, sans-serif",
+          boxSizing: "border-box",
+        }}
+      >
+        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
+          Bank Details List
+        </h2>
+
+        <div style={{ marginBottom: "20px", fontSize: "15px" }}>
+          <strong>Cluster:</strong> {cluster || "All"}
+          {"   "}
+          <strong>Vazhvathram:</strong> {vazhvathram || "All"}
+        </div>
+
         <table
           border="1"
-          cellPadding="3"
-          cellSpacing="1"
-          style={{ margin: "0 auto", fontSize: "14px" }}
+          cellPadding="5"
+          cellSpacing="0"
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
+          }}
         >
           <thead>
             <tr>
@@ -1044,10 +1067,12 @@ if (resultPage === "taluk") {
             ))}
           </tbody>
         </table>
+
         {rows.length === 0 && <p>No Bank Details records found.</p>}
       </div>
     );
   }
+
 
   // =========================================================
   // BANK ACCOUNT RESULT
