@@ -1852,7 +1852,7 @@ if (
 </th>
 
 <th style={resultTableHeaderStyle}>
-  Kalanjiam
+  Vazhvathram
 </th>
 
 <th style={resultTableHeaderStyle}>
@@ -1958,7 +1958,7 @@ if (resultPage === "loanInterest") {
         {resultType === "list2"
           ? "Interest Rate Not Entered Details"
           : resultType === "all"
-          ? "Interest Rate Entered Details for All Kalanjiam"
+          ? "Interest Rate Entered Details for All Vazhvathram"
           : "Interest Rate Entered Details"}
       </h2>
 
@@ -1978,7 +1978,7 @@ if (resultPage === "loanInterest") {
             </th>
 
             <th style={resultTableHeaderStyle}>
-              Kalanjiam
+              Vazhvathram
             </th>
 
             <th style={resultTableHeaderStyle}>
@@ -2932,7 +2932,7 @@ if (resultPage === "memberReceiptDetails") {
                 "Record Number",
                 "Receipt Date",
                 "Receipt Number",
-                "Member/Kalanjiam Code",
+                "Member/Vazhvathram Code",
                 "Account Head",
                 "Amount",
                 "Receipt Type",
