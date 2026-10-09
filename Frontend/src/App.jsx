@@ -198,6 +198,14 @@ if (resultPage === "debt") {
         setRows(Array.isArray(data) ? data : []);
         return;
       }
+      
+      // BRANCH DETAILS MASTER LIST
+      if (resultPage === "branchDetails") {
+        const data = await apiRequest("/branches");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
+
 
       // =====================================================
       // BANK ACCOUNT LIST
