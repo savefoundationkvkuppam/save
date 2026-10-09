@@ -192,6 +192,13 @@ if (resultPage === "debt") {
   return;
 }
 
+      // BANK DETAILS MASTER LIST
+      if (resultPage === "bankDetails") {
+        const data = await apiRequest("/bank-details");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
+
       // =====================================================
       // BANK ACCOUNT LIST
       // =====================================================
@@ -1004,6 +1011,40 @@ if (resultPage === "taluk") {
         }}
       >
         Loading...
+      </div>
+    );
+  }
+
+  // BANK DETAILS MASTER RESULT
+  if (resultPage === "bankDetails") {
+    return (
+      <div style={{ padding: "8px", fontFamily: "Times New Roman, serif" }}>
+        <table
+          border="1"
+          cellPadding="3"
+          cellSpacing="1"
+          style={{ margin: "0 auto", fontSize: "14px" }}
+        >
+          <thead>
+            <tr>
+              <th>Bank Code</th>
+              <th>Bank Name</th>
+              <th>Mapped Bank Code</th>
+              <th>Mapped Standard Bank Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((record, index) => (
+              <tr key={record.id ?? index}>
+                <td>{record.bankCode || ""}</td>
+                <td>{record.bankName || ""}</td>
+                <td>{record.mappedBankCode || ""}</td>
+                <td>{record.standardBankName || ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {rows.length === 0 && <p>No Bank Details records found.</p>}
       </div>
     );
   }
@@ -41017,9 +41058,18 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <button onClick={handleBankSave} disabled={bankMode !== "add" && bankMode !== "edit"}>Save</button>
               <button onClick={resetBankForm} disabled={bankMode === "view"}>Cancel</button>
               <button onClick={handleBankDelete}>Delete</button>
-              <button onClick={() => setShowBankList(value => !value)}>
-                {showBankList ? "Hide List" : "List"}
-              </button>
+              
+<button
+  onClick={() => {
+    window.open(
+      `${window.location.pathname}?resultPage=bankDetails`,
+      "_blank"
+    );
+  }}
+>
+  List
+</button>
+
             </div>
           </div>
 
