@@ -2897,7 +2897,169 @@ if (resultPage === "taluk") {
       </div>
     );
   }
+if (resultPage === "memberReceiptDetails") {
+  const receiptRows = rows.map((record, index) => ({
+    recordNumber: record.recordNumber ?? record.id ?? index + 1,
+    receiptDate: record.receiptDate ?? "",
+    receiptNo: record.receiptNo ?? "",
+    memberCode: record.memberCode ?? "",
+    accountHead: record.accountType ?? "Member Receipt",
+    amount: Number(record.total) || 0,
+    receiptType: record.cash ?? "",
+    enteredBy: record.enteredBy ?? "",
+  }));
 
+  const totalAmount = receiptRows.reduce(
+    (sum, record) => sum + record.amount,
+    0
+  );
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Receipt Voucher : Member - (Vazhvathram Code : 0010101)</h2>
+
+      <div style={{ overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
+          }}
+        >
+          <thead>
+            <tr>
+              {[
+                "Record Number",
+                "Receipt Date",
+                "Receipt Number",
+                "Member/Kalanjiam Code",
+                "Account Head",
+                "Amount",
+                "Receipt Type",
+                "Entered By",
+              ].map((heading) => (
+                <th
+                  key={heading}
+                  style={{
+                    border: "1px solid #999",
+                    padding: "10px",
+                    background: "#eee",
+                    textAlign: "left",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {receiptRows.map((record, index) => (
+              <tr key={`${record.receiptNo}-${index}`}>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.recordNumber}
+                </td>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.receiptDate}
+                </td>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.receiptNo}
+                </td>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.memberCode}
+                </td>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.accountHead}
+                </td>
+                <td
+                  style={{
+                    border: "1px solid #999",
+                    padding: "8px",
+                    textAlign: "right",
+                  }}
+                >
+                  {record.amount.toFixed(2)}
+                </td>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.receiptType}
+                </td>
+                <td style={{ border: "1px solid #999", padding: "8px" }}>
+                  {record.enteredBy}
+                </td>
+              </tr>
+            ))}
+
+            <tr>
+              <td
+                colSpan={5}
+                style={{
+                  border: "1px solid #999",
+                  padding: "8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                Total
+              </td>
+              <td
+                style={{
+                  border: "1px solid #999",
+                  padding: "8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {totalAmount.toFixed(2)}
+              </td>
+              <td colSpan={2} style={{ border: "1px solid #999" }} />
+            </tr>
+
+            <tr>
+              <td
+                colSpan={5}
+                style={{
+                  border: "1px solid #999",
+                  padding: "8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                Grand Total
+              </td>
+              <td
+                style={{
+                  border: "1px solid #999",
+                  padding: "8px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {totalAmount.toFixed(2)}
+              </td>
+              <td colSpan={2} style={{ border: "1px solid #999" }} />
+            </tr>
+
+            {receiptRows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={8}
+                  style={{
+                    border: "1px solid #999",
+                    padding: "15px",
+                    textAlign: "center",
+                  }}
+                >
+                  No receipt records found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
   if (resultPage === "auditorDetails") {
     return (
       <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
