@@ -41284,9 +41284,27 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <button onClick={handleBranchSave} disabled={branchMode !== "edit" && branchMode !== "add"}>Save</button>
               <button onClick={resetBranchForm} disabled={branchMode === "view"}>Cancel</button>
               <button onClick={handleBranchDelete}>Delete</button>
-              <button onClick={() => setShowBranchList(value => !value)}>
-                {showBranchList ? "Hide List" : "List"}
-              </button>
+<button
+  type="button"
+  onClick={() => {
+    const params = new URLSearchParams();
+    params.set("resultOnly", "1");
+    params.set("resultPage", "branchDetails");
+
+    const currentCluster = String(selectedCluster || "").trim();
+    const currentVazhvathram = String(selectedVazhvathram || "").trim();
+
+    if (currentCluster) params.set("cluster", currentCluster);
+    if (currentVazhvathram) params.set("vazhvathram", currentVazhvathram);
+
+    window.open(
+      `${window.location.origin}${window.location.pathname}?${params.toString()}`,
+      "_blank"
+    );
+  }}
+>
+  List
+</button>
             </div>
           </div>
           {showBranchList && (
