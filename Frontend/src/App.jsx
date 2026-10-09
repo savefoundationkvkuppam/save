@@ -41289,9 +41289,19 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               </button>
             </div>
           </div>
-
           {showBranchList && (
             <div className="master-list">
+              <div className="selected-context" style={{ marginBottom: "15px" }}>
+                <p>
+                  <strong>Cluster:</strong>{" "}
+                  {selectedCluster || "Not selected"}
+                </p>
+                <p>
+                  <strong>Vazhvathram:</strong>{" "}
+                  {selectedVazhvathram || "Not selected"}
+                </p>
+              </div>
+
               {branchRecords.length === 0 ? (
                 <p>No Branch Details records found.</p>
               ) : (
@@ -41314,7 +41324,14 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                         <td>{record.branchName}</td>
                         <td>{record.district}</td>
                         <td>{record.ifscCode}</td>
-                        <td><button onClick={() => selectBranchRecord(record)}>Select</button></td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => selectBranchRecord(record)}
+                          >
+                            Select
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
