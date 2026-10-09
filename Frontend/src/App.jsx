@@ -2668,6 +2668,63 @@ if (resultPage === "taluk") {
     </div>
   );
 }
+  
+  if (resultPage === "branchDetails") {
+    return (
+      <div style={{ padding: "24px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>Branch Details</h2>
+
+        <p>
+          <strong>Cluster:</strong> {cluster || "Not selected"}
+          {"  "}
+          <strong>Vazhvathram:</strong> {vazhvathram || "Not selected"}
+        </p>
+
+        {loading ? (
+          <p>Loading Branch Details...</p>
+        ) : rows.length === 0 ? (
+          <p>No Branch Details records found.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  {[
+                    "Bank Name",
+                    "Branch Code",
+                    "Branch Name",
+                    "District",
+                    "IFSC Code",
+                  ].map((heading) => (
+                    <th key={heading} style={resultTableHeaderStyle}>
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id || index}>
+                    <td style={resultTableCellStyle}>{record.bankName || ""}</td>
+                    <td style={resultTableCellStyle}>{record.branchCode || ""}</td>
+                    <td style={resultTableCellStyle}>{record.branchName || ""}</td>
+                    <td style={resultTableCellStyle}>{record.district || ""}</td>
+                    <td style={resultTableCellStyle}>{record.ifscCode || ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
