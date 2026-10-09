@@ -218,6 +218,12 @@ if (resultPage === "debt") {
         return;
       }
       
+      if (resultPage === "memberReceiptDetails") {
+        const data = await apiRequest("/member-receipts");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
+
       if (resultPage === "digPurposeDetails") {
         const data = await apiRequest("/dig-purposes");
         setRows(Array.isArray(data) ? data : []);
@@ -35721,7 +35727,7 @@ if (page.startsWith("report:")) {
           <button type="button" disabled={!selectedMemberReceiptId} onClick={() => setMemberReceiptMode("edit")}>Edit</button>
           <button type="button" disabled={memberReceiptLoading || memberReceiptMode === "view"} onClick={saveMemberReceipt}>Save</button>
           <button type="button" onClick={resetMemberReceiptForm}>Cancel</button>
-          <button type="button" onClick={() => setMemberReceiptMode("list")}>List</button>
+          <button type="button" onClick={() => openResultInNewTab({ page: "memberReceiptDetails" })} > List </button>
           <span>Total</span>
           <input className="short" value={memberReceiptForm.total || (totalValue ? String(totalValue) : "")} onChange={(e) => updateMemberReceiptField("total", e.target.value)} />
         </div>
