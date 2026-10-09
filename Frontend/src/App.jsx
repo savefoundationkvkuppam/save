@@ -41372,12 +41372,10 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <button onClick={handleBranchDelete}>Delete</button>              
 <button
   type="button"
-  onClick={() => setShowBranchList(value => !value)}
+  onClick={() => openResultInNewTab({ page: "branchDetails" })}
 >
-  {showBranchList ? "Hide List" : "List"}
+  List
 </button>
-
-
             </div>
           </div>
           {showBranchList && (
