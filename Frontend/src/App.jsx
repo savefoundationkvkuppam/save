@@ -41059,13 +41059,14 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
               <button onClick={resetBankForm} disabled={bankMode === "view"}>Cancel</button>
               <button onClick={handleBankDelete}>Delete</button>
               
+
 <button
-  onClick={() => {
-    window.open(
-      `${window.location.pathname}?resultPage=bankDetails`,
-      "_blank"
-    );
-  }}
+  type="button"
+  onClick={() =>
+    openResultInNewTab({
+      page: "bankDetails",
+    })
+  }
 >
   List
 </button>
