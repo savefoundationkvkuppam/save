@@ -13406,9 +13406,9 @@ function App() {
     window.location.search
   );
 
-  if (resultParams.get("resultOnly") === "1") {
-    return <ResultOnlyPage />;
-  }
+  if (resultParams.get("resultPage")) {
+  return <ResultOnlyPage />;
+}
   // =========================================================
   // GLOBAL ENTER KEY NAVIGATION
   // Press Enter to move to the next form field.
