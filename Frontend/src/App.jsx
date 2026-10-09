@@ -217,6 +217,12 @@ if (resultPage === "debt") {
         setRows(Array.isArray(data) ? data : []);
         return;
       }
+      
+      if (resultPage === "digPurposeDetails") {
+        const data = await apiRequest("/dig-purposes");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
 
       if (resultPage === "auditorDetails") {
         const data = await apiRequest("/auditors");
@@ -2804,6 +2810,43 @@ if (resultPage === "taluk") {
     );
   }
   
+  if (resultPage === "digPurposeDetails") {
+    return (
+      <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>DIG Purpose Details</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              margin: "0 auto",
+              borderCollapse: "collapse",
+              fontSize: "13px",
+              width: "auto",
+            }}
+          >
+            <thead>
+              <tr>
+                <th style={resultTableHeaderStyle}>DIG Purpose Code</th>
+                <th style={resultTableHeaderStyle}>DIG Purpose Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((record, index) => (
+                <tr key={record.id || index}>
+                  <td style={resultTableCellStyle}>
+                    {record.code || ""}
+                  </td>
+                  <td style={resultTableCellStyle}>
+                    {record.name || ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
   if (resultPage === "staffDetails") {
     return (
       <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
@@ -42179,8 +42222,13 @@ const districtOptions = [
                 setDigPurposeData({ code: "", name: "", classification: "Institution Building" });
                 setSelectedDigPurposeId(null);
                 setDigPurposeMode("view");
-              }}>Cancel</button>
-              <button onClick={() => setShowDigPurposeList(true)}>List</button>
+              }}>Cancel</button>           
+<button
+  type="button"
+  onClick={() => openResultInNewTab({ page: "digPurposeDetails" })}
+>
+  List
+</button>
             </div>
 
             {showDigPurposeList && (
