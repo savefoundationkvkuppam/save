@@ -230,6 +230,40 @@ if (resultPage === "debt") {
         return;
       }
       
+if (resultPage === "memberPaymentDetails") {
+  const [paymentData, memberData] = await Promise.all([
+    apiRequest("/member-payments"),
+    apiRequest("/members"),
+  ]);
+
+  const payments = Array.isArray(paymentData) ? paymentData : [];
+  const members = Array.isArray(memberData) ? memberData : [];
+
+  const filteredPayments = payments.filter((payment) => {
+    const member = members.find(
+      (item) =>
+        String(item.memberCode || "").trim() ===
+        String(payment.memberCode || "").trim()
+    );
+
+    if (!member) return false;
+
+    const clusterMatches =
+      !cluster ||
+      String(member.clusterName || "").trim() === cluster;
+
+    const vazhvathramMatches =
+      !vazhvathram ||
+      String(member.vazhvathramName || "").trim() === vazhvathram;
+
+    return clusterMatches && vazhvathramMatches;
+  });
+
+  setRows(filteredPayments);
+  return;
+}
+
+      
 if (resultPage === "fixedDepositDetails") {
   const data = await apiRequest("/fixed-deposits");
   setRows(Array.isArray(data) ? data : []);
@@ -3218,6 +3252,181 @@ if (resultPage === "fixedDepositDetails") {
                   </td>
                 </tr>
               ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+  
+if (resultPage === "memberPaymentDetails") {
+  const money = (value) => Number(value) || 0;
+
+  const voucherRows = rows.map((record, index) => {
+    const accountEntries = [
+      ["Savings", record.savings],
+      ["Savings Incentive", record.savingsIncentive],
+      ["Bullet Savings", record.bulletSavings],
+      [record.socialSecurityType, record.socialSecurityAmount],
+      [record.specialSavingsType, record.specialSavingsAmount],
+      [record.specialSavingsMoreType, record.specialSavingsMoreAmount],
+      ["Special Savings Incentive", record.specialSavingsIncentive],
+    ]
+      .filter(([name, amount]) =>
+        name &&
+        !["Select", "Select A/c Type"].includes(name) &&
+        money(amount) !== 0
+      )
+      .map(([name, amount]) => ({
+        accountHead: name,
+        amount: money(amount),
+      }));
+
+    const calculatedTotal = accountEntries.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+    return {
+      key: record.id ?? index,
+      recordNumber: record.recordNumber ?? record.id ?? index + 1,
+      voucherNo: record.voucherNo ?? "",
+      voucherDate: record.voucherDate ?? "",
+      memberCode: record.memberCode ?? "",
+      memberName: record.memberName ?? "",
+      voucherType: record.voucherType ?? "",
+      enteredBy: record.enteredBy ?? "",
+      entries: accountEntries,
+      total: money(record.total) || calculatedTotal,
+    };
+  });
+
+  const grandTotal = voucherRows.reduce(
+    (sum, voucher) => sum + voucher.total,
+    0
+  );
+
+  const cellStyle = {
+    border: "1px solid #888",
+    padding: "4px 6px",
+    fontSize: "12px",
+  };
+
+  return (
+    <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+      <h3 style={{ textAlign: "center", marginBottom: "4px" }}>
+        Payment Voucher : Member - (Vazhvathram Code : 0010101)
+      </h3>
+
+      <div style={{ textAlign: "center", marginBottom: "8px", fontSize: "12px" }}>
+        {voucherRows.length > 0
+          ? `Vouchers: ${voucherRows.length}`
+          : "No saved payment vouchers"}
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {[
+                "Record Number",
+                "Voucher Date",
+                "Voucher Number",
+                "Member/KalCode",
+                "Account Head",
+                "Amount",
+                "Voucher Type",
+                "Entered By",
+              ].map((heading) => (
+                <th key={heading} style={{ ...cellStyle, background: "#eee" }}>
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} style={cellStyle}>Loading...</td>
+              </tr>
+            ) : voucherRows.length === 0 ? (
+              <tr>
+                <td colSpan={8} style={cellStyle}>
+                  No Member Payment records found.
+                </td>
+              </tr>
+            ) : (
+              voucherRows.map((voucher) => (
+                <>
+                  {voucher.entries.length > 0 ? (
+                    voucher.entries.map((entry, entryIndex) => (
+                      <tr key={`${voucher.key}-${entryIndex}`}>
+                        <td style={cellStyle}>
+                          {entryIndex === 0 ? voucher.recordNumber : ""}
+                        </td>
+                        <td style={cellStyle}>
+                          {entryIndex === 0 ? voucher.voucherDate : ""}
+                        </td>
+                        <td style={cellStyle}>
+                          {entryIndex === 0 ? voucher.voucherNo : ""}
+                        </td>
+                        <td style={cellStyle}>
+                          {entryIndex === 0
+                            ? `${voucher.memberCode}${voucher.memberName ? ` - ${voucher.memberName}` : ""}`
+                            : ""}
+                        </td>
+                        <td style={cellStyle}>{entry.accountHead}</td>
+                        <td style={{ ...cellStyle, textAlign: "right" }}>
+                          {entry.amount.toFixed(2)}
+                        </td>
+                        <td style={cellStyle}>
+                          {entryIndex === 0 ? voucher.voucherType : ""}
+                        </td>
+                        <td style={cellStyle}>
+                          {entryIndex === 0 ? voucher.enteredBy : ""}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr key={voucher.key}>
+                      <td style={cellStyle}>{voucher.recordNumber}</td>
+                      <td style={cellStyle}>{voucher.voucherDate}</td>
+                      <td style={cellStyle}>{voucher.voucherNo}</td>
+                      <td style={cellStyle}>{voucher.memberCode}</td>
+                      <td style={cellStyle}>—</td>
+                      <td style={{ ...cellStyle, textAlign: "right" }}>
+                        {voucher.total.toFixed(2)}
+                      </td>
+                      <td style={cellStyle}>{voucher.voucherType}</td>
+                      <td style={cellStyle}>{voucher.enteredBy}</td>
+                    </tr>
+                  )}
+
+                  <tr key={`${voucher.key}-total`}>
+                    <td colSpan={5} style={{ ...cellStyle, textAlign: "right", fontWeight: "bold" }}>
+                      Total
+                    </td>
+                    <td style={{ ...cellStyle, textAlign: "right", fontWeight: "bold" }}>
+                      {voucher.total.toFixed(2)}
+                    </td>
+                    <td colSpan={2} style={cellStyle}></td>
+                  </tr>
+                </>
+              ))
+            )}
+
+            {!loading && voucherRows.length > 0 && (
+              <tr>
+                <td colSpan={5} style={{ ...cellStyle, textAlign: "right", fontWeight: "bold" }}>
+                  Grand Total
+                </td>
+                <td style={{ ...cellStyle, textAlign: "right", fontWeight: "bold" }}>
+                  {grandTotal.toFixed(2)}
+                </td>
+                <td colSpan={2} style={cellStyle}></td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -36541,7 +36750,11 @@ if (!otherReceiptForm.subLedger.trim()) {
           <button type="button" disabled={!selectedMemberPaymentId} onClick={() => setMemberPaymentMode("edit")}>Edit</button>
           <button type="button" disabled={memberPaymentLoading || memberPaymentMode === "view"} onClick={saveMemberPayment}>Save</button>
           <button type="button" onClick={resetMemberPaymentForm}>Cancel</button>
-          <button type="button" onClick={() => setMemberPaymentMode("list")}>List</button>
+          <button
+            type="button"
+            onClick={() => openResultInNewTab({ page: "memberPaymentDetails" })} >
+            List 
+          </button>
           <span>Total</span>
           <input className="short" value={memberPaymentForm.total || String(calculatedMemberPaymentTotal || "")} onChange={(e) => updateMemberPaymentField("total", e.target.value)} />
         </div>
