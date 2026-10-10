@@ -37653,15 +37653,15 @@ if (!otherReceiptForm.subLedger.trim()) {
             Cancel
           </button>
           <button
-            type="button"
-            onClick={() => {
-              const reportUrl = new URL(window.location.href);
-              reportUrl.searchParams.set("resultOnly", "1");
-              reportUrl.searchParams.set("resultPage", "memberJournalDetails");
-              window.open(reportUrl.toString(), "_blank");
-            }}
-            List
-          </button>
+  type="button"
+  onClick={() => {
+    const reportUrl = new URL(window.location.href);
+    reportUrl.searchParams.set("resultPage", "memberJournalDetails");
+    window.open(reportUrl.toString(), "_blank");
+  }}
+>
+  List
+</button>
         </div>
 
         <div className="legacy-totals">
