@@ -2909,93 +2909,57 @@ if (resultPage === "taluk") {
     );
   }
 if (resultPage === "memberReceiptDetails") {
-  const receiptRows = rows.map((record, index) => {
-    const amountFields = [
-      "regularSavings",
-      "bulletSavings",
-      "specialSavingsAmount",
-      "specialSavingsMoreAmount",
-      "livelihoodLoanSupport1",
-      "serviceCost1",
-      "livelihoodLoanSupport2",
-      "serviceCost2",
-      "housingLoan",
-      "housingServiceCost",
-      "donation",
-      "jothiFund",
-      "riskFund",
-      "drrFund",
-      "subsEntFee",
-      "specifiedProgFund",
-      "memberLife",
-      "spouseLife",
-      "livestock",
-      "health",
-      "pension",
-      "endowment",
-      "crop",
-      "tataAiaMember",
-      "tataAiaSpouse",
-      "lifeMember",
-      "lifeSpouse",
-      "mutualHealth",
-      "mutualLivestock",
-      "mutualCrop",
-      "funeral",
-      "admin",
-      "nalam",
-    ];
+  const amountFields = [
+    ["Regular Savings", "regularSavings"],
+    ["Bullet Savings", "bulletSavings"],
+    ["Special Savings", "specialSavingsAmount"],
+    ["Special Savings More", "specialSavingsMoreAmount"],
+    ["Livelihood Loan Support 1", "livelihoodLoanSupport1"],
+    ["Service Cost - Livelihood Loan Support 1", "serviceCost1"],
+    ["Livelihood Loan Support 2", "livelihoodLoanSupport2"],
+    ["Service Cost - Livelihood Loan Support 2", "serviceCost2"],
+    ["Housing Loan", "housingLoan"],
+    ["Housing Service Cost", "housingServiceCost"],
+    ["Donation", "donation"],
+    ["Jothi Fund", "jothiFund"],
+    ["Risk Fund", "riskFund"],
+    ["DRR Fund", "drrFund"],
+    ["Subscription / Entrance Fee", "subsEntFee"],
+    ["Specified Programme Fund", "specifiedProgFund"],
+    ["Member Life", "memberLife"],
+    ["Spouse Life", "spouseLife"],
+    ["Livestock", "livestock"],
+    ["Health", "health"],
+    ["Pension", "pension"],
+    ["Endowment", "endowment"],
+    ["Crop", "crop"],
+    ["Tata AIA Member", "tataAiaMember"],
+    ["Tata AIA Spouse", "tataAiaSpouse"],
+    ["Life Member", "lifeMember"],
+    ["Life Spouse", "lifeSpouse"],
+    ["Mutual Health", "mutualHealth"],
+    ["Mutual Livestock", "mutualLivestock"],
+    ["Mutual Crop", "mutualCrop"],
+    ["Funeral", "funeral"],
+    ["Admin", "admin"],
+    ["Nalam", "nalam"],
+  ];
 
-    const calculatedAmount = amountFields.reduce(
-      (sum, field) => sum + (Number(record[field]) || 0),
-      0
-    );
+  const money = (value) => Number(value) || 0;
+  let grandTotal = 0;
 
-    return {
-      recordNumber: record.recordNumber ?? record.id ?? index + 1,
-      receiptDate: record.receiptDate ?? "",
-      receiptNo: record.receiptNo ?? "",
-      memberCode: record.memberCode ?? "",
-      accountHead:
-  record.accountType &&
-  record.accountType !== "Select Acct Type"
-    ? record.accountType
-    : [
-        ["Regular Savings", record.regularSavings],
-        ["Bullet Savings", record.bulletSavings],
-        ["Special Savings", record.specialSavingsAmount],
-        ["Livelihood Loan Support 1", record.livelihoodLoanSupport1],
-        ["Livelihood Loan Support 2", record.livelihoodLoanSupport2],
-        ["Housing Loan", record.housingLoan],
-        ["Donation", record.donation],
-        ["Jothi Fund", record.jothiFund],
-        ["Risk Fund", record.riskFund],
-        ["DRR Fund", record.drrFund],
-      ]
-        .filter((item) => Number(item[1]) > 0)
-        .map((item) => item[0])
-        .join(", ") || "Member Receipt",
-      amount:
-        Number(record.total) || calculatedAmount,
-      receiptType: record.cash ?? "",
-      enteredBy: record.enteredBy ?? "",
-    };
-  });
-
-  const totalAmount = receiptRows.reduce(
-    (sum, record) => sum + record.amount,
-    0
-  );
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Receipt Voucher : Member - (Vazhvathram Code : 0010101)</h2>
+    <div style={{ padding: "12px", fontFamily: "Times New Roman, serif" }}>
+      <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
+        Member Receipt Details
+      </h3>
 
       <div style={{ overflowX: "auto" }}>
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            fontSize: "14px",
+            fontSize: "13px",
           }}
         >
           <thead>
@@ -3013,11 +2977,9 @@ if (resultPage === "memberReceiptDetails") {
                 <th
                   key={heading}
                   style={{
-                    border: "1px solid #999",
-                    padding: "10px",
-                    background: "#eee",
-                    textAlign: "left",
-                    whiteSpace: "nowrap",
+                    border: "1px solid #333",
+                    padding: "5px",
+                    textAlign: "center",
                   }}
                 >
                   {heading}
@@ -3027,101 +2989,89 @@ if (resultPage === "memberReceiptDetails") {
           </thead>
 
           <tbody>
-            {receiptRows.map((record, index) => (
-              <tr key={`${record.receiptNo}-${index}`}>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.recordNumber}
-                </td>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.receiptDate}
-                </td>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.receiptNo}
-                </td>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.memberCode}
-                </td>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.accountHead}
-                </td>
-                <td
-                  style={{
-                    border: "1px solid #999",
-                    padding: "8px",
-                    textAlign: "right",
-                  }}
-                >
-                  {record.amount.toFixed(2)}
-                </td>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.receiptType}
-                </td>
-                <td style={{ border: "1px solid #999", padding: "8px" }}>
-                  {record.enteredBy}
-                </td>
-              </tr>
-            ))}
+            {rows.map((record, index) => {
+              const entries = amountFields
+                .map(([label, field]) => ({
+                  label,
+                  amount: money(record[field]),
+                }))
+                .filter((entry) => entry.amount !== 0);
+
+              if (entries.length === 0 && money(record.total) > 0) {
+                entries.push({
+                  label: record.accountType || "Member Receipt",
+                  amount: money(record.total),
+                });
+              }
+
+              const receiptTotal = entries.reduce(
+                (sum, entry) => sum + entry.amount,
+                0
+              );
+
+              grandTotal += receiptTotal;
+
+              return (
+                <React.Fragment key={record.id ?? index}>
+                  {entries.map((entry, entryIndex) => (
+                    <tr key={`${record.id ?? index}-${entryIndex}`}>
+                      <td style={{ border: "1px solid #333", padding: "4px", textAlign: "center" }}>
+                        {entryIndex === 0 ? record.recordNumber ?? record.id ?? index + 1 : ""}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px", textAlign: "center" }}>
+                        {entryIndex === 0 ? record.receiptDate ?? "" : ""}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px", textAlign: "center" }}>
+                        {entryIndex === 0 ? record.receiptNo ?? "" : ""}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px" }}>
+                        {entryIndex === 0 ? record.memberCode ?? "" : ""}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px" }}>
+                        {entry.label}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px", textAlign: "right" }}>
+                        {entry.amount.toFixed(2)}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px", textAlign: "center" }}>
+                        {entryIndex === 0 ? record.cash ?? "" : ""}
+                      </td>
+                      <td style={{ border: "1px solid #333", padding: "4px", textAlign: "center" }}>
+                        {entryIndex === 0 ? record.enteredBy ?? "" : ""}
+                      </td>
+                    </tr>
+                  ))}
+
+                  <tr>
+                    <td colSpan={5} style={{ border: "1px solid #333", padding: "4px", textAlign: "right", fontWeight: "bold" }}>
+                      Total
+                    </td>
+                    <td style={{ border: "1px solid #333", padding: "4px", textAlign: "right", fontWeight: "bold" }}>
+                      {receiptTotal.toFixed(2)}
+                    </td>
+                    <td colSpan={2} style={{ border: "1px solid #333" }} />
+                  </tr>
+
+                  <tr>
+                    <td colSpan={8} style={{ height: "10px", border: "none" }} />
+                  </tr>
+                </React.Fragment>
+              );
+            })}
 
             <tr>
-              <td
-                colSpan={5}
-                style={{
-                  border: "1px solid #999",
-                  padding: "8px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
-              >
-                Total
-              </td>
-              <td
-                style={{
-                  border: "1px solid #999",
-                  padding: "8px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
-              >
-                {totalAmount.toFixed(2)}
-              </td>
-              <td colSpan={2} style={{ border: "1px solid #999" }} />
-            </tr>
-
-            <tr>
-              <td
-                colSpan={5}
-                style={{
-                  border: "1px solid #999",
-                  padding: "8px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
-              >
+              <td colSpan={5} style={{ border: "1px solid #333", padding: "5px", textAlign: "right", fontWeight: "bold" }}>
                 Grand Total
               </td>
-              <td
-                style={{
-                  border: "1px solid #999",
-                  padding: "8px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
-              >
-                {totalAmount.toFixed(2)}
+              <td style={{ border: "1px solid #333", padding: "5px", textAlign: "right", fontWeight: "bold" }}>
+                {grandTotal.toFixed(2)}
               </td>
-              <td colSpan={2} style={{ border: "1px solid #999" }} />
+              <td colSpan={2} style={{ border: "1px solid #333" }} />
             </tr>
 
-            {receiptRows.length === 0 && (
+            {rows.length === 0 && (
               <tr>
-                <td
-                  colSpan={8}
-                  style={{
-                    border: "1px solid #999",
-                    padding: "15px",
-                    textAlign: "center",
-                  }}
-                >
+                <td colSpan={8} style={{ border: "1px solid #333", padding: "12px", textAlign: "center" }}>
                   No receipt records found.
                 </td>
               </tr>
@@ -3132,7 +3082,6 @@ if (resultPage === "memberReceiptDetails") {
     </div>
   );
 }
-  
 if (resultPage === "fixedDepositDetails") {
   return (
     <div style={{ padding: "12px", fontFamily: "Times New Roman, serif" }}>
