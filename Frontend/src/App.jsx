@@ -37585,14 +37585,14 @@ if (!otherReceiptForm.subLedger.trim()) {
         </div>
 {journalRows.map(([index, subField, typeField, amtField]) => (
   <div
-    className="legacy-grid-row compact"
     key={index}
+    className="legacy-grid-row compact"
     style={{
-      display: index === 1 ? "grid" : "grid",
+      display: "grid",
       gridTemplateColumns:
         index === 1
-          ? "1fr 1fr 1fr 1fr"
-          : "1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
+          ? "80px minmax(100px, 1fr) 70px 50px minmax(100px, 1fr)"
+          : "80px minmax(80px, 1fr) 70px 40px minmax(80px, 1fr) 80px minmax(80px, 1fr) 70px 40px minmax(80px, 1fr)",
       gap: "4px",
       alignItems: "center",
     }}
