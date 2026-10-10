@@ -17769,15 +17769,8 @@ try {
     }
   };
 
-  const selectMemberPayment = (record) => {
-  // Make sure the payment belongs to the currently selected context
-  if (!isMemberInCurrentContext(record.memberCode)) {
-    alert(
-      "This Member Payment does not belong to the selected Cluster / Vazhvathram."
-    );
-    return;
-  }
-
+  
+const selectMemberPayment = (record) => {
   setSelectedMemberPaymentId(record.id);
   setMemberPaymentForm({ ...emptyMemberPayment, ...record });
   setMemberPaymentMode("view");
