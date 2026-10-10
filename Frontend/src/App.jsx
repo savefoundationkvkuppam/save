@@ -36721,7 +36721,12 @@ if (!otherReceiptForm.subLedger.trim()) {
           <button
             type="button"
             onClick={() => openResultInNewTab({ page: "memberPaymentDetails" })} >
-            List 
+            List
+          </button>
+          <button
+            type="button"
+            onClick={() => setMemberPaymentMode("list")} >
+            Select Voucher
           </button>
           <span>Total</span>
           <input className="short" value={memberPaymentForm.total || String(calculatedMemberPaymentTotal || "")} onChange={(e) => updateMemberPaymentField("total", e.target.value)} />
