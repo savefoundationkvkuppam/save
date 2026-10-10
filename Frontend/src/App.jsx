@@ -3055,7 +3055,7 @@ if (resultPage === "memberReceiptDetails") {
                   <tr>
                     <td colSpan={8} style={{ height: "10px", border: "none" }} />
                   </tr>
-                </React.Fragment>
+                </Fragment>
               );
             })}
 
