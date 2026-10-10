@@ -2949,7 +2949,15 @@ if (resultPage === "memberReceiptDetails") {
   let grandTotal = 0;
 
   return (
-    <div style={{ padding: "12px", fontFamily: "Times New Roman, serif" }}>
+<div
+  style={{
+    padding: "12px",
+    fontFamily: "Times New Roman, serif",
+    height: "85vh",
+    overflowY: "auto",
+    overflowX: "auto",
+  }}
+>
       <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
         Member Receipt Details
       </h3>
