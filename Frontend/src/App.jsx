@@ -229,52 +229,10 @@ if (resultPage === "debt") {
         setRows(Array.isArray(data) ? data : []);
         return;
       }
+
 if (resultPage === "memberPaymentDetails") {
-  const [paymentData, memberData] = await Promise.all([
-    apiRequest("/member-payments"),
-    apiRequest("/members"),
-  ]);
-
-  const payments = Array.isArray(paymentData) ? paymentData : [];
-  const members = Array.isArray(memberData) ? memberData : [];
-
-  const normalize = (value) =>
-    String(value ?? "").trim().toLowerCase();
-
-  const filteredPayments = payments.filter((payment) => {
-    const paymentMemberCode = normalize(
-      payment.memberCode || payment.memberKalCode || payment.kalCode
-    );
-
-    const member = members.find(
-      (item) =>
-        normalize(item.memberCode || item.memberKalCode || item.kalCode) ===
-        paymentMemberCode
-    );
-
-    if (!member) return false;
-
-    const memberCluster = normalize(
-      member.clusterName || member.cluster || member.clusterCode
-    );
-
-    const memberVazhvathram = normalize(
-      member.vazhvathramName ||
-        member.vazhvathram ||
-        member.vazhvathramCode
-    );
-
-    const clusterMatches =
-      !cluster || memberCluster === normalize(cluster);
-
-    const vazhvathramMatches =
-      !vazhvathram ||
-      memberVazhvathram === normalize(vazhvathram);
-
-    return clusterMatches && vazhvathramMatches;
-  });
-
-  setRows(filteredPayments);
+  const data = await apiRequest("/member-payments");
+  setRows(Array.isArray(data) ? data : []);
   return;
 }
 
