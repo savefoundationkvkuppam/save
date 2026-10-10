@@ -3236,6 +3236,7 @@ if (resultPage === "memberPaymentDetails") {
   const money = (value) => Number(value) || 0;
 
   const voucherRows = rows.map((record, index) => {
+   
     const accountEntries = [
       ["Savings", record.savings],
       ["Savings Incentive", record.savingsIncentive],
@@ -3244,6 +3245,8 @@ if (resultPage === "memberPaymentDetails") {
       [record.specialSavingsType, record.specialSavingsAmount],
       [record.specialSavingsMoreType, record.specialSavingsMoreAmount],
       ["Special Savings Incentive", record.specialSavingsIncentive],
+      ["Loan Amount", record.loanAmount],
+      ["Instalment Amount", record.instalmentAmount],
     ]
       .filter(([name, amount]) =>
         name &&
