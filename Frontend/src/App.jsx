@@ -36738,9 +36738,9 @@ if (!otherReceiptForm.subLedger.trim()) {
             <table className="legacy-table">
               <thead><tr><th>Voucher No.</th><th>Date</th><th>Member</th><th>Voucher Type</th><th>Total</th><th>Action</th></tr></thead>
               <tbody>
-                {filterTransactionsByContext(memberPaymentRecords).length === 0 ? (
+                memberPaymentRecords.length === 0 ? (
                   <tr><td colSpan="6" style={{ textAlign: "center", padding: "12px" }}>No Member Payments found.</td></tr>
-                 ) : filterTransactionsByContext(memberPaymentRecords).map((record) => (
+                 ) : memberPaymentRecords.map((record) => (
                   <tr key={record.id}>
                     <td>{record.voucherNo}</td><td>{record.voucherDate}</td><td>{getMemberDisplayName(record.memberCode, record.memberName)}</td><td>{record.voucherType}</td><td>{record.total}</td>
                     <td><button type="button" onClick={() => selectMemberPayment(record)}>Select</button><button type="button" onClick={() => deleteMemberPayment(record)}>Delete</button></td>
