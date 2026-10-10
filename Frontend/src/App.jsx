@@ -2953,7 +2953,9 @@ if (resultPage === "memberReceiptDetails") {
   style={{
     padding: "12px",
     fontFamily: "Times New Roman, serif",
-    height: "85vh",
+    width:"100%",
+    minHeight: "100vh",
+    boxSizing: "border-box",
     overflowY: "auto",
     overflowX: "auto",
   }}
