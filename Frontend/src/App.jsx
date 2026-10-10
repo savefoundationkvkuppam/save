@@ -36731,25 +36731,50 @@ if (!otherReceiptForm.subLedger.trim()) {
           <span>Total</span>
           <input className="short" value={memberPaymentForm.total || String(calculatedMemberPaymentTotal || "")} onChange={(e) => updateMemberPaymentField("total", e.target.value)} />
         </div>
-
-        {memberPaymentMode === "list" && (
-          <div style={{ marginTop: "18px" }}>
-            <div className="legacy-subtitle">Member Payment List</div>
-            <table className="legacy-table">
-              <thead><tr><th>Voucher No.</th><th>Date</th><th>Member</th><th>Voucher Type</th><th>Total</th><th>Action</th></tr></thead>
-              <tbody>
-                memberPaymentRecords.length === 0 ? (
-                  <tr><td colSpan="6" style={{ textAlign: "center", padding: "12px" }}>No Member Payments found.</td></tr>
-                 ) : memberPaymentRecords.map((record) => (
-                  <tr key={record.id}>
-                    <td>{record.voucherNo}</td><td>{record.voucherDate}</td><td>{getMemberDisplayName(record.memberCode, record.memberName)}</td><td>{record.voucherType}</td><td>{record.total}</td>
-                    <td><button type="button" onClick={() => selectMemberPayment(record)}>Select</button><button type="button" onClick={() => deleteMemberPayment(record)}>Delete</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+{memberPaymentMode === "list" && (
+  <div style={{ marginTop: "18px" }}>
+    <div className="legacy-subtitle">Member Payment List</div>
+    <table className="legacy-table">
+      <thead>
+        <tr>
+          <th>Voucher No.</th>
+          <th>Date</th>
+          <th>Member</th>
+          <th>Voucher Type</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {memberPaymentRecords.length === 0 ? (
+          <tr>
+            <td colSpan="6" style={{ textAlign: "center", padding: "12px" }}>
+              No Member Payments found.
+            </td>
+          </tr>
+        ) : (
+          memberPaymentRecords.map((record) => (
+            <tr key={record.id}>
+              <td>{record.voucherNo}</td>
+              <td>{record.voucherDate}</td>
+              <td>{getMemberDisplayName(record.memberCode, record.memberName)}</td>
+              <td>{record.voucherType}</td>
+              <td>{record.total}</td>
+              <td>
+                <button type="button" onClick={() => selectMemberPayment(record)}>
+                  Select
+                </button>
+                <button type="button" onClick={() => deleteMemberPayment(record)}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))
         )}
+      </tbody>
+    </table>
+  </div>
+)}
       </div>
     );
   }
