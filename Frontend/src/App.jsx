@@ -37583,35 +37583,45 @@ if (!otherReceiptForm.subLedger.trim()) {
             <option>Fixed Deposit - 2113</option>
           </select>
         </div>
-
-        {journalRows.map(([index, subField, typeField, amtField]) => (
-          <div className="legacy-grid-row compact" key={index}>
-            <label>Sub Led.</label>
-            <input
-              value={memberJournalForm[subField]}
-              onChange={(e) =>
-                updateMemberJournalField(subField, e.target.value)
-              }
-            />
-            <select
-              value={memberJournalForm[typeField]}
-              onChange={(e) =>
-                updateMemberJournalField(typeField, e.target.value)
-              }
-            >
-              <option>Debit</option>
-              <option>Credit</option>
-            </select>
-            <label>Amt</label>
-            <input
-              value={memberJournalForm[amtField]}
-              onChange={(e) =>
-                updateMemberJournalField(amtField, e.target.value)
-              }
-            />
-          </div>
-        ))}
-
+{journalRows.map(([index, subField, typeField, amtField]) => (
+  <div
+    className="legacy-grid-row compact"
+    key={index}
+    style={{
+      display: index === 1 ? "grid" : "grid",
+      gridTemplateColumns:
+        index === 1
+          ? "1fr 1fr 1fr 1fr"
+          : "1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
+      gap: "4px",
+      alignItems: "center",
+    }}
+  >
+    <label>Sub Led.</label>
+    <input
+      value={memberJournalForm[subField]}
+      onChange={(e) =>
+        updateMemberJournalField(subField, e.target.value)
+      }
+    />
+    <select
+      value={memberJournalForm[typeField]}
+      onChange={(e) =>
+        updateMemberJournalField(typeField, e.target.value)
+      }
+    >
+      <option>Debit</option>
+      <option>Credit</option>
+    </select>
+    <label>Amt</label>
+    <input
+      value={memberJournalForm[amtField]}
+      onChange={(e) =>
+        updateMemberJournalField(amtField, e.target.value)
+      }
+    />
+  </div>
+))}
         <div className="legacy-form-row narration">
           <label>Narration</label>
           <input
