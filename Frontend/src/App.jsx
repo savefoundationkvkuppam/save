@@ -3012,7 +3012,7 @@ if (resultPage === "memberReceiptDetails") {
               grandTotal += receiptTotal;
 
               return (
-                <React.Fragment key={record.id ?? index}>
+                <Fragment key={record.id ?? index}>
                   {entries.map((entry, entryIndex) => (
                     <tr key={`${record.id ?? index}-${entryIndex}`}>
                       <td style={{ border: "1px solid #333", padding: "4px", textAlign: "center" }}>
