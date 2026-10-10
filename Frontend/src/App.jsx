@@ -218,6 +218,12 @@ if (resultPage === "debt") {
         return;
       }
       
+      if (resultPage === "memberJournalDetails") {
+        const data = await apiRequest("/member-journals");
+        setRows(Array.isArray(data) ? data : []);
+        return;
+      }
+      
       if (resultPage === "memberReceiptDetails") {
         const data = await apiRequest("/member-receipts");
         setRows(Array.isArray(data) ? data : []);
@@ -2908,6 +2914,199 @@ if (resultPage === "taluk") {
       </div>
     );
   }
+  
+if (resultPage === "memberJournalDetails") {
+  const money = (value) =>
+    (Number(value) || 0).toFixed(2);
+
+  const getEntries = (record) => {
+    const entries = [];
+
+    for (let i = 1; i <= 6; i++) {
+      const accountHead = record[`subLed${i}`];
+      const amount = Number(record[`amt${i}`]) || 0;
+      const type = String(record[`type${i}`] || "").toLowerCase();
+
+      if (accountHead && amount !== 0) {
+        entries.push({
+          accountHead,
+          amount,
+          type: type.includes("credit") ? "Cr" : "Dr",
+        });
+      }
+    }
+
+    return entries;
+  };
+
+  const creditTotal = rows.reduce(
+    (sum, record) => sum + (Number(record.creditTotal) || 0),
+    0
+  );
+
+  const debitTotal = rows.reduce(
+    (sum, record) => sum + (Number(record.debitTotal) || 0),
+    0
+  );
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        width: "100%",
+        padding: "8px",
+        boxSizing: "border-box",
+        fontFamily: "Times New Roman, serif",
+        background: "#fff",
+        color: "#000",
+      }}
+    >
+      <h3 style={{ textAlign: "center", margin: "4px 0" }}>
+        Journal Voucher : Member - (Vazhvathram Code : 0010101)
+      </h3>
+
+      <div style={{ textAlign: "center", fontWeight: "bold" }}>
+        Journal details
+      </div>
+
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "13px",
+          }}
+        >
+          <thead>
+            <tr>
+              {[
+                "Record Number",
+                "Journal Date",
+                "Journal Number",
+                "Member/Vazhvathram Code",
+                "Account Head",
+                "Dr/Cr",
+                "Amount",
+                "Entered By",
+              ].map((heading) => (
+                <th
+                  key={heading}
+                  style={{
+                    border: "1px solid #777",
+                    padding: "5px",
+                    textAlign: "center",
+                  }}
+                >
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} style={{ border: "1px solid #777", padding: "8px" }}>
+                  Loading journal records...
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  style={{ border: "1px solid #777", padding: "8px", textAlign: "center" }}
+                >
+                  No Member Journal records found.
+                </td>
+              </tr>
+            ) : (
+              rows.map((record, index) => {
+                const entries = getEntries(record);
+
+                return (
+                  <React.Fragment key={record.id ?? index}>
+                    {entries.length === 0 ? (
+                      <tr>
+                        <td style={{ border: "1px solid #777", padding: "5px" }}>
+                          {index + 1}
+                        </td>
+                        <td style={{ border: "1px solid #777", padding: "5px" }}>
+                          {record.date || record.journalDate || ""}
+                        </td>
+                        <td style={{ border: "1px solid #777", padding: "5px" }}>
+                          {record.jrNo || ""}
+                        </td>
+                        <td style={{ border: "1px solid #777", padding: "5px" }}>
+                          {record.member || record.memberCode || ""}
+                        </td>
+                        <td style={{ border: "1px solid #777", padding: "5px" }}>
+                          —
+                        </td>
+                        <td style={{ border: "1px solid #777", padding: "5px" }} />
+                        <td style={{ border: "1px solid #777", padding: "5px", textAlign: "right" }}>
+                          0.00
+                        </td>
+                        <td style={{ border: "1px solid #777", padding: "5px" }}>
+                          {record.enteredBy || ""}
+                        </td>
+                      </tr>
+                    ) : (
+                      entries.map((entry, entryIndex) => (
+                        <tr key={`${record.id}-${entryIndex}`}>
+                          <td style={{ border: "1px solid #777", padding: "5px" }}>
+                            {entryIndex === 0 ? index + 1 : ""}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px" }}>
+                            {entryIndex === 0 ? record.date || record.journalDate || "" : ""}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px" }}>
+                            {entryIndex === 0 ? record.jrNo || "" : ""}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px" }}>
+                            {entryIndex === 0 ? record.member || record.memberCode || "" : ""}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px" }}>
+                            {entry.accountHead}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px", textAlign: "center" }}>
+                            {entry.type}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px", textAlign: "right" }}>
+                            {money(entry.amount)}
+                          </td>
+                          <td style={{ border: "1px solid #777", padding: "5px" }}>
+                            {entryIndex === 0 ? record.enteredBy || "" : ""}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </React.Fragment>
+                );
+              })
+            )}
+
+            <tr>
+              <td
+                colSpan={5}
+                style={{ border: "1px solid #777", padding: "5px", textAlign: "right", fontWeight: "bold" }}
+              >
+                Credit Total: {money(creditTotal)}
+              </td>
+              <td style={{ border: "1px solid #777", padding: "5px" }} />
+              <td
+                style={{ border: "1px solid #777", padding: "5px", textAlign: "right", fontWeight: "bold" }}
+              >
+                Debit Total: {money(debitTotal)}
+              </td>
+              <td style={{ border: "1px solid #777", padding: "5px" }} />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 if (resultPage === "memberReceiptDetails") {
   const amountFields = [
     ["Regular Savings", "regularSavings"],
@@ -37455,12 +37654,12 @@ if (!otherReceiptForm.subLedger.trim()) {
           </button>
           <button
             type="button"
-            onClick={() =>
-              setMemberJournalMode((previous) =>
-                previous === "list" ? "view" : "list"
-              )
-            }
-          >
+            onClick={() => {
+              const reportUrl = new URL(window.location.href);
+              reportUrl.searchParams.set("resultOnly", "1");
+              reportUrl.searchParams.set("resultPage", "memberJournalDetails");
+              window.open(reportUrl.toString(), "_blank");
+            }}
             List
           </button>
         </div>
