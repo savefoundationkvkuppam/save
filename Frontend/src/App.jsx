@@ -103,6 +103,7 @@ function ResultOnlyPage() {
   const params = new URLSearchParams(window.location.search);
 
   const resultPage = params.get("resultPage") || "";
+  const selectedVoucherId = params.get("selectedVoucherId") || "";
   const resultType = params.get("resultType") || "all";
   const cluster = params.get("cluster") || "";
   const vazhvathram = params.get("vazhvathram") || "";
@@ -219,10 +220,19 @@ if (resultPage === "debt") {
       }
       
       if (resultPage === "memberJournalDetails") {
-        const data = await apiRequest("/member-journals");
-        setRows(Array.isArray(data) ? data : []);
-        return;
-      }
+  const data = await apiRequest("/member-journals");
+  const journalRecords = Array.isArray(data) ? data : [];
+
+  const selectedRecords = selectedVoucherId
+    ? journalRecords.filter(
+        (record) =>
+          String(record.id) === String(selectedVoucherId)
+      )
+    : journalRecords;
+
+  setRows(selectedRecords);
+  return;
+}
       
       if (resultPage === "memberReceiptDetails") {
         const data = await apiRequest("/member-receipts");
@@ -2939,15 +2949,23 @@ if (resultPage === "memberJournalDetails") {
     return entries;
   };
 
-  const creditTotal = rows.reduce(
-    (sum, record) => sum + (Number(record.creditTotal) || 0),
-    0
-  );
+  const creditTotal = rows.reduce((total, record) => {
+  for (let i = 1; i <= 6; i++) {
+    if (String(record[`type${i}`]).toLowerCase() === "credit") {
+      total += Number(record[`amt${i}`]) || 0;
+    }
+  }
+  return total;
+}, 0);
 
-  const debitTotal = rows.reduce(
-    (sum, record) => sum + (Number(record.debitTotal) || 0),
-    0
-  );
+  const debitTotal = rows.reduce((total, record) => {
+  for (let i = 1; i <= 6; i++) {
+    if (String(record[`type${i}`]).toLowerCase() === "debit") {
+      total += Number(record[`amt${i}`]) || 0;
+    }
+  }
+  return total;
+}, 0);
 
   return (
     <div
@@ -37712,8 +37730,12 @@ if (!otherReceiptForm.subLedger.trim()) {
   type="button"
   onClick={() => {
     const reportUrl = new URL(window.location.href);
-    reportUrl.searchParams.set("resultPage", "memberJournalDetails");
-    window.open(reportUrl.toString(), "_blank");
+reportUrl.searchParams.set("resultPage", "memberJournalDetails");
+reportUrl.searchParams.set(
+  "selectedVoucherId",
+  String(selectedMemberJournalId || "")
+);
+window.open(reportUrl.toString(), "_blank");
   }}
 >
   List
