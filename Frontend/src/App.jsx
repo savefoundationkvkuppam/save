@@ -37650,7 +37650,7 @@ if (!otherReceiptForm.subLedger.trim()) {
               <option>Debit</option>
               <option>Credit</option>
             </select>
-            <label style={{ marginRight: "8px" }}>Amt</label>
+            <label style={{ marginRight: "12px", whiteSpace: "nowrap" }}>Amt</label>
             <input
               value={memberJournalForm[amtField]}
               onChange={(e) =>
