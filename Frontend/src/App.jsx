@@ -37583,45 +37583,86 @@ if (!otherReceiptForm.subLedger.trim()) {
             <option>Fixed Deposit - 2113</option>
           </select>
         </div>
-{journalRows.map(([index, subField, typeField, amtField]) => (
-  <div
-    key={index}
-    className="legacy-grid-row compact"
-    style={{
-      display: "grid",
-      gridTemplateColumns:
-        index === 1
-          ? "80px minmax(100px, 1fr) 70px 50px minmax(100px, 1fr)"
-          : "80px minmax(80px, 1fr) 70px 40px minmax(80px, 1fr) 80px minmax(80px, 1fr) 70px 40px minmax(80px, 1fr)",
-      gap: "4px",
-      alignItems: "center",
-    }}
+{/* First Sub Ledger row */}
+<div
+  className="legacy-grid-row compact"
+  style={{
+    display: "grid",
+    gridTemplateColumns: "75px minmax(100px, 1fr) 75px 45px minmax(100px, 1fr)",
+    gap: "5px",
+    alignItems: "center",
+  }}
+>
+  <label>Sub Led.</label>
+  <input
+    value={memberJournalForm.subLed1}
+    onChange={(e) => updateMemberJournalField("subLed1", e.target.value)}
+  />
+  <select
+    value={memberJournalForm.type1}
+    onChange={(e) => updateMemberJournalField("type1", e.target.value)}
   >
-    <label>Sub Led.</label>
-    <input
-      value={memberJournalForm[subField]}
-      onChange={(e) =>
-        updateMemberJournalField(subField, e.target.value)
-      }
-    />
-    <select
-      value={memberJournalForm[typeField]}
-      onChange={(e) =>
-        updateMemberJournalField(typeField, e.target.value)
-      }
+    <option>Debit</option>
+    <option>Credit</option>
+  </select>
+  <label>Amt</label>
+  <input
+    value={memberJournalForm.amt1}
+    onChange={(e) => updateMemberJournalField("amt1", e.target.value)}
+  />
+</div>
+
+{/* Remaining Sub Ledger rows in two columns */}
+{[2, 4, 6].map((leftIndex) => {
+  const rightIndex = leftIndex + 1;
+
+  return (
+    <div
+      key={leftIndex}
+      className="legacy-grid-row compact"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "75px minmax(60px, 1fr) 65px 35px minmax(60px, 1fr) 75px minmax(60px, 1fr) 65px 35px minmax(60px, 1fr)",
+        gap: "4px",
+        alignItems: "center",
+      }}
     >
-      <option>Debit</option>
-      <option>Credit</option>
-    </select>
-    <label>Amt</label>
-    <input
-      value={memberJournalForm[amtField]}
-      onChange={(e) =>
-        updateMemberJournalField(amtField, e.target.value)
-      }
-    />
-  </div>
-))}
+      {[leftIndex, rightIndex].map((index) => {
+        const subField = `subLed${index}`;
+        const typeField = `type${index}`;
+        const amtField = `amt${index}`;
+
+        return (
+          <Fragment key={index}>
+            <label>Sub Led.</label>
+            <input
+              value={memberJournalForm[subField]}
+              onChange={(e) =>
+                updateMemberJournalField(subField, e.target.value)
+              }
+            />
+            <select
+              value={memberJournalForm[typeField]}
+              onChange={(e) =>
+                updateMemberJournalField(typeField, e.target.value)
+              }
+            >
+              <option>Debit</option>
+              <option>Credit</option>
+            </select>
+            <label>Amt</label>
+            <input
+              value={memberJournalForm[amtField]}
+              onChange={(e) =>
+                updateMemberJournalField(amtField, e.target.value)
+              }
+            />
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+})}
         <div className="legacy-form-row narration">
           <label>Narration</label>
           <input
