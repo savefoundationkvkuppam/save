@@ -37588,7 +37588,7 @@ if (!otherReceiptForm.subLedger.trim()) {
   className="legacy-grid-row compact"
   style={{
     display: "grid",
-    gridTemplateColumns: "110px minmax(100px, 1fr) 75px 45px minmax(100px, 1fr)",
+    gridTemplateColumns: "110px minmax(100px, 1fr) 75px 65px minmax(100px, 1fr)",
     gap: "5px",
     alignItems: "center",
   }}
@@ -37622,7 +37622,7 @@ if (!otherReceiptForm.subLedger.trim()) {
       className="legacy-grid-row compact"
       style={{
         display: "grid",
-        gridTemplateColumns: "110px minmax(50px, 1fr) 65px 35px minmax(50px, 1fr) 110px minmax(50px, 1fr) 65px 35px minmax(50px, 1fr)",
+        gridTemplateColumns: "110px minmax(50px, 1fr) 65px 70px minmax(50px, 1fr) 110px minmax(50px, 1fr) 65px 70px minmax(50px, 1fr)",
         gap: "4px",
         alignItems: "center",
       }}
