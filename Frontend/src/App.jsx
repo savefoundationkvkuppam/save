@@ -37594,10 +37594,15 @@ if (!otherReceiptForm.subLedger.trim()) {
   }}
 >
   <label>Sub Led.</label>
-  <input
-    value={memberJournalForm.subLed1}
-    onChange={(e) => updateMemberJournalField("subLed1", e.target.value)}
-  />
+  <select
+  value={memberJournalForm.subLed1}
+  onChange={(e) => updateMemberJournalField("subLed1", e.target.value)}
+>
+  <option value="">Select Sub Ledger</option>
+  <option value="Donations Received - 3321">
+    Donations Received - 3321
+  </option>
+</select>
   <select
     value={memberJournalForm.type1}
     onChange={(e) => updateMemberJournalField("type1", e.target.value)}
