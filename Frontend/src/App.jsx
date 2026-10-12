@@ -8827,7 +8827,7 @@ if (fromDate && toDate && fromDate > toDate) {
     loadFinancialEndpoint("/other-receipts"),
     loadFinancialEndpoint("/member-payments"),
     loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/bank-accounts"),
+    loadFinancialEndpoint("/api/bank-accounts"),
     loadFinancialEndpoint("/members"),
   ]);
 
@@ -11340,7 +11340,7 @@ const firstRecord =
             apiRequest("/vazhvathrams"),
             apiRequest("/clusters"),
             apiRequest("/groups"),
-            apiRequest("/bank-accounts"),
+            apiRequest("/api/bank-accounts"),
             apiRequest("/member-receipts"),
             apiRequest("/member-payments"),
             apiRequest("/member-journals"),
