@@ -8827,7 +8827,7 @@ if (fromDate && toDate && fromDate > toDate) {
     loadFinancialEndpoint("/other-receipts"),
     loadFinancialEndpoint("/member-payments"),
     loadFinancialEndpoint("/other-payments"),
-    loadFinancialEndpoint("/api/bank-accounts"),
+    loadFinancialEndpoint("/bank-accounts"),
     loadFinancialEndpoint("/members"),
   ]);
 
