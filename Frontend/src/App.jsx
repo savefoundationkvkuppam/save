@@ -9991,7 +9991,13 @@ const selectedFinancialMember = memberRecords.find(
 );
 
     const renderFinancialReportResults = () => {
-  if (!financialReportResults.length) return null;
+  if (
+    !financialReportResults.length &&
+    financialReportSelection !==
+      "Bank Book - Acct No. wise - FR02A"
+  ) {
+    return null;
+  }
 
   const getValue = (record, names) => {
     for (const name of names) {
@@ -10919,13 +10925,31 @@ if (
     });
 
   const reportBankAccount =
-  (Array.isArray(bankAccountRecords) ? bankAccountRecords : []).find(
+  (Array.isArray(bankAccountRecords)
+    ? bankAccountRecords
+    : []
+  ).find(
     (account) =>
-      String(account?.vazhvathramName || "").trim() ===
-      String(selectedVazhvathram || "").trim()
+      String(
+        account?.vazhvathramName ||
+          account?.vazhvathram ||
+          ""
+      ).trim().toLowerCase() ===
+      String(selectedVazhvathram || "")
+        .trim()
+        .toLowerCase()
   ) || {};
 
-const firstRecord = reportBankAccount;
+const firstRecord = {
+  ...reportBankAccount,
+  vazhvathramCode:
+    reportBankAccount.vazhvathramCode || "",
+  vazhvathramName:
+    reportBankAccount.vazhvathramName ||
+    reportBankAccount.vazhvathram ||
+    selectedVazhvathram ||
+    "",
+};
 
   const reportStyle = {
     borderCollapse: "collapse",
