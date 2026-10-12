@@ -3637,6 +3637,72 @@ if (resultPage === "memberPaymentDetails") {
       </div>
     );
   }
+  
+  if (resultPage === "masterReport") {
+    const columns = [
+      { label: "GL Code", keys: ["glCode", "gl_code", "code"] },
+      { label: "GL Name", keys: ["glName", "gl_name", "name"] },
+      { label: "Sub Ledger", keys: ["subLedger", "sub_ledger"] },
+      { label: "GL Type", keys: ["glType", "gl_type"] },
+      { label: "Related To", keys: ["relatedTo", "related_to"] },
+      {
+        label: "Regional GL Name",
+        keys: ["regionalGlName", "regional_gl_name"],
+      },
+    ];
+
+    return (
+      <div style={{ padding: "12px", fontFamily: "Arial, sans-serif" }}>
+        <h2 style={{ textAlign: "center" }}>
+          MA 01 - General Ledger Details
+        </h2>
+
+        {loading ? (
+          <p>Loading General Ledger Details...</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "13px",
+              }}
+            >
+              <thead>
+                <tr>
+                  {columns.map((column) => (
+                    <th key={column.label} style={resultTableHeaderStyle}>
+                      {column.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((record, index) => (
+                  <tr key={record.id ?? index}>
+                    {columns.map((column) => {
+                      const key = column.keys.find(
+                        (field) => record?.[field] !== undefined
+                      );
+
+                      return (
+                        <td key={column.label} style={resultTableCellStyle}>
+                          {key ? String(record[key] ?? "") : ""}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {!rows.length && <p>No General Ledger records found.</p>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
