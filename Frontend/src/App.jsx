@@ -17223,6 +17223,7 @@ useEffect(() => {
   const [memberMode, setMemberMode] = useState("view");
 
   const [memberRecords, setMemberRecords] = useState([]);
+  const [bankAccountRecords, setBankAccountRecords] = useState([]);
   const [memberLoading, setMemberLoading] = useState(false);
 
   const [selectedMemberRecordId, setSelectedMemberRecordId] =
