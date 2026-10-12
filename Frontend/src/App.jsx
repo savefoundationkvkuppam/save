@@ -10536,7 +10536,7 @@ return (
     >
       Opening Cash
       <span style={{ float: "right" }}>
-        {openingCash}
+        {Number(openingBalance || 0).toFixed(2)}
       </span>
     </td>
   </tr>
