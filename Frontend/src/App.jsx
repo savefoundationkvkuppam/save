@@ -10918,7 +10918,14 @@ if (
       maximumFractionDigits: 2,
     });
 
-  const firstRecord = bankRows[0] || {};
+  const reportBankAccount =
+  (Array.isArray(bankAccountRecords) ? bankAccountRecords : []).find(
+    (account) =>
+      String(account?.vazhvathramName || "").trim() ===
+      String(selectedVazhvathram || "").trim()
+  ) || {};
+
+const firstRecord = reportBankAccount;
 
   const reportStyle = {
     borderCollapse: "collapse",
