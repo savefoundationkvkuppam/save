@@ -10923,18 +10923,46 @@ if (
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+  
 const safeBankAccounts = Array.isArray(bankAccountRecords)
   ? bankAccountRecords
   : [];
 
+const selectedVazhvathramName = String(
+  selectedVazhvathram || ""
+).trim().toLowerCase();
+
+const selectedVazhvathramRecord = (
+  Array.isArray(vazhvathramRecords) ? vazhvathramRecords : []
+).find(
+  (record) =>
+    String(record.vazhvathramName || "")
+      .trim()
+      .toLowerCase() === selectedVazhvathramName
+);
+
+const selectedVazhvathramCode = String(
+  selectedVazhvathramRecord?.vazhvathramCode || ""
+).trim().toLowerCase();
+
 const firstRecord =
-  safeBankAccounts.find(
-    (account) =>
-      String(
-        account?.vazhvathramName || account?.vazhvathram || ""
-      ).trim().toLowerCase() ===
-      String(selectedVazhvathram || "").trim().toLowerCase()
-  ) || {};
+  safeBankAccounts.find((account) => {
+    const accountName = String(
+      account.vazhvathramName || account.vazhvathram || ""
+    ).trim().toLowerCase();
+
+    const accountCode = String(
+      account.vazhvathramCode || ""
+    ).trim().toLowerCase();
+
+    return (
+      (selectedVazhvathramName &&
+        accountName === selectedVazhvathramName) ||
+      (selectedVazhvathramCode &&
+        accountCode === selectedVazhvathramCode)
+    );
+  }) || {};
+  
   const reportStyle = {
     borderCollapse: "collapse",
     width: "100%",
@@ -10969,7 +10997,8 @@ const firstRecord =
       <div style={{ textAlign: "center", fontWeight: "bold" }}>
         Bank: {firstRecord.bankName || ""} ; Branch:{" "}
         {firstRecord.branchName || ""} ; A/C. No.:{" "}
-        {firstRecord.accountCode ||
+        {firstRecord.accountNumber ||
+          firstRecord.accountCode ||
           firstRecord.accountNo ||
           ""}{" "}
         ; A/C Type: {firstRecord.accountType || ""} ; Date:{" "}
