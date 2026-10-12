@@ -10961,7 +10961,7 @@ const firstRecord =
       (selectedVazhvathramCode &&
         accountCode === selectedVazhvathramCode)
     );
-  }) || {};
+  }) || safeBankAccounts[0] || {};
   
   const reportStyle = {
     borderCollapse: "collapse",
@@ -11008,7 +11008,7 @@ const firstRecord =
       <div style={{ textAlign: "center", fontWeight: "bold" }}>
         Uzhavar Kulu Code:{" "}
         {firstRecord.vazhvathramCode || ""} Name:{" "}
-        {selectedVazhvathram || ""}
+        {firstRecord.vazhvathramName || selectedVazhvathram || ""}
       </div>
 
       <div
