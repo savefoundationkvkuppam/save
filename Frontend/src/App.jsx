@@ -10917,10 +10917,10 @@ if (
       return true;
     })
     .sort(
-      (a, b) =>
-        new Date(a.transactionDate) -
-        new Date(b.transactionDate)
-    );
+  (a, b) =>
+    (parseDate(a.transactionDate || a.receiptDate || a.voucherDate)?.getTime() || 0) -
+    (parseDate(b.transactionDate || b.receiptDate || b.voucherDate)?.getTime() || 0)
+);
 
   const openingBalance = Number(
   bankRows.find(
@@ -10940,32 +10940,49 @@ if (
   let cashAtBank = openingBalance;
 
   const reportRows = filteredRows.map((record, index) => {
-    const deposit = Number(record.receiptAmount || 0);
-    const withdrawal = Number(record.paymentAmount || 0);
+  const deposit = Number(
+    record.receiptAmount ||
+    (record.transactionType === "Receipt"
+      ? record.total || record.amount || record.amt1
+      : 0) ||
+    0
+  );
 
-    cashAtBank += deposit - withdrawal;
+  const withdrawal = Number(
+    record.paymentAmount ||
+    (record.transactionType === "Payment"
+      ? record.total || record.amount || record.amt1
+      : 0) ||
+    0
+  );
 
-    return {
-      id: record.id ?? index,
-      date: record.transactionDate,
-      voucherNo:
-        record.voucherNo ||
-        record.receiptNo ||
-        record.voucherNumber ||
-        "",
-      particulars:
-        record.particulars ||
-        record.accountName ||
-        record.receiptType ||
-        record.voucherType ||
-        record.transactionType ||
-        "",
-      withdrawal,
-      deposit,
-      balance: cashAtBank,
-    };
-  });
+  cashAtBank += deposit - withdrawal;
 
+  return {
+    id: record.id ?? index,
+    date:
+      record.transactionDate ||
+      record.receiptDate ||
+      record.voucherDate ||
+      "",
+    voucherNo:
+      record.voucherNo ||
+      record.receiptNo ||
+      record.voucherNumber ||
+      "",
+    particulars:
+      record.particulars ||
+      record.accountName ||
+      record.receiptType ||
+      record.voucherType ||
+      record.narration ||
+      record.transactionType ||
+      "",
+    withdrawal,
+    deposit,
+    balance: cashAtBank,
+  };
+});
   const money = (value) =>
     Number(value || 0).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
