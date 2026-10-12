@@ -10855,11 +10855,41 @@ if (
     ? financialReportResults
     : [];
 
-  const parseDate = (value) => {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-  };
+ const parseDate = (value) => {
+  if (!value) return null;
+
+  const text = String(value).trim();
+
+  // Handle dates in DD-MM-YYYY format
+  const match = text.match(
+    /^(\d{2})-(\d{2})-(\d{4})$/
+  );
+
+  if (match) {
+    const day = Number(match[1]);
+    const month = Number(match[2]) - 1;
+    const year = Number(match[3]);
+
+    const date = new Date(year, month, day);
+
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return date;
+  }
+
+  // Handle ISO dates and other supported date formats
+  const date = new Date(text);
+
+  return Number.isNaN(date.getTime())
+    ? null
+    : date;
+};
 
   const fromDate = parseDate(financialFromDate);
   const toDate = parseDate(financialToDate);
