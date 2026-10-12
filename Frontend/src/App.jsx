@@ -10925,28 +10925,8 @@ if (
       maximumFractionDigits: 2,
     });
 
+  const reportBankAccount = {};
   
-const reportBankAccount = (
-  Array.isArray(bankAccountRecords)
-    ? bankAccountRecords
-    : []
-).find((account) => {
-  const selectedAccountNo = String(
-    financialAcctNo || ""
-  ).trim();
-
-  const accountNo = String(
-    account?.accountNumber ||
-    account?.accountNo ||
-    ""
-  ).trim();
-
-  return (
-    selectedAccountNo &&
-    accountNo === selectedAccountNo
-  );
-}) || {};
-
 const firstRecord = {
   ...reportBankAccount,
   vazhvathramCode:
