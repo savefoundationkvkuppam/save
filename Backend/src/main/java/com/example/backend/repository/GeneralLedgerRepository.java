@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GeneralLedgerRepository
         extends JpaRepository<GeneralLedger, Long> {
+   boolean existsByGlCode(String glCode);
 }
