@@ -3964,7 +3964,6 @@ useEffect(() => {
 
     // FINANCIAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
     const [financialReportSelection, setFinancialReportSelection] = useState("Cash Book - FR01");
-    const [bankAccountRecords, setBankAccountRecords] = useState([]);
   
     const [financialMember, setFinancialMember] = useState(() => {
         return sessionStorage.getItem("financialMember") || "";
@@ -10926,21 +10925,27 @@ if (
       maximumFractionDigits: 2,
     });
 
-  const reportBankAccount =
-  (Array.isArray(bankAccountRecords)
+  
+const reportBankAccount = (
+  Array.isArray(bankAccountRecords)
     ? bankAccountRecords
     : []
-  ).find(
-    (account) =>
-      String(
-        account?.vazhvathramName ||
-          account?.vazhvathram ||
-          ""
-      ).trim().toLowerCase() ===
-      String(selectedVazhvathram || "")
-        .trim()
-        .toLowerCase()
-  ) || {};
+).find((account) => {
+  const selectedAccountNo = String(
+    financialAcctNo || ""
+  ).trim();
+
+  const accountNo = String(
+    account?.accountNumber ||
+    account?.accountNo ||
+    ""
+  ).trim();
+
+  return (
+    selectedAccountNo &&
+    accountNo === selectedAccountNo
+  );
+}) || {};
 
 const firstRecord = {
   ...reportBankAccount,
