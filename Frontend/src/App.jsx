@@ -10897,7 +10897,11 @@ if (
 
   const filteredRows = bankRows
     .filter((record) => {
-      const date = parseDate(record.transactionDate);
+      const date = parseDate(
+        record.transactionDate ||
+        record.receiptDate ||
+        record.voucherDate
+      );
 
       if (!date) return false;
 
