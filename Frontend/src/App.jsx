@@ -10940,21 +10940,9 @@ if (
   let cashAtBank = openingBalance;
 
   const reportRows = filteredRows.map((record, index) => {
-  const deposit = Number(
-    record.receiptAmount ||
-    (record.transactionType === "Receipt"
-      ? record.total || record.amount || record.amt1
-      : 0) ||
-    0
-  );
+  const deposit = Number(record.receiptAmount || 0);
 
-  const withdrawal = Number(
-    record.paymentAmount ||
-    (record.transactionType === "Payment"
-      ? record.total || record.amount || record.amt1
-      : 0) ||
-    0
-  );
+  const withdrawal = Number(record.paymentAmount || 0);
 
   cashAtBank += deposit - withdrawal;
 
