@@ -3964,6 +3964,8 @@ useEffect(() => {
 
     // FINANCIAL REPORT DATABASE CONNECTION (additive; existing pages preserved)
     const [financialReportSelection, setFinancialReportSelection] = useState("Cash Book - FR01");
+    const [bankAccountRecords, setBankAccountRecords] = useState([]);
+  
     const [financialMember, setFinancialMember] = useState(() => {
         return sessionStorage.getItem("financialMember") || "";
     });
@@ -18513,7 +18515,7 @@ const selectMemberPayment = (record) => {
     accountDate: "",
     amount: "",
   });
-  const [bankAccountRecords, setBankAccountRecords] = useState([]);
+  
   const [bankAccountMode, setBankAccountMode] = useState("view");
   const [selectedBankAccountRecordId, setSelectedBankAccountRecordId] = useState(null);
   const [showBankAccountList, setShowBankAccountList] = useState(false);
