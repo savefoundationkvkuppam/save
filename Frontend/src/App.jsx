@@ -10924,28 +10924,18 @@ if (
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-const reportBankAccount =
-  (bankAccountRecords || []).find((account) =>
-    String(account.vazhvathramName || account.vazhvathram || "").trim() ===
-    String(selectedVazhvathram || "").trim()
-  ) ||
-  (bankAccountRecords || []).find((account) =>
-    String(account.clusterName || "").trim() ===
-    String(selectedCluster || "").trim()
-  ) ||
-  (bankAccountRecords || [])[0] ||
-  {};
+const safeBankAccounts = Array.isArray(bankAccountRecords)
+  ? bankAccountRecords
+  : [];
 
-const firstRecord = {
-  ...reportBankAccount,
-  vazhvathramCode:
-    reportBankAccount.vazhvathramCode || "",
-  vazhvathramName:
-    reportBankAccount.vazhvathramName ||
-    reportBankAccount.vazhvathram ||
-    selectedVazhvathram ||
-    "",
-};
+const firstRecord =
+  safeBankAccounts.find(
+    (account) =>
+      String(
+        account?.vazhvathramName || account?.vazhvathram || ""
+      ).trim().toLowerCase() ===
+      String(selectedVazhvathram || "").trim().toLowerCase()
+  ) || {};
   const reportStyle = {
     borderCollapse: "collapse",
     width: "100%",
