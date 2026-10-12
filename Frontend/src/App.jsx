@@ -10832,168 +10832,241 @@ return (
 </div>
   );
 }
-   /*
-   * BANK BOOK - FR02A
-   * Account-number-wise Receipts & Payments report.
-   */
+
+/*
+ * BANK BOOK - FR02A
+ * Account-number-wise Bank Book report.
+ */
 if (
-    financialReportSelection ===
-    "Bank Book - Acct No. wise - FR02A"
-  ) {
-    const bankRows = financialReportResults;
+  financialReportSelection ===
+  "Bank Book - Acct No. wise - FR02A"
+) {
+  const bankRows = Array.isArray(financialReportResults)
+    ? financialReportResults
+    : [];
 
-    const accountRows = bankRows.reduce((result, record) => {
-      const accountCode =
-        String(
-          record?.accountCode ||
-          record?.accountNo ||
-          record?.accountType ||
-          ""
-        ).trim();
+  const parseDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
 
-      const accountName =
-        String(
-          record?.accountName ||
-          record?.memberName ||
-          record?.receiptType ||
-          record?.voucherType ||
-          record?.subLedger ||
-          record?.accountType ||
-          "Bank Account"
-        ).trim();
+  const fromDate = parseDate(financialFromDate);
+  const toDate = parseDate(financialToDate);
 
-      const key = `${accountCode}|||${accountName}`;
+  const filteredRows = bankRows
+    .filter((record) => {
+      const date = parseDate(record.transactionDate);
 
-      if (!result[key]) {
-        result[key] = {
-          accountCode,
-          accountName,
-          receipts: 0,
-          payments: 0,
-        };
+      if (!date) return false;
+
+      if (fromDate && date < fromDate) return false;
+
+      if (toDate) {
+        const endDate = new Date(toDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        if (date > endDate) return false;
       }
 
-      const receiptAmount = Number(record?.receiptAmount || 0);
-      const paymentAmount = Number(record?.paymentAmount || 0);
-
-      if (Number.isFinite(receiptAmount)) {
-        result[key].receipts += receiptAmount;
-      }
-
-      if (Number.isFinite(paymentAmount)) {
-        result[key].payments += paymentAmount;
-      }
-
-      return result;
-    }, {});
-
-    const reportRows = Object.values(accountRows);
-
-    const totalReceipts = reportRows.reduce(
-      (sum, row) => sum + row.receipts,
-      0
+      return true;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.transactionDate) -
+        new Date(b.transactionDate)
     );
 
-    const totalPayments = reportRows.reduce(
-      (sum, row) => sum + row.payments,
-      0
-    );
+  const openingBalance = Number(
+    bankRows.find(
+      (record) => record.openingBalance != null
+    )?.openingBalance || 0
+  );
 
-    return (
+  let cashAtBank = openingBalance;
+
+  const reportRows = filteredRows.map((record, index) => {
+    const deposit = Number(record.receiptAmount || 0);
+    const withdrawal = Number(record.paymentAmount || 0);
+
+    cashAtBank += deposit - withdrawal;
+
+    return {
+      id: record.id ?? index,
+      date: record.transactionDate,
+      voucherNo:
+        record.voucherNo ||
+        record.receiptNo ||
+        record.voucherNumber ||
+        "",
+      particulars:
+        record.particulars ||
+        record.accountName ||
+        record.receiptType ||
+        record.voucherType ||
+        record.transactionType ||
+        "",
+      withdrawal,
+      deposit,
+      balance: cashAtBank,
+    };
+  });
+
+  const money = (value) =>
+    Number(value || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  const firstRecord = bankRows[0] || {};
+
+  const reportStyle = {
+    borderCollapse: "collapse",
+    width: "100%",
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    fontSize: "14px",
+    color: "#000",
+  };
+
+  const cellStyle = {
+    padding: "8px 5px",
+    textAlign: "center",
+    borderBottom: "1px solid #999",
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        padding: "8px 20px",
+        background: "#fff",
+        color: "#000",
+        width: "100%",
+        boxSizing: "border-box",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+      }}
+    >
+      <div style={{ textAlign: "center", fontWeight: "bold" }}>
+        Bank Book From {financialFromDate || ""} To{" "}
+        {financialToDate || ""}
+      </div>
+
+      <div style={{ textAlign: "center", fontWeight: "bold" }}>
+        Bank: {firstRecord.bankName || ""} ; Branch:{" "}
+        {firstRecord.branchName || ""} ; A/C. No.:{" "}
+        {firstRecord.accountCode ||
+          firstRecord.accountNo ||
+          ""}{" "}
+        ; A/C Type: {firstRecord.accountType || ""} ; Date:{" "}
+        {firstRecord.accountDate || ""}
+      </div>
+
+      <div style={{ textAlign: "center", fontWeight: "bold" }}>
+        Uzhavar Kulu Code:{" "}
+        {firstRecord.vazhvathramCode || ""} Name:{" "}
+        {selectedVazhvathram || ""}
+      </div>
+
       <div
         style={{
-          marginTop: "14px",
-          border: "1px solid #777",
-          background: "#fff",
-          overflowX: "auto",
-          padding: "10px",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "12px",
+          marginTop: "8px",
+          marginBottom: "14px",
+          fontWeight: "bold",
         }}
       >
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "18px",
-            marginBottom: "8px",
-          }}
-        >
-          Bank Book - Acct No. wise - FR02A
-        </div>
-
-        <div
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "14px",
-          }}
-        >
-          From {financialFromDate} To {financialToDate}
-        </div>
-
-        <table
-          className="legacy-table"
-          style={{
-            width: "100%",
-            minWidth: "700px",
-            borderCollapse: "collapse",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>A/C Code</th>
-              <th>A/C Name</th>
-              <th>Receipts</th>
-              <th>Payments</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {reportRows.map((row, index) => (
-              <tr key={`${row.accountCode}-${row.accountName}-${index}`}>
-                <td>{row.accountCode}</td>
-                <td>{row.accountName}</td>
-                <td>{row.receipts.toFixed(2)}</td>
-                <td>{row.payments.toFixed(2)}</td>
-              </tr>
-            ))}
-
-            <tr>
-              <td
-                colSpan="2"
-                style={{ fontWeight: "bold", textAlign: "right" }}
-              >
-                Total
-              </td>
-
-              <td style={{ fontWeight: "bold" }}>
-                {totalReceipts.toFixed(2)}
-              </td>
-
-              <td style={{ fontWeight: "bold" }}>
-                {totalPayments.toFixed(2)}
-              </td>
-            </tr>
-
-            <tr>
-              <td
-                colSpan="2"
-                style={{ fontWeight: "bold", textAlign: "right" }}
-              >
-                Difference
-              </td>
-
-              <td
-                colSpan="2"
-                style={{ fontWeight: "bold", textAlign: "center" }}
-              >
-                {(totalReceipts - totalPayments).toFixed(2)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <span>
+          Federation: {firstRecord.federationName || ""}
+        </span>
+        <span>
+          Cluster: {selectedCluster || ""}
+        </span>
       </div>
-    );
-  }
+
+      <table style={reportStyle}>
+        <thead>
+          <tr>
+            {[
+              "Vr. Date",
+              "Vr. No.",
+              "Particulars",
+              "Withdrawal",
+              "Deposit",
+              "Cash at Bank",
+            ].map((heading) => (
+              <th key={heading} style={cellStyle}>
+                {heading}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td style={cellStyle}></td>
+            <td style={cellStyle}></td>
+            <td style={{ ...cellStyle, textAlign: "left" }}>
+              Opening Bank
+            </td>
+            <td style={cellStyle}></td>
+            <td style={cellStyle}></td>
+            <td style={{ ...cellStyle, textAlign: "right" }}>
+              {money(openingBalance)}
+            </td>
+          </tr>
+
+          {reportRows.map((row) => (
+            <tr key={row.id}>
+              <td style={cellStyle}>{row.date}</td>
+              <td style={cellStyle}>{row.voucherNo}</td>
+              <td style={{ ...cellStyle, textAlign: "left" }}>
+                {row.particulars}
+              </td>
+              <td style={{ ...cellStyle, textAlign: "right" }}>
+                {row.withdrawal ? money(row.withdrawal) : ""}
+              </td>
+              <td style={{ ...cellStyle, textAlign: "right" }}>
+                {row.deposit ? money(row.deposit) : ""}
+              </td>
+              <td style={{ ...cellStyle, textAlign: "right" }}>
+                {money(row.balance)}
+              </td>
+            </tr>
+          ))}
+
+          <tr>
+            <td style={cellStyle}></td>
+            <td style={cellStyle}></td>
+            <td style={{ ...cellStyle, textAlign: "left" }}>
+              Cash at Bank
+            </td>
+            <td style={cellStyle}></td>
+            <td style={cellStyle}></td>
+            <td style={{ ...cellStyle, textAlign: "right" }}>
+              {money(cashAtBank)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "12px",
+          borderTop: "1px solid #999",
+          marginTop: "10px",
+          paddingTop: "12px",
+        }}
+      >
+        <span>Report Generated by Save Software</span>
+        <span>Rainfed Farming Development Programme</span>
+      </div>
+    </div>
+  );
+}
 
   /*
    * ALL OTHER FINANCIAL REPORTS
