@@ -10920,8 +10920,17 @@ if (
 
   const openingBalance = Number(
   bankRows.find(
-    (record) => record.openingBalance != null
-  )?.openingBalance ?? 0
+    (record) =>
+      record.openingBalance != null &&
+      record.openingBalance !== ""
+  )?.openingBalance ??
+  bankRows.find(
+    (record) =>
+      record.amount != null &&
+      record.amount !== "" &&
+      Number(record.amount) > 0
+  )?.amount ??
+  0
 );
 
   let cashAtBank = openingBalance;
