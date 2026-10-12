@@ -192,7 +192,87 @@ if (resultPage === "debt") {
   setLoading(false);
   return;
 }
+      
+      // GENERAL LEDGER DETAILS - derive from existing transactions
+      if (resultPage === "masterReport") {
+        const [
+          receiptsData,
+          otherReceiptsData,
+          paymentsData,
+          otherPaymentsData,
+          memberJournalsData,
+          otherJournalsData,
+        ] = await Promise.all([
+          apiRequest("/member-receipts"),
+          apiRequest("/other-receipts"),
+          apiRequest("/member-payments"),
+          apiRequest("/other-payments"),
+          apiRequest("/member-journals"),
+          apiRequest("/other-journals"),
+        ]);
 
+        const transactions = [
+          ...(Array.isArray(receiptsData) ? receiptsData : []),
+          ...(Array.isArray(otherReceiptsData) ? otherReceiptsData : []),
+          ...(Array.isArray(paymentsData) ? paymentsData : []),
+          ...(Array.isArray(otherPaymentsData) ? otherPaymentsData : []),
+          ...(Array.isArray(memberJournalsData) ? memberJournalsData : []),
+          ...(Array.isArray(otherJournalsData) ? otherJournalsData : []),
+        ];
+
+        const ledgerMap = new Map();
+
+        transactions.forEach((record) => {
+          const nameValue =
+            record?.generalLedgerName ||
+            record?.generalLedger ||
+            record?.genLedger ||
+            record?.ledgerName ||
+            record?.accountName ||
+            "";
+
+          const codeValue =
+            record?.generalLedgerCode ||
+            record?.genLedgerCode ||
+            record?.ledgerCode ||
+            record?.accountCode ||
+            "";
+
+          const rawName = String(nameValue).trim();
+          const rawCode = String(codeValue).trim();
+
+          if (!rawName && !rawCode) return;
+
+          const match = rawName.match(/^(.*?)\s*-\s*(\d{3,})$/);
+          const name = match ? match[1].trim() : rawName;
+          const code = rawCode || (match ? match[2] : "");
+
+          const key = `${code}|${name}`.toLowerCase();
+
+          if (!ledgerMap.has(key)) {
+            ledgerMap.set(key, {
+              id: key,
+              glCode: code,
+              glName: name,
+              subLedger:
+                record?.subLedger ||
+                record?.subledger ||
+                record?.subLedgerName ||
+                "",
+              glType: record?.glType || record?.gl_type || "",
+              relatedTo: record?.relatedTo || record?.related_to || "",
+              regionalGlName:
+                record?.regionalGlName ||
+                record?.regional_gl_name ||
+                "",
+            });
+          }
+        });
+
+        setRows(Array.from(ledgerMap.values()));
+        setLoading(false);
+        return;
+      }
       // BANK DETAILS MASTER LIST
       if (resultPage === "bankDetails") {
         const data = await apiRequest("/bank-details");
