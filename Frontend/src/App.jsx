@@ -8921,7 +8921,7 @@ const receiptRows = [
         transactionDate:
           r.receiptDate || "",
         receiptAmount:
-          Number(r.total || 0),
+          Number(r.total || r.amount || r.amt1 || 0),
         paymentAmount: 0,
       };
     }),
@@ -8937,7 +8937,7 @@ const receiptRows = [
       "Other Receipt",
     transactionDate: r.receiptDate || "",
     receiptAmount: Number(
-      r.total || r.amount || r.amt1 || 0
+      r.total || r.amt1 || r.amount || 0
     ),
     paymentAmount: 0,
   })),
