@@ -8936,7 +8936,9 @@ const receiptRows = [
       r.subLedger ||
       "Other Receipt",
     transactionDate: r.receiptDate || "",
-    receiptAmount: Number(r.total || r.amount || 0),
+    receiptAmount: Number(
+      r.total || r.amount || r.amt1 || 0
+    ),
     paymentAmount: 0,
   })),
 ];
@@ -9020,7 +9022,9 @@ const paymentRows = [
       "Other Payment",
     transactionDate: r.voucherDate || "",
     receiptAmount: 0,
-    paymentAmount: Number(r.total || r.amount || 0),
+    paymentAmount: Number(
+      r.total || r.amount || r.amt1 || 0
+    ),
   })),
 ];
 
