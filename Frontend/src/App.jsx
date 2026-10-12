@@ -9029,6 +9029,7 @@ const paymentRows = [
 ];
 
 rows = [...receiptRows, ...paymentRows];
+          console.log("Bank Book rows loaded:", rows);
 
 sourceLabel =
   "existing receipt, payment and bank account tables";}
