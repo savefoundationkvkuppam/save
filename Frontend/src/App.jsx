@@ -10163,13 +10163,17 @@ const getPaymentParticular = (r) => {
           "date",
         ])
       );
-    const savingsTotal = totalAmount(receipts);
+const totalAmount = (rows) =>
+  rows.reduce((sum, r) => {
+    const value = Number(getAmount(r));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+const savingsTotal = totalAmount(receipts);
 
 const donationTotal = receipts.reduce((sum, r) => {
   const value = Number(
-    getValue(r, [
-      "donation",
-    ])
+    getValue(r, ["donation"])
   );
 
   return sum + (Number.isFinite(value) ? value : 0);
@@ -10177,16 +10181,11 @@ const donationTotal = receipts.reduce((sum, r) => {
 
 const overallReceiptTotal =
   savingsTotal + donationTotal;
-    const totalAmount = (rows) =>
-  rows.reduce((sum, r) => {
-    const value = Number(getAmount(r));
-    return sum + (Number.isFinite(value) ? value : 0);
-  }, 0);
 
 const totalReceiptsAmount = totalAmount(receipts);
 
 const totalPaymentsAmount = totalAmount(payments);
-
+    
 const closingCash =
   totalReceiptsAmount - totalPaymentsAmount;
 
