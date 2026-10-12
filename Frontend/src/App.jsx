@@ -8884,7 +8884,7 @@ const receiptRows = [
       );
 
       if (!member) {
-        return false;
+        return !selectedCluster && !selectedVazhvathram;
       }
 
       const clusterMatches =
