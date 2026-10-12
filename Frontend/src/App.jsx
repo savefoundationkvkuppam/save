@@ -7250,35 +7250,104 @@ if (memberMasterReports.includes(masterReportSelection)) {
       }
     };
 
-    const renderMasterReportResults = () => {
-      if (!masterReportResults.length) return null;
-      const keys = Array.from(
-        new Set(masterReportResults.flatMap((record) => Object.keys(record || {})))
-      ).filter((key) => key !== "id").slice(0, 10);
+    
+const renderMasterReportResults = () => {
+  if (!masterReportResults.length) return null;
 
-      if (!keys.length) return null;
+  if (masterReportSelection === "MA 01 - General Ledger Details") {
+    const columns = [
+      { label: "GL Code", keys: ["glCode", "gl_code", "code"] },
+      { label: "GL Name", keys: ["glName", "gl_name", "name"] },
+      { label: "Sub Ledger", keys: ["subLedger", "sub_ledger"] },
+      { label: "GL Type", keys: ["glType", "gl_type"] },
+      { label: "Related To", keys: ["relatedTo", "related_to"] },
+      {
+        label: "Regional GL Name",
+        keys: ["regionalGlName", "regional_gl_name"],
+      },
+    ];
 
-      return (
-        <div style={{ marginTop: "14px", overflowX: "auto", border: "1px solid #777", background: "#fff" }}>
-          <table className="legacy-table">
-            <thead>
-              <tr>
-                {keys.map((key) => <th key={key}>{key}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {masterReportResults.map((record, index) => (
-                <tr key={record.id ?? index}>
-                  {keys.map((key) => (
-                    <td key={key}>{String(record?.[key] ?? "")}</td>
-                  ))}
-                </tr>
+    return (
+      <div
+        style={{
+          marginTop: "14px",
+          overflowX: "auto",
+          border: "1px solid #777",
+          background: "#fff",
+        }}
+      >
+        <table className="legacy-table">
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column.label}>{column.label}</th>
               ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
+            </tr>
+          </thead>
+          <tbody>
+            {masterReportResults.map((record, index) => (
+              <tr key={record.id ?? index}>
+                {columns.map((column) => {
+                  const key = column.keys.find(
+                    (field) => record?.[field] !== undefined
+                  );
+
+                  return (
+                    <td key={column.label}>
+                      {key ? String(record[key] ?? "") : ""}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  const keys = Array.from(
+    new Set(
+      masterReportResults.flatMap((record) =>
+        Object.keys(record || {})
+      )
+    )
+  )
+    .filter((key) => key !== "id")
+    .slice(0, 10);
+
+  if (!keys.length) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: "14px",
+        overflowX: "auto",
+        border: "1px solid #777",
+        background: "#fff",
+      }}
+    >
+      <table className="legacy-table">
+        <thead>
+          <tr>
+            {keys.map((key) => (
+              <th key={key}>{key}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {masterReportResults.map((record, index) => (
+            <tr key={record.id ?? index}>
+              {keys.map((key) => (
+                <td key={key}>{String(record?.[key] ?? "")}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
     const MonthBox = ({ size = 5 }) => <ListBox options={months} size={size} />;
 
