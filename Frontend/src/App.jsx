@@ -10924,9 +10924,18 @@ if (
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+const reportBankAccount =
+  (bankAccountRecords || []).find((account) =>
+    String(account.vazhvathramName || account.vazhvathram || "").trim() ===
+    String(selectedVazhvathram || "").trim()
+  ) ||
+  (bankAccountRecords || []).find((account) =>
+    String(account.clusterName || "").trim() ===
+    String(selectedCluster || "").trim()
+  ) ||
+  (bankAccountRecords || [])[0] ||
+  {};
 
-  const reportBankAccount = {};
-  
 const firstRecord = {
   ...reportBankAccount,
   vazhvathramCode:
@@ -10937,7 +10946,6 @@ const firstRecord = {
     selectedVazhvathram ||
     "",
 };
-
   const reportStyle = {
     borderCollapse: "collapse",
     width: "100%",
