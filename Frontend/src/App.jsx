@@ -7328,6 +7328,7 @@ const contextJournals = filterReportRecordsByContext(
 
     const runMasterReport = async () => {
       const endpointByMasterReport = {
+        "MA 01 - General Ledger Details": "/general-ledgers",
         "MA 04 - Cluster Details": "/clusters",
         "MA 05 - vazhvathram Details": "/vazhvathrams",
         "MA 06 - Member Details": "/members",
