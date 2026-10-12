@@ -10856,33 +10856,47 @@ if (
     ? financialReportResults
     : [];
 
- const parseDate = (value) => {
+ 
+const parseDate = (value) => {
   if (!value) return null;
 
   const text = String(value).trim();
+  let year;
+  let month;
+  let day;
+  let match;
 
-  // Handle dates in DD-MM-YYYY format
-  const match = text.match(
-    /^(\d{2})-(\d{2})-(\d{4})$/
-  );
+  // Handle YYYY-MM-DD as a local date
+  match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 
   if (match) {
-    const day = Number(match[1]);
-    const month = Number(match[2]) - 1;
-    const year = Number(match[3]);
+    year = Number(match[1]);
+    month = Number(match[2]) - 1;
+    day = Number(match[3]);
+  } else {
+    // Handle DD-MM-YYYY
+    match = text.match(/^(\d{2})-(\d{2})-(\d{4})$/);
 
-    const date = new Date(year, month, day);
+    if (!match) return null;
 
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month ||
-      date.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return date;
+    day = Number(match[1]);
+    month = Number(match[2]) - 1;
+    year = Number(match[3]);
   }
+
+  const date = new Date(year, month, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+};
+
 
   // Handle ISO dates and other supported date formats
   const date = new Date(text);
