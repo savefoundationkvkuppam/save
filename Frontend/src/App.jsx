@@ -10113,7 +10113,7 @@ const selectedFinancialMember = memberRecords.find(
               ).trim().toLowerCase() ===
               String(selectedVazhvathram || "").trim().toLowerCase()
             )?.vazhvathramCode || ""
-          } Name : {params.get("vazhvathram") || ""}
+          } Name : {new URLSearchParams(window.location.search).get("vazhvathram") || ""}
         </h3>
 
         <div style={{
@@ -10131,7 +10131,7 @@ const selectedFinancialMember = memberRecords.find(
                 ).trim().toLowerCase() ===
                 String(cluster || "").trim().toLowerCase()
               )?.clusterCode || ""
-            } - {params.get("cluster") || ""}
+            } - {new URLSearchParams(window.location.search).get("cluster") || ""}
           </span>
         </div>
         <table style={{
