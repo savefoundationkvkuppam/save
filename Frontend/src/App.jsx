@@ -10113,7 +10113,7 @@ const selectedFinancialMember = memberRecords.find(
               ).trim().toLowerCase() ===
               String(selectedVazhvathram || "").trim().toLowerCase()
             )?.vazhvathramCode || ""
-          } Name : {{params.get("vazhvathram") || ""}}
+          } Name : {params.get("vazhvathram") || ""}
         </h3>
 
         <div style={{
