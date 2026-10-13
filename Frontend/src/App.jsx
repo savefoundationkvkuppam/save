@@ -16991,11 +16991,13 @@ const openResultInNewTab = ({
     vazhvathram: currentVazhvathram,
   });
 
-  window.open(
-    url,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  
+  const newTab = window.open(url, "_blank");
+
+  if (!newTab) {
+    alert("Please allow pop-ups for this website.");
+  }
+
 };
 
   
