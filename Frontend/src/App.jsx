@@ -10366,6 +10366,14 @@ const closingCash =
 /* =========================================================
    CASH BOOK HEADER INFORMATION
    ========================================================= */
+const reportParams = new URLSearchParams(window.location.search);
+
+const reportVazhvathramFromUrl =
+  reportParams.get("vazhvathram") || "";
+
+const reportClusterFromUrl =
+  reportParams.get("cluster") || "";
+
 const selectedReportVazhvathramRecord =
   vazhvathramRecords.find((record) => {
     const recordName = String(
@@ -10373,20 +10381,21 @@ const selectedReportVazhvathramRecord =
     ).trim().toLowerCase();
 
     const selectedName = String(
-      selectedVazhvathram || ""
+      reportVazhvathramFromUrl || selectedVazhvathram || ""
     ).trim().toLowerCase();
 
     const recordCluster = String(
-      record?.clusterName || ""
+      record?.clusterName || record?.cluster || ""
     ).trim().toLowerCase();
 
     const selectedClusterName = String(
-      selectedCluster || ""
+      reportClusterFromUrl || selectedCluster || ""
     ).trim().toLowerCase();
 
     return (
       recordName === selectedName &&
-      (!selectedClusterName || recordCluster === selectedClusterName)
+      (!selectedClusterName ||
+        recordCluster === selectedClusterName)
     );
   }) || null;
 
