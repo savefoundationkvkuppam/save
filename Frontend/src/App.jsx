@@ -10139,7 +10139,7 @@ const selectedFinancialMember = memberRecords.find(
                 ).trim().toLowerCase() ===
                 String(reportClusterFromUrl || selectedCluster || "").trim().toLowerCase()
               )?.clusterCode || ""
-            } - {new URLSearchParams(window.location.search).get("cluster") || ""}
+            } - {reportClusterFromUrl}
           </span>
         </div>
         <table style={{
