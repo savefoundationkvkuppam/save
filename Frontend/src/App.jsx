@@ -10353,43 +10353,46 @@ const closingCash =
 /* =========================================================
    CASH BOOK HEADER INFORMATION
    ========================================================= */
-
 const selectedReportVazhvathramRecord =
-  vazhvathramRecords.find(
-    (record) =>
-      String(record?.vazhvathramName || "")
-        .trim()
-        .toLowerCase() ===
-        String(selectedVazhvathram || "")
-          .trim()
-          .toLowerCase() &&
-      (
-        !selectedCluster ||
-        String(record?.clusterName || "")
-          .trim()
-          .toLowerCase() ===
-          String(selectedCluster || "")
-            .trim()
-            .toLowerCase()
-      )
-  ) || null;
+  vazhvathramRecords.find((record) => {
+    const recordName = String(
+      record?.vazhvathramName || record?.name || ""
+    ).trim().toLowerCase();
+
+    const selectedName = String(
+      selectedVazhvathram || ""
+    ).trim().toLowerCase();
+
+    const recordCluster = String(
+      record?.clusterName || ""
+    ).trim().toLowerCase();
+
+    const selectedClusterName = String(
+      selectedCluster || ""
+    ).trim().toLowerCase();
+
+    return (
+      recordName === selectedName &&
+      (!selectedClusterName || recordCluster === selectedClusterName)
+    );
+  }) || null;
 
 const selectedReportClusterRecord =
-  clusterRecords.find(
-    (record) =>
-      String(record?.clusterName || "")
-        .trim()
-        .toLowerCase() ===
-        String(selectedCluster || "")
-          .trim()
-          .toLowerCase()
+  clusterRecords.find((record) =>
+    String(record?.clusterName || record?.name || "")
+      .trim()
+      .toLowerCase() ===
+    String(selectedCluster || "").trim().toLowerCase()
   ) || null;
 
 const reportVazhvathramCode =
-  selectedReportVazhvathramRecord?.vazhvathramCode || "";
+  selectedReportVazhvathramRecord?.vazhvathramCode ||
+  selectedReportVazhvathramRecord?.code ||
+  "";
 
 const reportVazhvathramName =
   selectedReportVazhvathramRecord?.vazhvathramName ||
+  selectedReportVazhvathramRecord?.name ||
   selectedVazhvathram ||
   "";
 
@@ -10399,10 +10402,13 @@ const reportMeetingDate =
   "";
 
 const reportClusterCode =
-  selectedReportClusterRecord?.clusterCode || "";
+  selectedReportClusterRecord?.clusterCode ||
+  selectedReportClusterRecord?.code ||
+  "";
 
 const reportClusterName =
   selectedReportClusterRecord?.clusterName ||
+  selectedReportClusterRecord?.name ||
   selectedCluster ||
   "";
 
