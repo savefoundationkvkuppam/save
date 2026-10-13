@@ -10089,14 +10089,17 @@ const selectedFinancialMember = memberRecords.find(
 
     return (
       <div style={{
-        fontFamily: "Georgia, serif",
-        fontSize: "14px",
-        color: "#000",
-        background: "#fff",
-        padding: "12px",
-        width: "100%",
-        boxSizing: "border-box",
-      }}>
+  fontFamily: "Georgia, serif",
+  fontSize: "14px",
+  color: "#000",
+  background: "#fff",
+  padding: "12px",
+  width: "100%",
+  maxWidth: "100%",
+  boxSizing: "border-box",
+  overflowX: "hidden",
+  margin: "0",
+}}>
         <h3 style={{ textAlign: "center", margin: "0 0 4px" }}>
           Receipts &amp; Payments Account From{" "}
           {formatDate(financialFromDate)} To {formatDate(financialToDate)}
