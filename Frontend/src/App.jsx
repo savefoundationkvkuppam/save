@@ -10897,15 +10897,6 @@ const parseDate = (value) => {
   return date;
 };
 
-
-  // Handle ISO dates and other supported date formats
-  const date = new Date(text);
-
-  return Number.isNaN(date.getTime())
-    ? null
-    : date;
-};
-
   const fromDate = parseDate(financialFromDate);
   const toDate = parseDate(financialToDate);
 
