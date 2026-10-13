@@ -10113,16 +10113,16 @@ const selectedFinancialMember = memberRecords.find(
           {formatDate(financialFromDate)} To {formatDate(financialToDate)}
         </h3>
 
-        <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
-          Uzhavar Kulu Code : {
-            vazhvathramRecords.find((record) =>
-              String(
-                record?.vazhvathramName || record?.name || ""
-              ).trim().toLowerCase() ===
-              String(selectedVazhvathram || "").trim().toLowerCase()
-            )?.vazhvathramCode || ""
-          } Name : {new URLSearchParams(window.location.search).get("vazhvathram") || ""}
-        </h3>
+<h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
+  Uzhavar Kulu Code : {
+    vazhvathramRecords.find((record) =>
+      String(record?.vazhvathramName || record?.name || "")
+        .trim().toLowerCase() ===
+      String(vazhvathram || "").trim().toLowerCase()
+    )?.vazhvathramCode || ""
+  }{" "}
+  Name : {vazhvathram}
+</h3>
 
         <div style={{
           display: "flex",
