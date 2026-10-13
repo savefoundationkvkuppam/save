@@ -3936,6 +3936,14 @@ const ReportPage = ({
   openUploadImages,
   TopBar,
 }) => {
+  const reportParams = new URLSearchParams(window.location.search);
+  const reportClusterFromUrl = reportParams.get("cluster") || "";
+  const reportVazhvathramFromUrl = reportParams.get("vazhvathram") || "";
+  const cluster =
+  reportClusterFromUrl || selectedCluster || "";
+
+const vazhvathram =
+  reportVazhvathramFromUrl || selectedVazhvathram || "";
 useEffect(() => {
   console.log("REPORT PAGE CREATED");
   return () => console.log("REPORT PAGE REMOVED");
@@ -10129,7 +10137,7 @@ const selectedFinancialMember = memberRecords.find(
                 String(
                   record?.clusterName || record?.name || ""
                 ).trim().toLowerCase() ===
-                String(cluster || "").trim().toLowerCase()
+                String(reportClusterFromUrl || selectedCluster || "").trim().toLowerCase()
               )?.clusterCode || ""
             } - {new URLSearchParams(window.location.search).get("cluster") || ""}
           </span>
