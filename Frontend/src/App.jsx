@@ -10100,17 +10100,20 @@ const selectedFinancialMember = memberRecords.find(
   overflowX: "hidden",
   margin: "0",
 }}>
-        <h3 style={{ textAlign: "center", margin: "0 0 4px" }}>
+               <h3 style={{ textAlign: "center", margin: "0 0 4px" }}>
           Receipts &amp; Payments Account From{" "}
           {formatDate(financialFromDate)} To {formatDate(financialToDate)}
         </h3>
 
         <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
-          Uzhavar Kulu Code : {vazhvathramRecords.find( 
-        (record) =>
-        String(record?.vazhvathramName || "").trim().toLowerCase() ===
-        String(selectedVazhvathram || "").trim().toLowerCase()
-    )?.vazhvathramCode || ""} Name : {selectedVazhvathram}
+          Uzhavar Kulu Code : {
+            vazhvathramRecords.find((record) =>
+              String(
+                record?.vazhvathramName || record?.name || ""
+              ).trim().toLowerCase() ===
+              String(selectedVazhvathram || "").trim().toLowerCase()
+            )?.vazhvathramCode || ""
+          } Name : {selectedVazhvathram || ""}
         </h3>
 
         <div style={{
@@ -10121,14 +10124,16 @@ const selectedFinancialMember = memberRecords.find(
         }}>
           <span>Federation : 001 - SAVE Foundation</span>
           <span>
-            Cluster : {clusterRecords.find(
-               (record) =>
-                  String(record?.clusterName || "").trim().toLowerCase() ===
-                  String(selectedCluster || "").trim().toLowerCase()
-               )?.clusterCode || ""} - {selectedCluster}
+            Cluster : {
+              clusterRecords.find((record) =>
+                String(
+                  record?.clusterName || record?.name || ""
+                ).trim().toLowerCase() ===
+                String(selectedCluster || "").trim().toLowerCase()
+              )?.clusterCode || ""
+            } - {selectedCluster || ""}
           </span>
         </div>
-
         <table style={{
           width: "100%",
           borderCollapse: "collapse",
