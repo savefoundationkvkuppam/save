@@ -10177,6 +10177,7 @@ const selectedFinancialMember = memberRecords.find(
    * Displayed in the same report-style structure as the reference.
    */
   if (financialReportSelection === "Cash Book - FR01") {
+    const openingBalance = 0;
     const receipts = financialReportResults.filter((r) =>
       ["Member Receipt", "Other Receipt"].includes(r.transactionType)
     );
