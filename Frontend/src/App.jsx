@@ -14784,8 +14784,7 @@ rows = filterReportRecordsByContext(
           {renderClusterReportResults()}
         </>
       );
-    }
-
+    
     return (
       <div className="save-page reports-page">
         <TopBar />
