@@ -10406,6 +10406,7 @@ const reportVazhvathramCode =
 const reportVazhvathramName =
   selectedReportVazhvathramRecord?.vazhvathramName ||
   selectedReportVazhvathramRecord?.name ||
+  new URLSearchParams(window.location.search).get("vazhvathram") ||
   selectedVazhvathram ||
   "";
 
