@@ -10103,7 +10103,11 @@ const selectedFinancialMember = memberRecords.find(
         </h3>
 
         <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
-          Uzhavar Kulu Code : {selectedVazhvathram} Name : {selectedVazhvathram}
+          Uzhavar Kulu Code : {vazhvathramRecords.find( 
+        (record) =>
+        String(record?.vazhvathramName || "").trim().toLowerCase() ===
+        String(selectedVazhvathram || "").trim().toLowerCase()
+    )?.vazhvathramCode || ""} Name : {selectedVazhvathram}
         </h3>
 
         <div style={{
@@ -10114,7 +10118,11 @@ const selectedFinancialMember = memberRecords.find(
         }}>
           <span>Federation : 001 - SAVE Foundation</span>
           <span>
-            Cluster : {selectedCluster}
+            Cluster : {clusterRecords.find(
+               (record) =>
+                  String(record?.clusterName || "").trim().toLowerCase() ===
+                  String(selectedCluster || "").trim().toLowerCase()
+               )?.clusterCode || ""} - {selectedCluster}
           </span>
         </div>
 
