@@ -10113,35 +10113,67 @@ const selectedFinancialMember = memberRecords.find(
           {formatDate(financialFromDate)} To {formatDate(financialToDate)}
         </h3>
 
+
 <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
   Uzhavar Kulu Code : {
     vazhvathramRecords.find((record) =>
       String(record?.vazhvathramName || record?.name || "")
         .trim().toLowerCase() ===
-      String(vazhvathram || "").trim().toLowerCase()
-    )?.vazhvathramCode || ""
+      String(
+        new URLSearchParams(window.location.search).get("vazhvathram") ||
+        selectedVazhvathram ||
+        vazhvathram ||
+        ""
+      ).trim().toLowerCase()
+    )?.vazhvathramCode ||
+    vazhvathramRecords.find((record) =>
+      String(record?.vazhvathramName || record?.name || "")
+        .trim().toLowerCase() ===
+      String(selectedVazhvathram || vazhvathram || "")
+        .trim().toLowerCase()
+    )?.code ||
+    ""
   }{" "}
-  Name : {selectedVazhvathram || ""}
+  Name : {
+    new URLSearchParams(window.location.search).get("vazhvathram") ||
+    selectedVazhvathram ||
+    vazhvathram ||
+    ""
+  }
 </h3>
 
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "12px",
-          marginBottom: "12px",
-        }}>
-          <span>Federation : 001 - SAVE Foundation</span>
-          <span>
-            Cluster : {
-              clusterRecords.find((record) =>
-                String(
-                  record?.clusterName || record?.name || ""
-                ).trim().toLowerCase() ===
-                String(reportClusterFromUrl || selectedCluster || "").trim().toLowerCase()
-              )?.clusterCode || ""
-            } - {reportClusterFromUrl}
-          </span>
-        </div>
+<div style={{
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  marginBottom: "12px",
+}}>
+  <span>Federation : 001 - SAVE Foundation</span>
+  <span>
+    Cluster : {
+      clusterRecords.find((record) =>
+        String(record?.clusterName || record?.name || "")
+          .trim().toLowerCase() ===
+        String(
+          new URLSearchParams(window.location.search).get("cluster") ||
+          selectedCluster ||
+          ""
+        ).trim().toLowerCase()
+      )?.clusterCode ||
+      clusterRecords.find((record) =>
+        String(record?.clusterName || record?.name || "")
+          .trim().toLowerCase() ===
+        String(selectedCluster || "").trim().toLowerCase()
+      )?.code ||
+      ""
+    } - {
+      new URLSearchParams(window.location.search).get("cluster") ||
+      selectedCluster ||
+      ""
+    }
+  </span>
+</div>
+
         <table style={{
           width: "100%",
           borderCollapse: "collapse",
