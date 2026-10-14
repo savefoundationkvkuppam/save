@@ -10112,34 +10112,31 @@ const selectedFinancialMember = memberRecords.find(
           Receipts &amp; Payments Account From{" "}
           {formatDate(financialFromDate)} To {formatDate(financialToDate)}
         </h3>
-
-
+        
 <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
   Uzhavar Kulu Code : {
-    vazhvathramRecords.find((record) =>
-      String(record?.vazhvathramName || record?.name || "")
-        .trim().toLowerCase() ===
-      String(
+    (() => {
+      const name =
         new URLSearchParams(window.location.search).get("vazhvathram") ||
         selectedVazhvathram ||
         vazhvathram ||
-        ""
-      ).trim().toLowerCase()
-    )?.vazhvathramCode ||
-    vazhvathramRecords.find((record) =>
-      String(record?.vazhvathramName || record?.name || "")
-        .trim().toLowerCase() ===
-      String(selectedVazhvathram || vazhvathram || "")
-        .trim().toLowerCase()
-    )?.code ||
-    ""
-  }{" "}
+        "";
+
+      const record = vazhvathramRecords.find((r) =>
+        String(r?.vazhvathramName || r?.name || "")
+          .trim().toLowerCase() === name.trim().toLowerCase()
+      );
+
+      return record?.vazhvathramCode || record?.code || "";
+    })()
+  }
+  {" "}
   Name : {
-  new URLSearchParams(window.location.search).get("vazhvathram") ||
-  selectedVazhvathram ||
-  vazhvathram ||
-  ""
-}
+    new URLSearchParams(window.location.search).get("vazhvathram") ||
+    selectedVazhvathram ||
+    vazhvathram ||
+    ""
+  }
 </h3>
 
 <div style={{
