@@ -10448,6 +10448,7 @@ const reportVazhvathramName =
   selectedReportVazhvathramRecord?.name ||
   new URLSearchParams(window.location.search).get("vazhvathram") ||
   selectedVazhvathram ||
+  vazhvathram ||
   "";
 
 const reportMeetingDate =
@@ -10463,6 +10464,7 @@ const reportClusterCode =
 const reportClusterName =
   selectedReportClusterRecord?.clusterName ||
   selectedReportClusterRecord?.name ||
+  new URLSearchParams(window.location.search).get("cluster") ||
   selectedCluster ||
   "";
 
