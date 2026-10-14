@@ -10135,11 +10135,11 @@ const selectedFinancialMember = memberRecords.find(
     ""
   }{" "}
   Name : {
-    new URLSearchParams(window.location.search).get("vazhvathram") ||
-    selectedVazhvathram ||
-    vazhvathram ||
-    ""
-  }
+  new URLSearchParams(window.location.search).get("vazhvathram") ||
+  selectedVazhvathram ||
+  vazhvathram ||
+  ""
+}
 </h3>
 
 <div style={{
@@ -10150,27 +10150,26 @@ const selectedFinancialMember = memberRecords.find(
 }}>
   <span>Federation : 001 - SAVE Foundation</span>
   <span>
-    Cluster : {
-      clusterRecords.find((record) =>
-        String(record?.clusterName || record?.name || "")
-          .trim().toLowerCase() ===
-        String(
-          new URLSearchParams(window.location.search).get("cluster") ||
-          selectedCluster ||
-          ""
-        ).trim().toLowerCase()
-      )?.clusterCode ||
-      clusterRecords.find((record) =>
-        String(record?.clusterName || record?.name || "")
-          .trim().toLowerCase() ===
-        String(selectedCluster || "").trim().toLowerCase()
-      )?.code ||
-      ""
-    } - {
+Cluster : {
+  (() => {
+    const clusterNameFromUrl =
       new URLSearchParams(window.location.search).get("cluster") ||
       selectedCluster ||
-      ""
-    }
+      "";
+
+    const clusterRecord = clusterRecords.find((record) =>
+      String(record?.clusterName || record?.name || "")
+        .trim()
+        .toLowerCase() === clusterNameFromUrl.trim().toLowerCase()
+    );
+
+    return clusterRecord
+      ? `${clusterRecord.clusterCode || clusterRecord.code || ""} - ${
+          clusterRecord.clusterName || clusterRecord.name || clusterNameFromUrl
+        }`
+      : clusterNameFromUrl;
+  })()
+}
   </span>
 </div>
 
