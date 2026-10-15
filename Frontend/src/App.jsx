@@ -17447,12 +17447,19 @@ useEffect(() => {
   });
 
   const vazhvathrams = vazhvathramRecords
-  .filter(
-    (record) =>
-      !selectedCluster ||
-      String(record.clusterName || "").trim() ===
-        String(selectedCluster || "").trim()
-  )
+  
+  .filter((record) => {
+    const recordCluster = String(
+      record.clusterName || record.cluster || ""
+    ).trim().toLowerCase();
+
+    const currentCluster = String(selectedCluster || "")
+      .trim()
+      .toLowerCase();
+
+    return !currentCluster || recordCluster === currentCluster;
+  })
+
   .map((record) =>
     String(record.vazhvathramName || "").trim()
   )
