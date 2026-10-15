@@ -9045,99 +9045,174 @@ sourceLabel =
   financialReportSelection ===
   "Receipts & Payments - FR03"
 ) {
-  const [
-    mr,
-    or,
-    mp,
-    op,
-    memberData,
-  ] = await Promise.all([
+  const [mr, or, mp, op, memberData, glData] = await Promise.all([
     loadFinancialEndpoint("/member-receipts"),
     loadFinancialEndpoint("/other-receipts"),
     loadFinancialEndpoint("/member-payments"),
     loadFinancialEndpoint("/other-payments"),
     loadFinancialEndpoint("/members"),
+    loadFinancialEndpoint("/general-ledgers").catch(() => []),
   ]);
 
-  const members = Array.isArray(memberData)
-    ? memberData
-    : [];
-
-  const memberBelongsToSelectedContext = (
-    record
-  ) => {
-    const member = members.find(
-      (item) =>
-        String(item?.memberCode || "")
-          .trim()
-          .toLowerCase() ===
-        String(record?.memberCode || "")
-          .trim()
-          .toLowerCase()
-    );
-
-    if (!member) {
-      return false;
-    }
-
-    const clusterMatches =
-      !selectedCluster ||
-      String(member?.clusterName || "").trim() ===
-        String(selectedCluster || "").trim();
-
-    const vazhvathramMatches =
-      !selectedVazhvathram ||
-      String(member?.vazhvathramName || "").trim() ===
-        String(selectedVazhvathram || "").trim();
-
-    return (
-      clusterMatches &&
-      vazhvathramMatches
-    );
+  const members = Array.isArray(memberData) ? memberData : [];
+  const norm = (v) => String(v || "").trim().toLowerCase();
+  const num = (v) => {
+    const n = parseFloat(String(v ?? "").replace(/,/g, ""));
+    return Number.isFinite(n) ? n : 0;
   };
 
-  const filteredMemberReceipts =
-    mr.filter(
-      memberBelongsToSelectedContext
-    );
+  // ---- Selected Cluster / Uzhavar Kulu --------------------------------
+  const kuluRecord = vazhvathramRecords.find(
+    (v) =>
+      norm(v?.vazhvathramName) === norm(selectedVazhvathram) &&
+      (!selectedCluster || norm(v?.clusterName) === norm(selectedCluster))
+  );
 
-  const filteredMemberPayments =
-    mp.filter(
-      memberBelongsToSelectedContext
+  // Member Receipt / Member Payment: member must belong to the selection
+  const memberBelongsToSelectedContext = (record) => {
+    const member = members.find(
+      (m) => norm(m?.memberCode) === norm(record?.memberCode)
     );
+    if (!member) return false;
+    const clusterMatches =
+      !selectedCluster || norm(member.clusterName) === norm(selectedCluster);
+    const kuluMatches =
+      !selectedVazhvathram ||
+      norm(member.vazhvathramName) === norm(selectedVazhvathram);
+    return clusterMatches && kuluMatches;
+  };
+
+  // Other Receipt / Other Payment have no Kulu column, so they are tied to the
+  // selected Kulu through the bank account number they were posted to.
+  const kuluAccountNos = new Set(
+    bankAccountRecords
+      .filter(
+        (b) =>
+          (kuluRecord?.vazhvathramCode &&
+            norm(b?.vazhvathramCode) === norm(kuluRecord.vazhvathramCode)) ||
+          (selectedVazhvathram &&
+            norm(b?.vazhvathramName) === norm(selectedVazhvathram))
+      )
+      .map((b) => norm(b?.accountNumber))
+      .filter(Boolean)
+  );
+  const otherBelongsToSelectedContext = (record) =>
+    !selectedVazhvathram || kuluAccountNos.has(norm(record?.accountNo));
+
+  // ---- A/C code lookup ---------------------------------------------------
+  // explicit code -> else search General Ledger master by name
+  const glList = Array.isArray(glData) ? glData : [];
+  const codeFor = (explicit, nameRegex) => {
+    if (explicit) return explicit;
+    const hit = glList.find((g) =>
+      nameRegex.test(`${g?.subLedger || ""} ${g?.glName || ""}`)
+    );
+    return hit?.glCode || "";
+  };
+  // "Bank Charges ... - 4415"  ->  { code: "4415", name: "Bank Charges ..." }
+  const splitCodeName = (text) => {
+    const t = String(text || "").trim();
+    const m = t.match(/^(.*?)[\s-]*-\s*(\d{3,5})\s*$/);
+    return m ? { name: m[1].trim(), code: m[2] } : { name: t, code: "" };
+  };
+
+  // ---- Expand every voucher into one row per A/C head --------------------
+  // Any part of the voucher total that is not classified goes to
+  // "Unclassified" so the report total always equals the voucher totals.
+  const expand = (record, type, lines, dateKey) => {
+    const out = [];
+    let used = 0;
+    lines.forEach(({ name, code, amount }) => {
+      const amt = num(amount);
+      if (!amt) return;
+      used += amt;
+      out.push({
+        transactionType: type,
+        [dateKey]: record[dateKey],
+        generalLedgerCode: code || "",
+        generalLedgerName: name,
+        amount: amt,
+      });
+    });
+    const rest = num(record.total) - used;
+    if (Math.abs(rest) > 0.004) {
+      out.push({
+        transactionType: type,
+        [dateKey]: record[dateKey],
+        generalLedgerCode: "",
+        generalLedgerName: "Unclassified",
+        amount: rest,
+      });
+    }
+    return out;
+  };
+
+  const memberReceiptLines = (r) => [
+    { name: "Regular Savings", code: codeFor("1131", /regular saving/i), amount: r.regularSavings },
+    { name: "Bullet Savings", code: codeFor("", /bullet/i), amount: r.bulletSavings },
+    { name: "Special Savings", code: codeFor("1132", /special saving/i), amount: num(r.specialSavingsAmount) + num(r.specialSavingsMoreAmount) },
+    { name: "Repayment LH1 Principal", code: codeFor("2211", /lh ?1|support 1/i), amount: r.livelihoodLoanSupport1 },
+    { name: "Service Cost LH1", code: codeFor("", /service cost.*1/i), amount: r.serviceCost1 },
+    { name: "Repayment LH2 Principal", code: codeFor("2212", /lh ?2|support 2/i), amount: r.livelihoodLoanSupport2 },
+    { name: "Service Cost LH2", code: codeFor("", /service cost.*2/i), amount: r.serviceCost2 },
+    { name: "Housing Loan Repayment", code: codeFor("", /housing/i), amount: r.housingLoan },
+    { name: "Housing Service Cost", code: codeFor("", /housing.*service/i), amount: r.housingServiceCost },
+    { name: "Donations", code: codeFor("3320", /donation/i), amount: r.donation },
+    { name: "Subscription And Entrance Fee", code: codeFor("3310", /entrance|subscription/i), amount: r.subsEntFee },
+    { name: "Jothi Fund", code: codeFor("", /jothi/i), amount: r.jothiFund },
+    { name: "Risk Fund", code: codeFor("1420", /risk/i), amount: r.riskFund },
+    { name: "DRR Fund", code: codeFor("", /drr/i), amount: r.drrFund },
+    { name: "Specified Prog. Activity", code: codeFor("1430", /specified/i), amount: r.specifiedProgFund },
+  ];
+
+  const memberPaymentLines = (r) => {
+    const loan = String(r.loanType || "");
+    const loanHead = /support 1/i.test(loan)
+      ? { name: "Programme Fund LH1 Issued", code: "2211" }
+      : /support 2/i.test(loan)
+      ? { name: "Programme Fund LH2 Issued", code: "2212" }
+      : /housing/i.test(loan)
+      ? { name: "Housing Loan Issued", code: codeFor("", /housing/i) }
+      : { name: loan || "Loan Issued", code: "" };
+    return [
+      { name: "Savings Returned", code: codeFor("1131", /regular saving/i), amount: r.savings },
+      { name: "Savings Incentive", code: codeFor("4120", /incentive/i), amount: r.savingsIncentive },
+      { name: "Bullet Savings Returned", code: codeFor("", /bullet/i), amount: r.bulletSavings },
+      { name: "Social Security", code: codeFor("", /social secu/i), amount: r.socialSecurityAmount },
+      { name: "Special Savings Returned", code: codeFor("1132", /special saving/i), amount: num(r.specialSavingsAmount) + num(r.specialSavingsMoreAmount) },
+      { name: "Special Savings Incentive", code: codeFor("4120", /incentive/i), amount: r.specialSavingsIncentive },
+      { ...loanHead, amount: r.loanAmount },
+    ];
+  };
+
+  const otherReceiptLines = (r) => {
+    let list = r.subLedgerLines;
+    if (typeof list === "string") {
+      try { list = JSON.parse(list || "[]"); } catch { list = []; }
+    }
+    return (Array.isArray(list) ? list : []).map((l) => ({
+      ...splitCodeName(l.subLedger),
+      amount: l.amount,
+    }));
+  };
+
+  const otherPaymentLines = (r) => {
+    const lines = [];
+    for (let i = 1; i <= 8; i++) {
+      lines.push({ ...splitCodeName(r[`subLed${i}`]), amount: r[`amt${i}`] });
+    }
+    return lines;
+  };
 
   rows = [
-    ...filteredMemberReceipts.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Receipt",
-      })
-    ),
-
-    ...or.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Receipt",
-      })
-    ),
-
-    ...filteredMemberPayments.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Member Payment",
-      })
-    ),
-
-    ...op.map(
-      (r) => ({
-        ...r,
-        transactionType:
-          "Other Payment",
-      })
-    ),
+    ...mr.filter(memberBelongsToSelectedContext).flatMap((r) =>
+      expand(r, "Member Receipt", memberReceiptLines(r), "receiptDate")),
+    ...or.filter(otherBelongsToSelectedContext).flatMap((r) =>
+      expand(r, "Other Receipt", otherReceiptLines(r), "receiptDate")),
+    ...mp.filter(memberBelongsToSelectedContext).flatMap((r) =>
+      expand(r, "Member Payment", memberPaymentLines(r), "voucherDate")),
+    ...op.filter(otherBelongsToSelectedContext).flatMap((r) =>
+      expand(r, "Other Payment", otherPaymentLines(r), "voucherDate")),
   ];
 
   sourceLabel =
@@ -10087,13 +10162,55 @@ const selectedFinancialMember = memberRecords.find(
       accountMap.set(key, current);
     });
 
-    const accounts = Array.from(accountMap.values());
+    const fmt = (n) =>
+      n ? Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
+    const accounts = Array.from(accountMap.values()).sort((x, y) =>
+      String(x.code || "zzzz").localeCompare(String(y.code || "zzzz")) ||
+      x.name.localeCompare(y.name)
+    );
     const totalReceipts = accounts.reduce(
       (sum, row) => sum + row.receipts, 0
     );
     const totalPayments = accounts.reduce(
       (sum, row) => sum + row.payments, 0
     );
+
+    // ---- HEADER: Cluster + Uzhavar Kulu (from top-bar selection) ----
+    const norm = (v) => String(v || "").trim().toLowerCase();
+
+    const fr03ClusterName =
+      new URLSearchParams(window.location.search).get("cluster") ||
+      selectedCluster ||
+      "";
+
+    const fr03KuluName =
+      new URLSearchParams(window.location.search).get("vazhvathram") ||
+      selectedVazhvathram ||
+      vazhvathram ||
+      "";
+
+    // Cluster record -> code + name
+    const fr03ClusterRecord =
+      clusterRecords.find(
+        (r) => norm(r?.clusterName || r?.name) === norm(fr03ClusterName)
+      ) || null;
+
+    // Uzhavar Kulu record -> must match name AND selected cluster
+    const fr03KuluRecord =
+      vazhvathramRecords.find(
+        (r) =>
+          norm(r?.vazhvathramName || r?.name) === norm(fr03KuluName) &&
+          (!fr03ClusterName || norm(r?.clusterName || r?.cluster) === norm(fr03ClusterName))
+      ) || null;
+
+    const fr03KuluCode =
+      fr03KuluRecord?.vazhvathramCode || fr03KuluRecord?.code || "";
+
+    const fr03ClusterText = fr03ClusterRecord
+      ? `${fr03ClusterRecord.clusterCode || fr03ClusterRecord.code || ""} - ${
+          fr03ClusterRecord.clusterName || fr03ClusterRecord.name || fr03ClusterName
+        }`
+      : fr03ClusterName;
 
     return (
       <div style={{
@@ -10114,29 +10231,8 @@ const selectedFinancialMember = memberRecords.find(
         </h3>
         
 <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
-  Uzhavar Kulu Code : {
-    (() => {
-      const name =
-        new URLSearchParams(window.location.search).get("vazhvathram") ||
-        selectedVazhvathram ||
-        vazhvathram ||
-        "";
-
-      const record = vazhvathramRecords.find((r) =>
-        String(r?.vazhvathramName || r?.name || "")
-          .trim().toLowerCase() === name.trim().toLowerCase()
-      );
-
-      return record?.vazhvathramCode || record?.code || "";
-    })()
-  }
-  {" "}
-  Name : {
-    new URLSearchParams(window.location.search).get("vazhvathram") ||
-    selectedVazhvathram ||
-    vazhvathram ||
-    ""
-  }
+  Uzhavar Kulu Code : {fr03KuluCode}{" "}
+  Name : {fr03KuluName}
 </h3>
 
 <div style={{
@@ -10146,28 +10242,7 @@ const selectedFinancialMember = memberRecords.find(
   marginBottom: "12px",
 }}>
   <span>Federation : 001 - SAVE Foundation</span>
-  <span>
-Cluster : {
-  (() => {
-    const clusterNameFromUrl =
-      new URLSearchParams(window.location.search).get("cluster") ||
-      selectedCluster ||
-      "";
-
-    const clusterRecord = clusterRecords.find((record) =>
-      String(record?.clusterName || record?.name || "")
-        .trim()
-        .toLowerCase() === clusterNameFromUrl.trim().toLowerCase()
-    );
-
-    return clusterRecord
-      ? `${clusterRecord.clusterCode || clusterRecord.code || ""} - ${
-          clusterRecord.clusterName || clusterRecord.name || clusterNameFromUrl
-        }`
-      : clusterNameFromUrl;
-  })()
-}
-  </span>
+  <span>Cluster : {fr03ClusterText}</span>
 </div>
 
         <table style={{
@@ -10190,10 +10265,10 @@ Cluster : {
                 <td style={{ padding: "4px 10px" }}>{row.code}</td>
                 <td style={{ padding: "4px 10px" }}>{row.name}</td>
                 <td style={{ padding: "4px 10px", textAlign: "right" }}>
-                  {row.receipts || ""}
+                  {fmt(row.receipts)}
                 </td>
                 <td style={{ padding: "4px 10px", textAlign: "right" }}>
-                  {row.payments || ""}
+                  {fmt(row.payments)}
                 </td>
               </tr>
             ))}
@@ -10203,10 +10278,10 @@ Cluster : {
                 Total
               </td>
               <td style={{ padding: "12px", textAlign: "right" }}>
-                {totalReceipts}
+                {fmt(totalReceipts)}
               </td>
               <td style={{ padding: "12px", textAlign: "right" }}>
-                {totalPayments}
+                {fmt(totalPayments)}
               </td>
             </tr>
           </tbody>
