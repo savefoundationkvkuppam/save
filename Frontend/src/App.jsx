@@ -10535,14 +10535,65 @@ const selectedReportVazhvathramRecord =
         recordCluster === selectedClusterName)
     );
   }) || null;
+    
+const normalizeReportValue = (value) =>
+  String(value ?? "").trim().toLowerCase();
+
+const selectedClusterValue = normalizeReportValue(
+  new URLSearchParams(window.location.search).get("cluster") ||
+  selectedCluster
+);
+
+const selectedVazhvathramValue = normalizeReportValue(
+  new URLSearchParams(window.location.search).get("vazhvathram") ||
+  selectedVazhvathram
+);
 
 const selectedReportClusterRecord =
   clusterRecords.find((record) =>
-    String(record?.clusterName || record?.name || "")
-      .trim()
-      .toLowerCase() ===
-    String(selectedCluster || "").trim().toLowerCase()
+    [
+      record?.clusterName,
+      record?.name,
+      record?.clusterCode,
+      record?.code,
+    ].some(
+      (value) => normalizeReportValue(value) === selectedClusterValue
+    )
   ) || null;
+
+const selectedReportVazhvathramRecord =
+  vazhvathramRecords.find((record) => {
+    const matchesNameOrCode = [
+      record?.vazhvathramName,
+      record?.name,
+      record?.vazhvathramCode,
+      record?.code,
+    ].some(
+      (value) =>
+        normalizeReportValue(value) === selectedVazhvathramValue
+    );
+
+    const recordCluster = normalizeReportValue(
+      record?.clusterName || record?.cluster
+    );
+
+    const selectedClusterName = normalizeReportValue(
+      selectedReportClusterRecord?.clusterName ||
+      selectedReportClusterRecord?.name
+    );
+
+    return (
+      matchesNameOrCode &&
+      (!selectedClusterValue ||
+        recordCluster === selectedClusterValue ||
+        recordCluster === selectedClusterName ||
+        normalizeReportValue(record?.clusterCode) ===
+          normalizeReportValue(
+            selectedReportClusterRecord?.clusterCode ||
+            selectedReportClusterRecord?.code
+          ))
+    );
+  }) || null;
 
 const reportVazhvathramCode =
   selectedReportVazhvathramRecord?.vazhvathramCode ||
@@ -10550,13 +10601,10 @@ const reportVazhvathramCode =
   "";
 
 const reportVazhvathramName =
-  new URLSearchParams(window.location.search).get("vazhvathram") ||
-  selectedVazhvathram ||
-  vazhvathram ||
   selectedReportVazhvathramRecord?.vazhvathramName ||
   selectedReportVazhvathramRecord?.name ||
+  selectedVazhvathram ||
   "";
-
 const reportMeetingDate =
   selectedReportVazhvathramRecord?.meetingDate ||
   financialToDate ||
