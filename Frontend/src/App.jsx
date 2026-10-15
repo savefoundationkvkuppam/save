@@ -17464,14 +17464,13 @@ useEffect(() => {
     String(record.vazhvathramName || "").trim()
   )
   .filter(Boolean);
-  useEffect(() => {
-  if (!selectedCluster) {
-    setSelectedVazhvathram("");
+  
+useEffect(() => {
+  if (vazhvathramRecords.length === 0) {
     return;
   }
 
-  if (vazhvathrams.length === 0) {
-    setSelectedVazhvathram("");
+  if (!selectedCluster || vazhvathrams.length === 0) {
     return;
   }
 
@@ -17482,7 +17481,9 @@ useEffect(() => {
   selectedCluster,
   vazhvathramRecords,
   selectedVazhvathram,
+  vazhvathrams,
 ]);
+
 useEffect(() => {
   if (!memberPaymentForm.memberCode) {
     return;
