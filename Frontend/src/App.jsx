@@ -17404,6 +17404,13 @@ const filterReportRecordsByContext = (
     loadClustersFromDatabase();
     return () => { cancelled = true; };
   }, []);
+  
+useEffect(() => {
+  if (!selectedCluster && clusters.length > 0) {
+    setSelectedCluster(clusters[0]);
+  }
+}, [selectedCluster, clusters]);
+
 
   // =========================================================
   // VAZHVATHRAM
