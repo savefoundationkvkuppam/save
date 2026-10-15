@@ -10174,43 +10174,77 @@ const selectedFinancialMember = memberRecords.find(
     const totalPayments = accounts.reduce(
       (sum, row) => sum + row.payments, 0
     );
+    
+// HEADER: Cluster + Uzhavar Kulu from database records
+const norm = (value) =>
+  String(value ?? "").trim().toLowerCase();
 
-    // ---- HEADER: Cluster + Uzhavar Kulu (from top-bar selection) ----
-    const norm = (v) => String(v || "").trim().toLowerCase();
+const fr03ClusterName =
+  selectedCluster || "";
 
-    const fr03ClusterName =
-      new URLSearchParams(window.location.search).get("cluster") ||
-      selectedCluster ||
-      "";
+const fr03KuluName =
+  selectedVazhvathram || "";
 
-    const fr03KuluName =
-      new URLSearchParams(window.location.search).get("vazhvathram") ||
-      selectedVazhvathram ||
-      vazhvathram ||
-      "";
+const fr03ClusterRecord =
+  clusterRecords.find((record) => {
+    const name = norm(
+      record?.clusterName || record?.name
+    );
+    const code = norm(
+      record?.clusterCode || record?.code
+    );
 
-    // Cluster record -> code + name
-    const fr03ClusterRecord =
-      clusterRecords.find(
-        (r) => norm(r?.clusterName || r?.name) === norm(fr03ClusterName)
-      ) || null;
+    return (
+      name === norm(fr03ClusterName) ||
+      code === norm(fr03ClusterName)
+    );
+  }) || null;
 
-    // Uzhavar Kulu record -> must match name AND selected cluster
-    const fr03KuluRecord =
-      vazhvathramRecords.find(
-        (r) =>
-          norm(r?.vazhvathramName || r?.name) === norm(fr03KuluName) &&
-          (!fr03ClusterName || norm(r?.clusterName || r?.cluster) === norm(fr03ClusterName))
-      ) || null;
+const fr03KuluRecord =
+  vazhvathramRecords.find((record) => {
+    const name = norm(
+      record?.vazhvathramName || record?.name
+    );
+    const code = norm(
+      record?.vazhvathramCode || record?.code
+    );
+    const recordCluster = norm(
+      record?.clusterName || record?.cluster
+    );
 
-    const fr03KuluCode =
-      fr03KuluRecord?.vazhvathramCode || fr03KuluRecord?.code || "";
+    const matchesKulu =
+      name === norm(fr03KuluName) ||
+      code === norm(fr03KuluName);
 
-    const fr03ClusterText = fr03ClusterRecord
-      ? `${fr03ClusterRecord.clusterCode || fr03ClusterRecord.code || ""} - ${
-          fr03ClusterRecord.clusterName || fr03ClusterRecord.name || fr03ClusterName
-        }`
-      : fr03ClusterName;
+    const matchesCluster =
+      !fr03ClusterName ||
+      recordCluster === norm(fr03ClusterName) ||
+      norm(record?.clusterCode) ===
+        norm(
+          fr03ClusterRecord?.clusterCode ||
+          fr03ClusterRecord?.code
+        );
+
+    return matchesKulu && matchesCluster;
+  }) || null;
+
+const fr03KuluCode =
+  fr03KuluRecord?.vazhvathramCode ||
+  fr03KuluRecord?.code ||
+  "";
+
+const fr03KuluDisplayName =
+  fr03KuluRecord?.vazhvathramName ||
+  fr03KuluRecord?.name ||
+  fr03KuluName;
+
+const fr03ClusterText = fr03ClusterRecord
+  ? `${fr03ClusterRecord.clusterCode || fr03ClusterRecord.code || ""} - ${
+      fr03ClusterRecord.clusterName ||
+      fr03ClusterRecord.name ||
+      fr03ClusterName
+    }`
+  : fr03ClusterName;
 
     return (
       <div style={{
@@ -10232,7 +10266,7 @@ const selectedFinancialMember = memberRecords.find(
         
 <h3 style={{ textAlign: "center", margin: "0 0 12px" }}>
   Uzhavar Kulu Code : {fr03KuluCode}{" "}
-  Name : {fr03KuluName}
+  Name : {fr03KuluDisplayName}
 </h3>
 
 <div style={{
