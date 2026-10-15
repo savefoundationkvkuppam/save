@@ -17519,7 +17519,10 @@ useEffect(() => {
       try {
         const data = await apiRequest("/vazhvathrams");
         if (!cancelled) {
-          setVazhvathramRecords(Array.isArray(data) ? data : []);
+          setVazhvathramRecords((previous) =>
+            Array.isArray(data) && data.length > 0 ? data : previous
+            );
+
         }
       } catch (error) {
         console.error("Could not load Vazhvathram data:", error);
