@@ -39606,18 +39606,24 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
                 >
                   Cancel
                 </button>
-
-                <button
-                  onClick={() => {
-                    setShowClusterList(
-                      (previous) =>
-                        !previous
-                    );
-                    setClusterMode("view");
-                  }}
-                >
-                  List
-                </button>
+<button
+  onClick={async () => {
+    try {
+      setClusterLoading(true);
+      const data = await apiRequest("/clusters");
+      setClusterRecords(Array.isArray(data) ? data : []);
+      setShowClusterList(true);
+      setClusterMode("view");
+    } catch (error) {
+      console.error("Could not load clusters:", error);
+      alert("Unable to load Cluster data: " + error.message);
+    } finally {
+      setClusterLoading(false);
+    }
+  }}
+>
+  List
+</button>
 
               </div>
 
