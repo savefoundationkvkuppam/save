@@ -28545,7 +28545,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {twoColRows([
-              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={landLoading}><option value="">Select Member</option>{getContextMembers().map(member)=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("1 Ownership","landOwnership",["Rainfed","Irrigated","Barren/Fallow"])],
+              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={landLoading}><option value="">Select Member</option>{getContextMembers().map(member)=>(<option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>))}</select></div>, input("1 Ownership","landOwnership",["Rainfed","Irrigated","Barren/Fallow"])],
               [input("2 Area in acre","areaInAcre"),input("3 Value in Rs.","landValue")],
               [input("5 Land Patta","landPatta",["Yes","No"]),input("6 In whose Name","landName")],
               [input("7 Irrigation Type","irrigationType",["Well","River","Tank","NA"]),input("8 Crop 1","crop1",["Paddy","Wheat","Cotton","Brinjal","Tomato","Chilly","Onion","Beans","Maize","Millet","Others","NotApplicable"])],
@@ -28562,7 +28562,15 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {twoColRows([
-              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={assetLoading}><option value="">Select Member</option>{getContextMembers().map(member=>(<option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>))}</select></div>, input("9.2 Asset","asset",["Auto Rickshaw","Cycle Rickshaw","Tricycle","Two Wheeler","Lorry","Van","Minivan","Tractor","Jeep","Jewels (Sovereign)","Petty Shop","Hotel","Fruit Shop","Tea Shop","PowerLoom","Manufacturing Tools","Manufacturing Equipments","Investment for Business","Sewing Machine","Washing Machine","Water purifier","Borewell","Others"])],
+              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={assetLoading}><option value="">Select Member</option>
+              {getContextMembers().map((member) => (
+  <option key={member.id} value={member.id}>
+    {member.memberCode
+      ? `${member.memberCode} - ${member.memberName || ""}`
+      : member.memberName || member.id}
+  </option>
+))}
+              </select></div>, input("9.2 Asset","asset",["Auto Rickshaw","Cycle Rickshaw","Tricycle","Two Wheeler","Lorry","Van","Minivan","Tractor","Jeep","Jewels (Sovereign)","Petty Shop","Hotel","Fruit Shop","Tea Shop","PowerLoom","Manufacturing Tools","Manufacturing Equipments","Investment for Business","Sewing Machine","Washing Machine","Water purifier","Borewell","Others"])],
               [input("9.3 Number/Quantity","quantity"),input("9.4 Year of purchase","purchaseYear")],
               [input("9.5 Value","value"),input("9.6 Insurance","insurance",["Yes","No"])]
             ])}
