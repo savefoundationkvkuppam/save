@@ -107,6 +107,29 @@ function ResultOnlyPage() {
   const resultType = params.get("resultType") || "all";
   const cluster = params.get("cluster") || "";
   const vazhvathram = params.get("vazhvathram") || "";
+  const normalizeContextValue = (value) =>
+  String(value ?? "").trim().toLowerCase();
+
+const filterMembersForResult = (records) => {
+  if (!Array.isArray(records)) return [];
+
+  return records.filter((member) => {
+    const memberCluster = normalizeContextValue(
+      member.clusterName || member.cluster
+    );
+
+    const memberVazhvathram = normalizeContextValue(
+      member.vazhvathramName || member.vazhvathram
+    );
+
+    return (
+      (!cluster ||
+        memberCluster === normalizeContextValue(cluster)) &&
+      (!vazhvathram ||
+        memberVazhvathram === normalizeContextValue(vazhvathram))
+    );
+  });
+};
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -310,13 +333,19 @@ if (resultPage === "debt") {
       )
     : journalRecords;
 
-  setRows(selectedRecords);
+  setRows(
+  filterReportRecordsByContext(selectedRecords)
+);
   return;
 }
       
       if (resultPage === "memberReceiptDetails") {
         const data = await apiRequest("/member-receipts");
-        setRows(Array.isArray(data) ? data : []);
+        setRows(
+          filterReportRecordsByContext(
+            Array.isArray(data) ? data : []
+          )
+        );
         return;
       }
 
@@ -328,7 +357,11 @@ if (resultPage === "debt") {
 
 if (resultPage === "memberPaymentDetails") {
   const data = await apiRequest("/member-payments");
-  setRows(Array.isArray(data) ? data : []);
+  setRows(
+  filterReportRecordsByContext(
+    Array.isArray(data) ? data : []
+  )
+);
   return;
 }
 
@@ -926,7 +959,7 @@ if (resultPage === "taluk") {
           memberRecords
         );
 
-        setRows(memberRecords);
+        setRows(filterMembersForResult(memberRecords));
         return;
       }
      setRows([]);
@@ -17162,36 +17195,32 @@ const openResultInNewTab = ({
   }
 
 };
-
   
-
-  // =========================================================
+ // =========================================================
 // GLOBAL CONTEXT FILTER
 // Cluster → Vazhvathram → Member → Transactions
 // =========================================================
 
 const getContextMembers = () => {
-  return memberRecords.filter((member) => {
-    const memberCluster = String(
-      member.clusterName || ""
-    ).trim();
+  const normalize = (value) =>
+    String(value ?? "").trim().toLowerCase();
 
-    const memberVazhvathram = String(
-      member.vazhvathramName || ""
-    ).trim();
+  return memberRecords.filter((member) => {
+    const memberCluster = normalize(member.clusterName);
+    const memberVazhvathram = normalize(member.vazhvathramName);
 
     const clusterMatches =
       !selectedCluster ||
-      memberCluster === String(selectedCluster).trim();
+      memberCluster === normalize(selectedCluster);
 
     const vazhvathramMatches =
       !selectedVazhvathram ||
-      memberVazhvathram ===
-        String(selectedVazhvathram).trim();
+      memberVazhvathram === normalize(selectedVazhvathram);
 
     return clusterMatches && vazhvathramMatches;
   });
 };
+
 
 const getContextMemberCodes = () => {
   return getContextMembers()
@@ -27949,7 +27978,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
   >
     <option value="">Select Member Code</option>
 
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode || member.id}
       </option>
@@ -27971,7 +28000,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={disMemberLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28064,7 +28093,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={familyMemberLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28151,7 +28180,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={livelihoodLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28245,7 +28274,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 }}
               >
                 <option value="">Select Member</option>
-                {memberRecords.map((member) => (
+                {getContextMembers().map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.memberCode
                       ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28320,7 +28349,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 }}
               >
                 <option value="">Select Member</option>
-                {memberRecords.map((member) => (
+                {getContextMembers().map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.memberCode
                       ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28409,7 +28438,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                 }}
               >
                 <option value="">Select Member</option>
-                {memberRecords.map((member) => (
+                {getContextMembers().map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.memberCode
                       ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28484,7 +28513,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <label>Member Name</label>
                   <select value={value("memberId")} onChange={(e) => { const m=memberRecords.find(x=>String(x.id)===String(e.target.value)); setValue("memberId",m?.id??""); setValue("memberName",m?.memberName??""); }} disabled={housingLoading}>
                     <option value="">Select Member</option>
-                    {memberRecords.map((member)=><option key={member.id} value={member.id}>{member.memberCode ? `${member.memberCode} - ${member.memberName || ""}` : member.memberName || member.id}</option>)}
+                    getContextMembers().map((member)=><option key={member.id} value={member.id}>{member.memberCode ? `${member.memberCode} - ${member.memberName || ""}` : member.memberName || member.id}</option>)}
                   </select>
                 </div>,
                 input("1 Type of House","typeOfHouse",["Thatched","Tiled","RCC","Tin","Colony"])
@@ -28510,7 +28539,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {twoColRows([
-              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={landLoading}><option value="">Select Member</option>{memberRecords.map(member=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("1 Ownership","landOwnership",["Rainfed","Irrigated","Barren/Fallow"])],
+              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={landLoading}><option value="">Select Member</option>{getContextMembers().map(member)=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("1 Ownership","landOwnership",["Rainfed","Irrigated","Barren/Fallow"])],
               [input("2 Area in acre","areaInAcre"),input("3 Value in Rs.","landValue")],
               [input("5 Land Patta","landPatta",["Yes","No"]),input("6 In whose Name","landName")],
               [input("7 Irrigation Type","irrigationType",["Well","River","Tank","NA"]),input("8 Crop 1","crop1",["Paddy","Wheat","Cotton","Brinjal","Tomato","Chilly","Onion","Beans","Maize","Millet","Others","NotApplicable"])],
@@ -28527,7 +28556,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {twoColRows([
-              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={assetLoading}><option value="">Select Member</option>{memberRecords.map(member=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("9.2 Asset","asset",["Auto Rickshaw","Cycle Rickshaw","Tricycle","Two Wheeler","Lorry","Van","Minivan","Tractor","Jeep","Jewels (Sovereign)","Petty Shop","Hotel","Fruit Shop","Tea Shop","PowerLoom","Manufacturing Tools","Manufacturing Equipments","Investment for Business","Sewing Machine","Washing Machine","Water purifier","Borewell","Others"])],
+              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={assetLoading}><option value="">Select Member</option>{getContextMembers().map(member=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("9.2 Asset","asset",["Auto Rickshaw","Cycle Rickshaw","Tricycle","Two Wheeler","Lorry","Van","Minivan","Tractor","Jeep","Jewels (Sovereign)","Petty Shop","Hotel","Fruit Shop","Tea Shop","PowerLoom","Manufacturing Tools","Manufacturing Equipments","Investment for Business","Sewing Machine","Washing Machine","Water purifier","Borewell","Others"])],
               [input("9.3 Number/Quantity","quantity"),input("9.4 Year of purchase","purchaseYear")],
               [input("9.5 Value","value"),input("9.6 Insurance","insurance",["Yes","No"])]
             ])}
@@ -28540,7 +28569,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
         content = (
           <>
             {twoColRows([
-              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={debtLoading}><option value="">Select Member</option>{memberRecords.map(member=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("10.2 Type of Debt","debtType",["Cash","Jewel","House","Land"])],
+              [<div className="dis-field" key="memberName"><label>Member Name</label><select value={value("memberId")} onChange={(e)=>{const m=memberRecords.find(x=>String(x.id)===String(e.target.value));setValue("memberId",m?.id??"");setValue("memberName",m?.memberName??"");}} disabled={debtLoading}><option value="">Select Member</option>{getContextMembers().map(member=><option key={member.id} value={member.id}>{member.memberCode?`${member.memberCode} - ${member.memberName||""}`:member.memberName||member.id}</option>)}</select></div>, input("10.2 Type of Debt","debtType",["Cash","Jewel","House","Land"])],
               [input("10.3 Source","source",["1. Vazhvathram","2. Banks","3. Money Lender","4. Relatives/Friends","13. Selling out Assets","5. From Dowry","6. From Inherited Family Sources","7. From Gifts","8. From Donations/ Grants","9. Purchased on Due","10. Others","11. LIC","12. NGO"]),input("10.4 Loan Amount","loanAmount")],
               [input("10.5 Present loan outstanding","presentOutstanding"),input("10.6 Year of borrowing","borrowingYear")],
               [input("10.7 Interest rate","interestRate"),input("10.8 Purpose of loan","loanPurpose",["Consumption","Medical","Housing","Education","Debt Redemption","Business Activites","Agriculture","Social Obligations","Asset Creation","Others"])],
@@ -28569,7 +28598,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={savingsLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28606,7 +28635,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={bankAccountDisLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28687,7 +28716,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                     disabled={healthLoading}
                   >
                     <option value="">Select Member</option>
-                    {memberRecords.map((member) => (
+                    {getContextMembers().map((member) => (
                       <option key={member.id} value={member.id}>
                         {member.memberCode ? `${member.memberCode} - ${member.memberName || ""}` : member.memberName || member.id}
                       </option>
@@ -28787,7 +28816,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={legalLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -28861,7 +28890,7 @@ const bankOutstanding = dashboardDebtRecords.reduce(
     disabled={entitlementLoading}
   >
     <option value="">Select Member</option>
-    {memberRecords.map((member) => (
+    {getContextMembers().map((member) => (
       <option key={member.id} value={member.id}>
         {member.memberCode
           ? `${member.memberCode} - ${member.memberName || ""}`
@@ -34948,7 +34977,7 @@ if (item === "External Debt") {
                   }}
                 >
                   <option value="">Select</option>
-                  {memberRecords.map((member) => (
+                  {getContextMembers().map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.memberName || member.memberCode || member.id}
                     </option>
@@ -41185,7 +41214,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
 
                   <h2>Member List</h2>
 
-                  {memberRecords.filter(
+                  {getContextMembers().filter(
                   (record) =>
                     (!selectedCluster ||
                      String(record.clusterName || "").trim() ===
@@ -41221,7 +41250,7 @@ Cr. Interest on Bank Loan - Adjustments (3213) ............... Rs.500
 
                       <tbody>
 
-                        {memberRecords
+                        {getContextMembers()
                           .filter(
                              (record) =>
                                 (!selectedCluster ||
