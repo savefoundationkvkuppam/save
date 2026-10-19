@@ -28513,7 +28513,13 @@ const bankOutstanding = dashboardDebtRecords.reduce(
                   <label>Member Name</label>
                   <select value={value("memberId")} onChange={(e) => { const m=memberRecords.find(x=>String(x.id)===String(e.target.value)); setValue("memberId",m?.id??""); setValue("memberName",m?.memberName??""); }} disabled={housingLoading}>
                     <option value="">Select Member</option>
-                    getContextMembers().map((member)=><option key={member.id} value={member.id}>{member.memberCode ? `${member.memberCode} - ${member.memberName || ""}` : member.memberName || member.id}</option>)}
+                    {getContextMembers().map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.memberCode
+                          ? `${member.memberCode} - ${member.memberName || ""}`
+                          : member.memberName || member.id}
+                      </option>
+                    ))}
                   </select>
                 </div>,
                 input("1 Type of House","typeOfHouse",["Thatched","Tiled","RCC","Tin","Colony"])
