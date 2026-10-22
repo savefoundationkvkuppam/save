@@ -38933,31 +38933,6 @@ window.open(reportUrl.toString(), "_blank");
               <div className="attendance-top">
 
                 <div className="attendance-left">
-
-                  <div className="attendance-row">
-                    <label>Meeting Date</label>
-                    <input
-                      type="date"
-                      value={attendanceDate}
-                      onChange={(e) =>
-                        setAttendanceDate(e.target.value)
-                      }
-                      disabled={attendanceNotConducted}
-                    />
-                  </div>
-
-                  <div className="attendance-row">
-                    <label>R.V. Col. Date</label>
-                    <input
-                      type="date"
-                      value={rvColDate}
-                      onChange={(e) =>
-                        setRvColDate(e.target.value)
-                      }
-                      disabled={attendanceNotConducted}
-                    />
-                  </div>
-
                   <div className="attendance-row">
                     <label>Reason</label>
                     <select
