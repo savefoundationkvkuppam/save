@@ -20638,15 +20638,21 @@ try {
 
   // Attendance members come only from Member Master records.
   // No sample/hard-coded member names are used here.
-  const attendanceMembers = memberRecords
-    .map((record) => {
-      const code = String(record.memberCode || "").trim();
-      const name = String(record.memberName || "").trim();
+  
+const attendanceMembers = Array.from(
+  new Map(
+    getContextMembers()
+      .map((record) => {
+        const code = String(record.memberCode || "").trim();
+        const name = String(record.memberName || "").trim();
 
-      if (code && name) return `${code}-${name}`;
-      return code || name;
-    })
-    .filter(Boolean);
+        if (!code || !name) return null;
+
+        return [`${code}-${name}`, `${code}-${name}`];
+      })
+      .filter(Boolean)
+  ).values()
+);
 
   useEffect(() => {
     apiRequest("/attendances")
