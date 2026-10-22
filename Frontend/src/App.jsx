@@ -38943,6 +38943,7 @@ window.open(reportUrl.toString(), "_blank");
                       }
                       disabled={attendanceNotConducted}
                       />
+                  </div>
                     <div className="attendance-row">
                       <lable>R.V. Col. Date</lable>
                       <input
