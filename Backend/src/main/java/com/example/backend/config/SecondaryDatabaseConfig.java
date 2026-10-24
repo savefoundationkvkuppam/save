@@ -24,6 +24,14 @@ public class SecondaryDatabaseConfig {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
 
-        return dataSource;
+                return dataSource;
+    }
+
+    @Bean(name = "secondaryJdbcTemplate")
+    public org.springframework.jdbc.core.JdbcTemplate secondaryJdbcTemplate(
+            @org.springframework.beans.factory.annotation.Qualifier("secondaryDataSource")
+            DataSource dataSource) {
+        return new org.springframework.jdbc.core.JdbcTemplate(dataSource);
     }
 }
+    
