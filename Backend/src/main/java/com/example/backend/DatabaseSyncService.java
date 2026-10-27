@@ -1,3 +1,4 @@
+
 package com.example.backend.service;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,33 +9,34 @@ import org.springframework.stereotype.Service;
 @Service
 public class DatabaseSyncService {
 
+    private final JdbcTemplate sourceJdbc;
     private final JdbcTemplate targetJdbc;
 
     public DatabaseSyncService(
+            JdbcTemplate primaryJdbc,
             @Qualifier("secondaryJdbcTemplate")
             JdbcTemplate secondaryJdbc) {
+        this.sourceJdbc = primaryJdbc;
         this.targetJdbc = secondaryJdbc;
     }
 
-    @Scheduled(
-        fixedDelay = 60000,
-        initialDelay = 15000
-    )
-    public void testDestinationConnection() {
+    @Scheduled(fixedDelay = 60000, initialDelay = 15000)
+    public void checkDatabaseConnections() {
         try {
-            String databaseName = targetJdbc.queryForObject(
-                "SELECT current_database()",
-                String.class
-            );
+            String source = sourceJdbc.queryForObject(
+                "SELECT current_database()", String.class);
+
+            String target = targetJdbc.queryForObject(
+                "SELECT current_database()", String.class);
 
             System.out.println(
-                "SYNC CONNECTION TEST: Connected to " + databaseName
+                "SYNC CHECK: source=" + source
+                + ", destination=" + target
+                + ". Connections successful; data sync not yet enabled."
             );
-
         } catch (Exception e) {
             System.err.println(
-                "SYNC CONNECTION TEST FAILED: " + e.getMessage()
-            );
+                "SYNC CHECK FAILED: " + e.getMessage());
         }
     }
 }
