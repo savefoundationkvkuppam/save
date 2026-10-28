@@ -1,12 +1,12 @@
 package com.example.backend.service;
- 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
- 
+
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
- 
+
 /**
  * One-way sync: save_db_2 (source) -> save_db_1 (destination, the app's own database).
  *
@@ -34,36 +34,36 @@ import java.util.regex.Pattern;
  */
 @Service
 public class DatabaseSyncService {
- 
+
     private static final Logger log = LoggerFactory.getLogger(DatabaseSyncService.class);
- 
+
     private static final String SOURCE_DB_NAME = "save_db_2";
     private static final String DEST_DB_NAME = "save_db_1";
     private static final String CHECKPOINT_NAME = "save_db_2_to_save_db_1";
     private static final int BATCH_SIZE = 200;
     private static final Pattern SAFE_NAME = Pattern.compile("[A-Za-z0-9_]+");
- 
+
     private final DataSource destDataSource;    // the app's own datasource (save_db_1)
     private final DataSource sourceDataSource;  // save_db_2, built from SOURCE_DB_* variables
     private final Map<String, TableInfo> tableCache = new HashMap<>();
- 
+
     private static final String REGISTERED_MARKER = "existing_records_registered";
- 
+
     private boolean ready = false;
     private boolean blocked = false;
     private boolean registered = false;
- 
+
     /** A table the sync cannot handle (missing in destination, no single primary key). */
     private static class TableProblem extends SQLException {
         TableProblem(String message) {
             super(message);
         }
     }
- 
+
     private record Change(long id, String table, String op, String key) {}
- 
+
     private record TableInfo(List<String> columns, List<String> pkColumns) {}
- 
+
     public DatabaseSyncService(
             DataSource destDataSource,
             @Value("${SOURCE_DB_URL:}") String sourceUrl,
@@ -81,7 +81,7 @@ public class DatabaseSyncService {
             this.sourceDataSource = ds;
         }
     }
- 
+
     @Scheduled(initialDelay = 30000, fixedDelay = 60000)
     public void syncDatabases() {
         if (blocked) {
@@ -105,24 +105,24 @@ public class DatabaseSyncService {
             log.error("Sync run failed: {}", e.toString(), e);
         }
     }
- 
+
     // ---------------------------------------------------------------- startup checks
- 
+
     private boolean verify() throws SQLException {
         try (Connection src = sourceDataSource.getConnection();
              Connection dst = destDataSource.getConnection()) {
- 
+
             String srcName = currentDatabase(src);
             String dstName = currentDatabase(dst);
             log.info("Sync check: source database = {}, destination database = {}", srcName, dstName);
- 
+
             if (!SOURCE_DB_NAME.equals(srcName) || !DEST_DB_NAME.equals(dstName)) {
                 log.error("Sync DISABLED for safety: expected {} -> {} but found {} -> {}.",
                         SOURCE_DB_NAME, DEST_DB_NAME, srcName, dstName);
                 blocked = true;
                 return false;
             }
- 
+
             try (Statement st = src.createStatement()) {
                 st.execute("SELECT id, table_name, operation_type, record_key FROM sync_change_log LIMIT 0");
             }
@@ -136,7 +136,7 @@ public class DatabaseSyncService {
         ready = true;
         return true;
     }
- 
+
     private String currentDatabase(Connection c) throws SQLException {
         try (Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT current_database()")) {
@@ -144,9 +144,9 @@ public class DatabaseSyncService {
             return rs.getString(1);
         }
     }
- 
+
     // ---------------------------------------------------------------- one-time registration of existing rows
- 
+
     /**
      * Runs once, automatically, before the first sync. Rows that already exist in BOTH databases
      * with the same primary key AND identical content are registered as "copied by the sync", so
@@ -156,7 +156,7 @@ public class DatabaseSyncService {
     private void registerExisting() throws SQLException {
         try (Connection src = sourceDataSource.getConnection();
              Connection dst = destDataSource.getConnection()) {
- 
+
             dst.setAutoCommit(false);
             try {
                 try (PreparedStatement ps = dst.prepareStatement("SELECT 1 FROM sync_checkpoint WHERE name = ?")) {
@@ -169,7 +169,7 @@ public class DatabaseSyncService {
                     }
                 }
                 dst.commit();
- 
+
                 log.info("Registering existing records (one-time step). This can take a minute...");
                 List<String> tables = new ArrayList<>();
                 try (Statement st = src.createStatement();
@@ -179,7 +179,7 @@ public class DatabaseSyncService {
                         tables.add(rs.getString(1));
                     }
                 }
- 
+
                 int total = 0;
                 for (String table : tables) {
                     String lower = table.toLowerCase();
@@ -195,7 +195,7 @@ public class DatabaseSyncService {
                         log.warn("Register existing: table {} skipped: {}", table, e.getMessage());
                     }
                 }
- 
+
                 try (PreparedStatement ps = dst.prepareStatement(
                         "INSERT INTO sync_checkpoint (name, last_change_id) VALUES (?, 1) "
                                 + "ON CONFLICT (name) DO NOTHING")) {
@@ -217,22 +217,22 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private int registerTable(Connection src, Connection dst, String table) throws SQLException {
         TableInfo info = tableInfo(dst, table);
         if (info.pkColumns().size() != 1) {
             throw new TableProblem("needs exactly one primary key column, found " + info.pkColumns());
         }
         String pk = info.pkColumns().get(0);
- 
+
         Map<String, String> srcHashes = rowHashes(src, table, pk);
         Map<String, String> dstHashes = rowHashes(dst, table, pk);
- 
+
         int registeredCount = 0;
         int differs = 0;
         int missing = 0;
         List<String> sampleDiffs = new ArrayList<>();
- 
+
         try (PreparedStatement ps = dst.prepareStatement(
                 "INSERT INTO sync_source_records (table_name, source_record_id, source_change_id, synced_at) "
                         + "SELECT ?, ?, 0, NOW() WHERE NOT EXISTS ("
@@ -255,13 +255,13 @@ public class DatabaseSyncService {
                 }
             }
         }
- 
+
         log.info("Register existing: {}: registered={}, differs={}, missing_in_destination={}{}",
                 table, registeredCount, differs, missing,
                 differs > 0 ? ", example differing ids " + sampleDiffs : "");
         return registeredCount;
     }
- 
+
     /** primary key (as text) -> md5 of the whole row, so rows can be compared across databases. */
     private Map<String, String> rowHashes(Connection c, String table, String pk) throws SQLException {
         Map<String, String> map = new HashMap<>();
@@ -274,19 +274,19 @@ public class DatabaseSyncService {
         }
         return map;
     }
- 
+
     // ---------------------------------------------------------------- main loop
- 
+
     private void runSync() throws SQLException {
         try (Connection src = sourceDataSource.getConnection();
              Connection dst = destDataSource.getConnection()) {
- 
+
             dst.setAutoCommit(false);
             try {
                 long last = readCheckpoint(dst);
                 dst.commit();
                 int applied = 0;
- 
+
                 while (true) {
                     List<Change> batch = fetchChanges(src, last);
                     if (batch.isEmpty()) {
@@ -324,7 +324,7 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private List<Change> fetchChanges(Connection src, long afterId) throws SQLException {
         List<Change> list = new ArrayList<>();
         try (PreparedStatement ps = src.prepareStatement(
@@ -340,7 +340,7 @@ public class DatabaseSyncService {
         }
         return list;
     }
- 
+
     private long readCheckpoint(Connection dst) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
                 "SELECT last_change_id FROM sync_checkpoint WHERE name = ?")) {
@@ -350,7 +350,7 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private void writeCheckpoint(Connection dst, long changeId) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
                 "INSERT INTO sync_checkpoint (name, last_change_id) VALUES (?, ?) "
@@ -360,9 +360,9 @@ public class DatabaseSyncService {
             ps.executeUpdate();
         }
     }
- 
+
     // ---------------------------------------------------------------- applying one change
- 
+
     private void apply(Connection dst, Change c) throws SQLException {
         String table = c.table();
         if (table == null) {
@@ -375,27 +375,27 @@ public class DatabaseSyncService {
         if (!SAFE_NAME.matcher(table).matches()) {
             throw new SQLException("Unsafe table name: " + table);
         }
- 
+
         String key = c.key();
         if (key == null || !key.trim().startsWith("{")) {
             throw new SQLException("record_key is not JSON (expected the full row as JSON). Value starts with: "
                     + (key == null ? "null" : key.substring(0, Math.min(60, key.length()))));
         }
- 
+
         TableInfo info = tableInfo(dst, table);
         if (info.pkColumns().size() != 1) {
             throw new SQLException("Table " + table + " needs exactly one primary key column, found "
                     + info.pkColumns());
         }
         String pk = info.pkColumns().get(0);
- 
+
         String pkValue = jsonField(dst, key, pk);
         if (pkValue == null) {
             throw new SQLException("record_key has no value for primary key '" + pk + "' in table " + table);
         }
- 
+
         boolean tracked = isTracked(dst, table, pkValue);
- 
+
         switch (c.op() == null ? "" : c.op().toUpperCase()) {
             case "INSERT" -> {
                 if (tracked) {
@@ -439,9 +439,9 @@ public class DatabaseSyncService {
             default -> throw new SQLException("Unknown operation_type: " + c.op());
         }
     }
- 
+
     // ---------------------------------------------------------------- helpers
- 
+
     private TableInfo tableInfo(Connection dst, String table) throws SQLException {
         TableInfo cached = tableCache.get(table);
         if (cached != null) {
@@ -468,7 +468,7 @@ public class DatabaseSyncService {
         tableCache.put(table, info);
         return info;
     }
- 
+
     private String jsonField(Connection c, String json, String field) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("SELECT (?::json) ->> (?::text)")) {
             ps.setString(1, json);
@@ -479,7 +479,7 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private boolean rowExists(Connection dst, String table, String pk, String json) throws SQLException {
         String sql = "SELECT 1 FROM " + q(table) + " x JOIN json_populate_record(null::" + q(table)
                 + ", ?::json) r ON x." + q(pk) + " = r." + q(pk);
@@ -490,14 +490,14 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private int execJson(Connection dst, String sql, String json) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(sql)) {
             ps.setString(1, json);
             return ps.executeUpdate();
         }
     }
- 
+
     private boolean isTracked(Connection dst, String table, String pkValue) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
                 "SELECT 1 FROM sync_source_records WHERE table_name = ? AND source_record_id = ?")) {
@@ -508,7 +508,7 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private void track(Connection dst, String table, String pkValue, long changeId) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
                 "INSERT INTO sync_source_records (table_name, source_record_id, source_change_id, synced_at) "
@@ -519,7 +519,7 @@ public class DatabaseSyncService {
             ps.executeUpdate();
         }
     }
- 
+
     private void untrack(Connection dst, String table, String pkValue) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
                 "DELETE FROM sync_source_records WHERE table_name = ? AND source_record_id = ?")) {
@@ -528,7 +528,7 @@ public class DatabaseSyncService {
             ps.executeUpdate();
         }
     }
- 
+
     /**
      * After copying a row with an explicit id, move the destination's id counter past it,
      * so rows your website creates later in save_db_1 don't reuse a copied id.
@@ -567,7 +567,7 @@ public class DatabaseSyncService {
             }
         }
     }
- 
+
     private static String q(String identifier) {
         return "\"" + identifier.replace("\"", "\"\"") + "\"";
     }
