@@ -1,34 +1,3 @@
-Claude
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Databasesyncservice · JAVA
 package com.example.backend.service;
  
 import org.slf4j.Logger;
@@ -460,5 +429,3 @@ public class DatabaseSyncService {
         return "\"" + identifier.replace("\"", "\"\"") + "\"";
     }
 }
- 
-Claude finished the response
