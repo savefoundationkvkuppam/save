@@ -1,21 +1,25 @@
 package com.example.backend.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MemberSyncService {
 
-    private final JdbcTemplate sourceJdbc;
-    private final JdbcTemplate targetJdbc;
+    private static final Logger log = LoggerFactory.getLogger(MemberSyncService.class);
+
+    // The secondary connection is optional: services without SECONDARY_DB_* settings
+    // still start, and simply skip copying members.
+    private final ObjectProvider<JdbcTemplate> secondaryJdbcProvider;
+    private boolean warnedNoSecondary = false;
 
     public MemberSyncService(
-            JdbcTemplate primaryJdbc,
-            @Qualifier("secondaryJdbcTemplate") JdbcTemplate secondaryJdbc) {
-        this.sourceJdbc = primaryJdbc;
-        this.targetJdbc = secondaryJdbc;
+            @Qualifier("secondaryJdbcTemplate") ObjectProvider<JdbcTemplate> secondaryJdbcProvider) {
+        this.secondaryJdbcProvider = secondaryJdbcProvider;
     }
 
     public void syncMember(
@@ -48,6 +52,15 @@ public class MemberSyncService {
             String specialSavings,
             String houseOwnership,
             boolean locked) {
+
+        JdbcTemplate targetJdbc = secondaryJdbcProvider.getIfAvailable();
+        if (targetJdbc == null) {
+            if (!warnedNoSecondary) {
+                log.info("MemberSyncService: no secondary database configured, member copy is skipped.");
+                warnedNoSecondary = true;
+            }
+            return;
+        }
 
         String sql = """
             INSERT INTO public.members (
