@@ -47,8 +47,18 @@ public class DatabaseSyncService {
     private final DataSource sourceDataSource;  // save_db_2, built from SOURCE_DB_* variables
     private final Map<String, TableInfo> tableCache = new HashMap<>();
  
+    private static final String REGISTERED_MARKER = "existing_records_registered";
+ 
     private boolean ready = false;
     private boolean blocked = false;
+    private boolean registered = false;
+ 
+    /** A table the sync cannot handle (missing in destination, no single primary key). */
+    private static class TableProblem extends SQLException {
+        TableProblem(String message) {
+            super(message);
+        }
+    }
  
     private record Change(long id, String table, String op, String key) {}
  
@@ -86,6 +96,9 @@ public class DatabaseSyncService {
         try {
             if (!ready && !verify()) {
                 return;
+            }
+            if (!registered) {
+                registerExisting(); // one-time; throws on error so the sync waits and retries
             }
             runSync();
         } catch (Exception e) {
@@ -130,6 +143,136 @@ public class DatabaseSyncService {
             rs.next();
             return rs.getString(1);
         }
+    }
+ 
+    // ---------------------------------------------------------------- one-time registration of existing rows
+ 
+    /**
+     * Runs once, automatically, before the first sync. Rows that already exist in BOTH databases
+     * with the same primary key AND identical content are registered as "copied by the sync", so
+     * later updates/deletes made in save_db_2 reach them. Rows that differ, or exist only on one
+     * side, are never changed or registered; they are only counted in the log.
+     */
+    private void registerExisting() throws SQLException {
+        try (Connection src = sourceDataSource.getConnection();
+             Connection dst = destDataSource.getConnection()) {
+ 
+            dst.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = dst.prepareStatement("SELECT 1 FROM sync_checkpoint WHERE name = ?")) {
+                    ps.setString(1, REGISTERED_MARKER);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            registered = true;
+                            return;
+                        }
+                    }
+                }
+                dst.commit();
+ 
+                log.info("Registering existing records (one-time step). This can take a minute...");
+                List<String> tables = new ArrayList<>();
+                try (Statement st = src.createStatement();
+                     ResultSet rs = st.executeQuery("SELECT table_name FROM information_schema.tables "
+                             + "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name")) {
+                    while (rs.next()) {
+                        tables.add(rs.getString(1));
+                    }
+                }
+ 
+                int total = 0;
+                for (String table : tables) {
+                    String lower = table.toLowerCase();
+                    if (lower.equals("login_details") || lower.startsWith("sync_")
+                            || !SAFE_NAME.matcher(table).matches()) {
+                        continue;
+                    }
+                    try {
+                        total += registerTable(src, dst, table);
+                        dst.commit();
+                    } catch (TableProblem e) {
+                        dst.rollback();
+                        log.warn("Register existing: table {} skipped: {}", table, e.getMessage());
+                    }
+                }
+ 
+                try (PreparedStatement ps = dst.prepareStatement(
+                        "INSERT INTO sync_checkpoint (name, last_change_id) VALUES (?, 1) "
+                                + "ON CONFLICT (name) DO NOTHING")) {
+                    ps.setString(1, REGISTERED_MARKER);
+                    ps.executeUpdate();
+                }
+                dst.commit();
+                registered = true;
+                log.info("Registering existing records finished: {} record(s) registered.", total);
+            } catch (SQLException | RuntimeException e) {
+                dst.rollback();
+                throw e;
+            } finally {
+                try {
+                    dst.setAutoCommit(true);
+                } catch (SQLException ignored) {
+                    // connection is being closed anyway
+                }
+            }
+        }
+    }
+ 
+    private int registerTable(Connection src, Connection dst, String table) throws SQLException {
+        TableInfo info = tableInfo(dst, table);
+        if (info.pkColumns().size() != 1) {
+            throw new TableProblem("needs exactly one primary key column, found " + info.pkColumns());
+        }
+        String pk = info.pkColumns().get(0);
+ 
+        Map<String, String> srcHashes = rowHashes(src, table, pk);
+        Map<String, String> dstHashes = rowHashes(dst, table, pk);
+ 
+        int registeredCount = 0;
+        int differs = 0;
+        int missing = 0;
+        List<String> sampleDiffs = new ArrayList<>();
+ 
+        try (PreparedStatement ps = dst.prepareStatement(
+                "INSERT INTO sync_source_records (table_name, source_record_id, source_change_id, synced_at) "
+                        + "SELECT ?, ?, 0, NOW() WHERE NOT EXISTS ("
+                        + "SELECT 1 FROM sync_source_records WHERE table_name = ? AND source_record_id = ?)")) {
+            for (Map.Entry<String, String> e : srcHashes.entrySet()) {
+                String destHash = dstHashes.get(e.getKey());
+                if (destHash == null) {
+                    missing++;
+                } else if (destHash.equals(e.getValue())) {
+                    ps.setString(1, table);
+                    ps.setString(2, e.getKey());
+                    ps.setString(3, table);
+                    ps.setString(4, e.getKey());
+                    registeredCount += ps.executeUpdate();
+                } else {
+                    differs++;
+                    if (sampleDiffs.size() < 5) {
+                        sampleDiffs.add(e.getKey());
+                    }
+                }
+            }
+        }
+ 
+        log.info("Register existing: {}: registered={}, differs={}, missing_in_destination={}{}",
+                table, registeredCount, differs, missing,
+                differs > 0 ? ", example differing ids " + sampleDiffs : "");
+        return registeredCount;
+    }
+ 
+    /** primary key (as text) -> md5 of the whole row, so rows can be compared across databases. */
+    private Map<String, String> rowHashes(Connection c, String table, String pk) throws SQLException {
+        Map<String, String> map = new HashMap<>();
+        try (Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT " + q(pk) + "::text, md5(to_jsonb(t)::text) FROM "
+                     + q(table) + " t")) {
+            while (rs.next()) {
+                map.put(rs.getString(1), rs.getString(2));
+            }
+        }
+        return map;
     }
  
     // ---------------------------------------------------------------- main loop
@@ -313,7 +456,7 @@ public class DatabaseSyncService {
             }
         }
         if (columns.isEmpty()) {
-            throw new SQLException("Table '" + table + "' not found in destination database");
+            throw new TableProblem("Table '" + table + "' not found in destination database");
         }
         List<String> pks = new ArrayList<>();
         try (ResultSet rs = dst.getMetaData().getPrimaryKeys(null, "public", table)) {
