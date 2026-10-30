@@ -124,7 +124,7 @@ public class DatabaseSyncService {
             }
 
             try (Statement st = src.createStatement()) {
-                st.execute("SELECT id, table_name, operation_type, record_key FROM sync_change_log LIMIT 0");
+                st.execute("SELECT id, table_name, operation, record_key FROM sync_change_log LIMIT 0");
             }
             try (Statement st = dst.createStatement()) {
                 st.execute("SELECT table_name, source_record_id, source_change_id, synced_at "
@@ -328,7 +328,7 @@ public class DatabaseSyncService {
     private List<Change> fetchChanges(Connection src, long afterId) throws SQLException {
         List<Change> list = new ArrayList<>();
         try (PreparedStatement ps = src.prepareStatement(
-                "SELECT id, table_name, operation_type, record_key FROM sync_change_log "
+                "SELECT id, table_name, operation, record_key FROM sync_change_log "
                         + "WHERE id > ? ORDER BY id ASC LIMIT ?")) {
             ps.setLong(1, afterId);
             ps.setInt(2, BATCH_SIZE);
@@ -436,7 +436,7 @@ public class DatabaseSyncService {
                         + q(table) + ", ?::json) r WHERE d." + q(pk) + " = r." + q(pk), key);
                 untrack(dst, table, pkValue);
             }
-            default -> throw new SQLException("Unknown operation_type: " + c.op());
+            default -> throw new SQLException("Unknown operation: " + c.op());
         }
     }
 
