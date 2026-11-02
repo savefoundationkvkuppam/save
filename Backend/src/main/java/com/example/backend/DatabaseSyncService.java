@@ -235,7 +235,7 @@ public class DatabaseSyncService {
 
         try (PreparedStatement ps = dst.prepareStatement(
                 "INSERT INTO sync_source_records (table_name, source_record_id, source_change_id, synced_at) "
-                        + "SELECT ?, ?, 0, NOW() WHERE NOT EXISTS ("
+                        + "SELECT ?, ?::BIGINT, 0, NOW() WHERE NOT EXISTS ("
                         + "SELECT 1 FROM sync_source_records WHERE table_name = ? AND source_record_id = ?::BIGINT)")) {
             for (Map.Entry<String, String> e : srcHashes.entrySet()) {
                 String destHash = dstHashes.get(e.getKey());
@@ -512,7 +512,7 @@ public class DatabaseSyncService {
     private void track(Connection dst, String table, String pkValue, long changeId) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
                 "INSERT INTO sync_source_records (table_name, source_record_id, source_change_id, synced_at) "
-                        + "VALUES (?, ?, ?, NOW())")) {
+                        + "VALUES (?, ?::BIGINT, ?, NOW())")) {
             ps.setString(1, table);
             ps.setString(2, pkValue);
             ps.setLong(3, changeId);
