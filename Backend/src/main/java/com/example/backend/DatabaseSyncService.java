@@ -500,7 +500,7 @@ public class DatabaseSyncService {
 
     private boolean isTracked(Connection dst, String table, String pkValue) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
-                "SELECT 1 FROM sync_source_records WHERE table_name = ? AND source_record_id = ?")) {
+                "SELECT 1 FROM sync_source_records WHERE table_name = ? AND source_record_id = ?::BIGINT")) {
             ps.setString(1, table);
             ps.setString(2, pkValue);
             try (ResultSet rs = ps.executeQuery()) {
@@ -522,7 +522,7 @@ public class DatabaseSyncService {
 
     private void untrack(Connection dst, String table, String pkValue) throws SQLException {
         try (PreparedStatement ps = dst.prepareStatement(
-                "DELETE FROM sync_source_records WHERE table_name = ? AND source_record_id = ?")) {
+                "DELETE FROM sync_source_records WHERE table_name = ? AND source_record_id = ?::BIGINT")) {
             ps.setString(1, table);
             ps.setString(2, pkValue);
             ps.executeUpdate();
